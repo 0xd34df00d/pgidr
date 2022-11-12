@@ -10,3 +10,5 @@ depends = base
         , linear
 
 modules = Postgres.C
+        , Postgres.C.Connection
+        , Postgres.C.Utils
