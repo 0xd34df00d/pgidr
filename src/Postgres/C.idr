@@ -31,9 +31,11 @@ ffi_reset : Handle -> PrimIO ()
 %foreign (libpq "status")
 ffi_status : Handle -> PrimIO Int
 
+%foreign (libpq "errorMessage")
+ffi_errorMessage : Handle -> PrimIO BorrowedString
+
 %foreign (libpq "serverVersion")
 ffi_serverVersion : Handle -> PrimIO Int
-
 
 export
 data Conn : (0 s : Type) -> Type where
@@ -62,6 +64,10 @@ wrapFFI ffi = primIO . ffi . getHandle
 export
 status : HasIO io => (c : Conn s) -> io Int
 status = wrapFFI ffi_status
+
+export
+errorMessage : HasIO io => (c : Conn s) -> io String
+errorMessage = map asString . wrapFFI ffi_errorMessage
 
 export
 reset : HasIO io => (c : Conn s) -> io ()
