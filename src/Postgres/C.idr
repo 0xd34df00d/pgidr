@@ -45,14 +45,17 @@ withConnection connStr f = do
   primIO $ ffi_finish conn
   pure res
 
+wrapFFI : HasIO io => (Handle -> PrimIO a) -> (c : Conn s) -> io a
+wrapFFI ffi = primIO . ffi . getHandle
+
 export
 status : HasIO io => (c : Conn s) -> io Int
-status = primIO . ffi_status . getHandle
+status = wrapFFI ffi_status
 
 export
 reset : HasIO io => (c : Conn s) -> io ()
-reset = primIO . ffi_reset . getHandle
+reset = wrapFFI ffi_reset
 
 export
 serverVersion : HasIO io => (c : Conn s) -> io Int
-serverVersion = primIO . ffi_serverVersion . getHandle
+serverVersion = wrapFFI ffi_serverVersion
