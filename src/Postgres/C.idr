@@ -3,6 +3,17 @@ module Postgres.C
 libpq : String -> String
 libpq s = "C:PQ" <+> s <+> ",libpq"
 
+
+BorrowedString : Type
+BorrowedString = Ptr String
+
+%foreign "C:strdup,libc"
+c_strdup : Ptr String -> String
+
+asString : BorrowedString -> String
+asString = c_strdup
+
+
 data ConnTag : Type where
 
 Handle : Type
