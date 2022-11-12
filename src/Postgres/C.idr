@@ -1,12 +1,12 @@
 module Postgres.C
 
-data PG : Type where
-
 libpq : String -> String
 libpq s = "C:PQ" <+> s <+> ",libpq"
 
+data ConnTag : Type where
+
 Handle : Type
-Handle = Ptr PG
+Handle = Ptr ConnTag
 
 %foreign (libpq "connectdb")
 ffi_connectdb : String -> PrimIO Handle
