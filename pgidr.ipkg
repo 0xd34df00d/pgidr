@@ -1,0 +1,12 @@
+package pgidr
+version = 0.0.1
+authors = "0xd34df00d"
+license = "BSD-3-Clause"
+
+sourcedir = "src"
+
+depends = base
+        , contrib
+        , linear
+
+modules = Postgres.C
