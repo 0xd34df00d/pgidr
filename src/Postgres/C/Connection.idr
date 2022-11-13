@@ -31,8 +31,8 @@ data Conn : (0 s : Type) -> Type where
 
 %name Conn conn
 
-getHandle : Conn s -> Handle
-getHandle (MkConn handle) = handle
+HandleWrapper Handle Conn where
+  getHandle (MkConn h) = h
 
 
 export
@@ -45,9 +45,6 @@ withConnection connStr f = do
   res <- f {s = ()} $ MkConn conn
   primIO $ ffi_finish conn
   pure res
-
-wrapFFI : HasIO io => (Handle -> PrimIO a) -> (c : Conn s) -> io a
-wrapFFI ffi = primIO . ffi . getHandle
 
 export
 status : HasIO io => (c : Conn s) -> io Int
