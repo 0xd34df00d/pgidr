@@ -7,7 +7,6 @@ sourcedir = "src"
 
 depends = base
         , contrib
-        , linear
 
 modules = Postgres.C
         , Postgres.C.Connection
