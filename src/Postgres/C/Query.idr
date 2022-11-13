@@ -100,6 +100,7 @@ resultErrorMessage = map asString . wrapFFI ffi_resultErrorMessage
 %foreign (libpq "clear")
 ffi_clear : ResultHandle -> PrimIO ()
 
+-- TODO use this as a finalizer
 export
 clear : HasIO io =>
         Result s ->
