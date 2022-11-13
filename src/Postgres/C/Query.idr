@@ -56,6 +56,10 @@ data ResultStatus
 
 %runElab derive "ResultStatus" [Eq, Ord, Show]
 
+export
+isSuccessfulQuery : ResultStatus -> Bool
+isSuccessfulQuery s = s == TuplesOk || s == SingleTuple
+
 toResultStatus : Int -> ResultStatus
 toResultStatus n = case integerToFin (cast n) (length knownStatuses) of
                         Nothing => Other n
