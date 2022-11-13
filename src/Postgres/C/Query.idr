@@ -11,18 +11,6 @@ data ResTag : Type where
 ResultHandle : Type
 ResultHandle = Ptr ResTag
 
-%foreign (libpq "exec")
-ffi_exec : ConnHandle -> String -> PrimIO ResultHandle
-
-%foreign (libpq "resultStatus")
-ffi_resultStatus : ResultHandle -> PrimIO Int
-
-%foreign (libpq "resultErrorMessage")
-ffi_resultErrorMessage : ResultHandle -> PrimIO BorrowedString
-
-%foreign (libpq "clear")
-ffi_clear : ResultHandle -> PrimIO ()
-
 
 export
 data Result : (0 s : Type) -> Type where
@@ -34,6 +22,9 @@ HandleWrapper ResultHandle Result where
   getHandle (MkResult h) = h
 
 
+%foreign (libpq "exec")
+ffi_exec : ConnHandle -> String -> PrimIO ResultHandle
+
 export
 exec : HasIO io =>
        (conn : Conn s) ->
@@ -41,6 +32,9 @@ exec : HasIO io =>
        io (Result s)
 exec conn query = MkResult <$> wrapFFI (`ffi_exec` query) conn
 
+
+%foreign (libpq "resultStatus")
+ffi_resultStatus : ResultHandle -> PrimIO Int
 
 public export
 data ResultStatus
@@ -84,11 +78,19 @@ resultStatus : HasIO io =>
                io ResultStatus
 resultStatus = map toResultStatus . wrapFFI ffi_resultStatus
 
+
+%foreign (libpq "resultErrorMessage")
+ffi_resultErrorMessage : ResultHandle -> PrimIO BorrowedString
+
 export
 resultErrorMessage : HasIO io =>
                      Result s ->
                      io String
 resultErrorMessage = map asString . wrapFFI ffi_resultErrorMessage
+
+
+%foreign (libpq "clear")
+ffi_clear : ResultHandle -> PrimIO ()
 
 export
 clear : HasIO io =>
