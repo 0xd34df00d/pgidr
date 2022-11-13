@@ -105,3 +105,23 @@ clear : HasIO io =>
         Result s ->
         io ()
 clear = wrapFFI ffi_clear
+
+
+%foreign (libpq "ntuples")
+ffi_ntuples : ResultHandle -> PrimIO Int
+
+export
+ntuples : HasIO io =>
+          Result s ->
+          io Int
+ntuples = wrapFFI ffi_ntuples
+
+
+%foreign (libpq "nfields")
+ffi_nfields : ResultHandle -> PrimIO Int
+
+export
+nfields : HasIO io =>
+          Result s ->
+          io Int
+nfields = wrapFFI ffi_nfields
