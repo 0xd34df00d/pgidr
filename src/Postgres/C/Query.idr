@@ -2,15 +2,17 @@ module Postgres.C.Query
 
 import Data.Fin
 import Data.Vect
+import Derive.Prelude
 
 import Postgres.C.Connection
 import Postgres.C.Utils
+
+%language ElabReflection
 
 data ResTag : Type where
 
 ResultHandle : Type
 ResultHandle = Ptr ResTag
-
 
 export
 data Result : (0 s : Type) -> Type where
@@ -51,6 +53,8 @@ data ResultStatus
   | PipelineSync
   | PipelineAborted
   | Other Int
+
+%runElab derive "ResultStatus" [Eq, Ord, Show]
 
 toResultStatus : Int -> ResultStatus
 toResultStatus n = case integerToFin (cast n) (length knownStatuses) of
