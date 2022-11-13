@@ -11,4 +11,5 @@ depends = base
 
 modules = Postgres.C
         , Postgres.C.Connection
+        , Postgres.C.Query
         , Postgres.C.Utils

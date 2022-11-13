@@ -4,6 +4,7 @@ import Postgres.C.Utils
 
 data ConnTag : Type where
 
+public export
 ConnHandle : Type
 ConnHandle = Ptr ConnTag
 
@@ -31,6 +32,7 @@ data Conn : (0 s : Type) -> Type where
 
 %name Conn conn
 
+export
 HandleWrapper ConnHandle Conn where
   getHandle (MkConn h) = h
 
