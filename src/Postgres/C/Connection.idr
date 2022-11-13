@@ -4,34 +4,34 @@ import Postgres.C.Utils
 
 data ConnTag : Type where
 
-Handle : Type
-Handle = Ptr ConnTag
+ConnHandle : Type
+ConnHandle = Ptr ConnTag
 
 %foreign (libpq "connectdb")
-ffi_connectdb : String -> PrimIO Handle
+ffi_connectdb : String -> PrimIO ConnHandle
 
 %foreign (libpq "finish")
-ffi_finish : Handle -> PrimIO ()
+ffi_finish : ConnHandle -> PrimIO ()
 
 %foreign (libpq "reset")
-ffi_reset : Handle -> PrimIO ()
+ffi_reset : ConnHandle -> PrimIO ()
 
 %foreign (libpq "status")
-ffi_status : Handle -> PrimIO Int
+ffi_status : ConnHandle -> PrimIO Int
 
 %foreign (libpq "errorMessage")
-ffi_errorMessage : Handle -> PrimIO BorrowedString
+ffi_errorMessage : ConnHandle -> PrimIO BorrowedString
 
 %foreign (libpq "serverVersion")
-ffi_serverVersion : Handle -> PrimIO Int
+ffi_serverVersion : ConnHandle -> PrimIO Int
 
 export
 data Conn : (0 s : Type) -> Type where
-  MkConn : (handle : Handle) -> Conn s
+  MkConn : (handle : ConnHandle) -> Conn s
 
 %name Conn conn
 
-HandleWrapper Handle Conn where
+HandleWrapper ConnHandle Conn where
   getHandle (MkConn h) = h
 
 
