@@ -40,21 +40,22 @@ exec conn query = MkResult <$> wrapFFI (`ffi_exec` query) conn
 %foreign (libpq "resultStatus")
 ffi_resultStatus : ResultHandle -> PrimIO Int
 
-public export
-data ResultStatus
-  = EmptyQuery
-  | CommandOk
-  | TuplesOk
-  | CopyOut
-  | CopyIn
-  | BadResponse
-  | NonfatalError
-  | FatalError
-  | CopyBoth
-  | SingleTuple
-  | PipelineSync
-  | PipelineAborted
-  | Other Int
+namespace ResultStatus
+  public export
+  data ResultStatus
+    = EmptyQuery
+    | CommandOk
+    | TuplesOk
+    | CopyOut
+    | CopyIn
+    | BadResponse
+    | NonfatalError
+    | FatalError
+    | CopyBoth
+    | SingleTuple
+    | PipelineSync
+    | PipelineAborted
+    | Other Int
 
 %runElab derive "ResultStatus" [Eq, Ord, Show]
 
