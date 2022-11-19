@@ -173,3 +173,13 @@ getisnull : HasIO io =>
             (col, row : Int) ->
             io Bool
 getisnull res row col = (== 1) <$> wrapFFI (\h => ffi_getisnull h row col) res
+
+%foreign (libpq "getlength")
+ffi_getlength : ResultHandle -> Int -> Int -> PrimIO Int
+
+export
+getlength : HasIO io =>
+            (res : Result s) ->
+            (col, row : Int) ->
+            io Int
+getlength res col row = wrapFFI (\h => ffi_getlength h row col) res
