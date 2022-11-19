@@ -84,7 +84,7 @@ toResultStatus n = case integerToFin (cast n) (length knownStatuses) of
 
 export
 resultStatus : HasIO io =>
-               Result s ->
+               (res : Result s) ->
                io ResultStatus
 resultStatus = map toResultStatus . wrapFFI ffi_resultStatus
 
@@ -94,7 +94,7 @@ ffi_resultErrorMessage : ResultHandle -> PrimIO BorrowedString
 
 export
 resultErrorMessage : HasIO io =>
-                     Result s ->
+                     (res : Result s) ->
                      io String
 resultErrorMessage = map asString . wrapFFI ffi_resultErrorMessage
 
@@ -105,7 +105,7 @@ ffi_clear : ResultHandle -> PrimIO ()
 -- TODO use this as a finalizer
 export
 clear : HasIO io =>
-        Result s ->
+        (res : Result s) ->
         io ()
 clear = wrapFFI ffi_clear
 
@@ -115,7 +115,7 @@ ffi_ntuples : ResultHandle -> PrimIO Int
 
 export
 ntuples : HasIO io =>
-          Result s ->
+          (res : Result s) ->
           io Int
 ntuples = wrapFFI ffi_ntuples
 
@@ -125,7 +125,7 @@ ffi_nfields : ResultHandle -> PrimIO Int
 
 export
 nfields : HasIO io =>
-          Result s ->
+          (res : Result s) ->
           io Int
 nfields = wrapFFI ffi_nfields
 
@@ -135,7 +135,7 @@ ffi_ftype : ResultHandle -> Int -> PrimIO Int
 
 export
 ftype : HasIO io =>
-        Result s ->
-        Int ->
+        (res : Result s) ->
+        (col : Int) ->
         io Int
 ftype r n = wrapFFI (`ffi_ftype` n) r
