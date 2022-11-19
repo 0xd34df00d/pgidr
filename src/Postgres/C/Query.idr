@@ -139,3 +139,14 @@ ftype : HasIO io =>
         (col : Int) ->
         io Int
 ftype r n = wrapFFI (`ffi_ftype` n) r
+
+
+%foreign (libpq "getisnull")
+ffi_getisnull : ResultHandle -> Int -> Int -> PrimIO Int
+
+export
+getisnull : HasIO io =>
+            (res : Result s) ->
+            (col, row : Int) ->
+            io Bool
+getisnull res row col = (== 1) <$> wrapFFI (\h => ffi_getisnull h row col) res
