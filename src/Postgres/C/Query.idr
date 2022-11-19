@@ -126,3 +126,14 @@ nfields : HasIO io =>
           Result s ->
           io Int
 nfields = wrapFFI ffi_nfields
+
+
+%foreign (libpq "ftype")
+ffi_ftype : ResultHandle -> Int -> PrimIO Int
+
+export
+ftype : HasIO io =>
+        Result s ->
+        Int ->
+        io Int
+ftype r n = wrapFFI (`ffi_ftype` n) r
