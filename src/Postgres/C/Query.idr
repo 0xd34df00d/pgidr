@@ -183,3 +183,16 @@ getlength : HasIO io =>
             (col, row : Int) ->
             io Int
 getlength res col row = wrapFFI (\h => ffi_getlength h row col) res
+
+%foreign (libpq "getvalue")
+ffi_getvalue : ResultHandle -> Int -> Int -> PrimIO (Ptr Bits8)
+
+export
+getvalue : HasIO io =>
+           (res : Result s) ->
+           (col, row : Int) ->
+           (deserializer : Ptr Bits8 -> io a) ->
+           io a
+getvalue res col row deserializer = do
+  bits <- wrapFFI (\h => ffi_getvalue h row col) res
+  deserializer bits
