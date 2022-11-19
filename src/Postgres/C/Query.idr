@@ -141,6 +141,28 @@ ftype : HasIO io =>
         io Int
 ftype r n = wrapFFI (`ffi_ftype` n) r
 
+%foreign (libpq "fformat")
+ffi_fformat : ResultHandle -> Int -> PrimIO Int
+
+namespace ColumnFormat
+  public export
+  data ColumnFormat
+    = Textual
+    | Binary
+    | Other Int
+
+toColumnFormat : Int -> ColumnFormat
+toColumnFormat 0 = Textual
+toColumnFormat 1 = Binary
+toColumnFormat n = Other n
+
+export
+fformat : HasIO io =>
+          (res : Result s) ->
+          (col : Int) ->
+          io ColumnFormat
+fformat res col = toColumnFormat <$> wrapFFI (`ffi_fformat` col) res
+
 
 %foreign (libpq "getisnull")
 ffi_getisnull : ResultHandle -> Int -> Int -> PrimIO Int
