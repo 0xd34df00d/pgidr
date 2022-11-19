@@ -191,8 +191,5 @@ export
 getvalue : HasIO io =>
            (res : Result s) ->
            (col, row : Int) ->
-           (deserializer : Ptr Bits8 -> io a) ->
-           io a
-getvalue res col row deserializer = do
-  bits <- wrapFFI (\h => ffi_getvalue h row col) res
-  deserializer bits
+           io (Ptr Bits8)
+getvalue res col row = wrapFFI (\h => ffi_getvalue h row col) res
