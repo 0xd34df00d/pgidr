@@ -2,6 +2,8 @@ module Postgres.C.Connection
 
 import Postgres.C.Utils
 
+%default total
+
 data ConnTag : Type where
 
 public export

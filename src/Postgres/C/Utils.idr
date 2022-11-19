@@ -1,5 +1,7 @@
 module Postgres.C.Utils
 
+%default total
+
 public export
 libpq : String -> String
 libpq s = "C:PQ" <+> s <+> ",libpq"

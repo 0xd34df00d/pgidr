@@ -7,6 +7,8 @@ import Derive.Prelude
 import Postgres.C.Connection
 import Postgres.C.Utils
 
+%default total
+
 %language ElabReflection
 
 data ResTag : Type where
