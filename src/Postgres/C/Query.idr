@@ -63,6 +63,9 @@ export
 isSuccessfulQuery : ResultStatus -> Bool
 isSuccessfulQuery s = s == TuplesOk || s == SingleTuple
 
+-- TODO eventually we'll need to query the actual values of these constants from C,
+-- but this requires non-trivial changes to the build system to introduce our own
+-- C helper library, which we're trying to avoid.
 toResultStatus : Int -> ResultStatus
 toResultStatus n = case integerToFin (cast n) (length knownStatuses) of
                         Nothing => Other n
@@ -151,6 +154,9 @@ namespace ColumnFormat
     | Binary
     | Other Int
 
+-- TODO eventually we'll need to query the actual values of these constants from C,
+-- but this requires non-trivial changes to the build system to introduce our own
+-- C helper library, which we're trying to avoid.
 toColumnFormat : Int -> ColumnFormat
 toColumnFormat 0 = Textual
 toColumnFormat 1 = Binary
