@@ -174,7 +174,7 @@ ffi_getisnull : ResultHandle -> Int -> Int -> PrimIO Int
 export
 getisnull : HasIO io =>
             (res : Result s) ->
-            (col, row : Int) ->
+            (row, col : Int) ->
             io Bool
 getisnull res row col = (== 1) <$> wrapFFI (\h => ffi_getisnull h row col) res
 
@@ -184,9 +184,9 @@ ffi_getlength : ResultHandle -> Int -> Int -> PrimIO Int
 export
 getlength : HasIO io =>
             (res : Result s) ->
-            (col, row : Int) ->
+            (row, col : Int) ->
             io Int
-getlength res col row = wrapFFI (\h => ffi_getlength h row col) res
+getlength res row col = wrapFFI (\h => ffi_getlength h row col) res
 
 %foreign (libpq "getvalue")
 ffi_getvalue : ResultHandle -> Int -> Int -> PrimIO (Ptr Bits8)
@@ -194,6 +194,6 @@ ffi_getvalue : ResultHandle -> Int -> Int -> PrimIO (Ptr Bits8)
 export
 getvalue : HasIO io =>
            (res : Result s) ->
-           (col, row : Int) ->
+           (row, col : Int) ->
            io (Ptr Bits8)
-getvalue res col row = wrapFFI (\h => ffi_getvalue h row col) res
+getvalue res row col = wrapFFI (\h => ffi_getvalue h row col) res
