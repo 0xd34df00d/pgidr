@@ -197,3 +197,13 @@ getvalue : HasIO io =>
            (row, col : Int) ->
            io (Ptr Bits8)
 getvalue res row col = wrapFFI (\h => ffi_getvalue h row col) res
+
+export
+getvalueTextual : HasIO io =>
+                  (res : Result s) ->
+                  (row, col : Int) ->
+                  io String
+getvalueTextual res row col = convert <$> getvalue res row col
+  where
+    convert : Ptr Bits8 -> String
+    convert = asString . prim__castPtr . prim__forgetPtr
