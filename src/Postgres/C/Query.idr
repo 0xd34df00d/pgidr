@@ -13,8 +13,11 @@ import Postgres.C.Utils
 
 data ResTag : Type where
 
+UnmanagedResultHandle : Type
+UnmanagedResultHandle = Ptr ResTag
+
 ResultHandle : Type
-ResultHandle = Ptr ResTag
+ResultHandle = GCPtr ResTag
 
 export
 data Result : (0 s : Type) -> Type where
@@ -25,16 +28,22 @@ data Result : (0 s : Type) -> Type where
 HandleWrapper ResultHandle Result where
   getHandle (MkResult h) = h
 
+%foreign (libpq "clear")
+ffi_clear : UnmanagedResultHandle -> PrimIO ()
+
 
 %foreign (libpq "exec")
-ffi_exec : ConnHandle -> String -> PrimIO ResultHandle
+ffi_exec : ConnHandle -> String -> PrimIO UnmanagedResultHandle
 
 export
 exec : HasIO io =>
        (conn : Conn s) ->
        (query : String) ->
        io (Result s)
-exec conn query = MkResult <$> wrapFFI (`ffi_exec` query) conn
+exec conn query = do
+  uhandle <- wrapFFI (`ffi_exec` query) conn
+  handle <- onCollect uhandle $ primIO . ffi_clear
+  pure $ MkResult handle
 
 
 %foreign (libpq "resultStatus")
@@ -56,7 +65,6 @@ namespace ResultStatus
     | PipelineSync
     | PipelineAborted
     | Other Int
-
 %runElab derive "ResultStatus" [Eq, Ord, Show]
 
 export
@@ -101,17 +109,6 @@ resultErrorMessage : HasIO io =>
                      (res : Result s) ->
                      io String
 resultErrorMessage = map asString . wrapFFI ffi_resultErrorMessage
-
-
-%foreign (libpq "clear")
-ffi_clear : ResultHandle -> PrimIO ()
-
--- TODO use this as a finalizer
-export
-clear : HasIO io =>
-        (res : Result s) ->
-        io ()
-clear = wrapFFI ffi_clear
 
 
 %foreign (libpq "ntuples")
