@@ -1,8 +1,12 @@
 module Postgres.C.Connection
 
+import Derive.Prelude
+
 import Postgres.C.Utils
 
 %default total
+
+%language ElabReflection
 
 data ConnTag : Type where
 
@@ -42,9 +46,23 @@ withConnection connStr f = do
 %foreign (libpq "status")
 ffi_status : ConnHandle -> PrimIO Int
 
+data ConnectionStatus
+  = Ok
+  | Bad
+  | Other Int
+%runElab derive "ConnectionStatus" [Eq, Ord, Show]
+
+-- TODO eventually we'll need to query the actual values of these constants from C,
+-- but this requires non-trivial changes to the build system to introduce our own
+-- C helper library, which we're trying to avoid.
+toConnectionStatus : Int -> ConnectionStatus
+toConnectionStatus 0 = Ok
+toConnectionStatus 1 = Bad
+toConnectionStatus n = Other n
+
 export
-status : HasIO io => (c : Conn s) -> io Int
-status = wrapFFI ffi_status
+status : HasIO io => (c : Conn s) -> io ConnectionStatus
+status = map toConnectionStatus . wrapFFI ffi_status
 
 
 %foreign (libpq "errorMessage")
