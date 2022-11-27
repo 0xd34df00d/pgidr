@@ -7,6 +7,12 @@ dumpResult res = do
   resultStatus res >>= printLn
   resultErrorMessage res >>= putStr
 
+dropTable : HasIO io => Conn s -> io ()
+dropTable conn = do
+  putStrLn "dropping table..."
+  res <- exec conn "DROP TABLE IF EXISTS persons"
+  dumpResult res
+
 createTable : HasIO io => Conn s -> io ()
 createTable conn = do
   putStrLn "creating table..."
@@ -30,6 +36,7 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
   e <- errorMessage conn
   putStr e
 
+  dropTable conn
   createTable conn
 
   putStrLn "querying..."
