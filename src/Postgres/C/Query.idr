@@ -141,6 +141,16 @@ ftype : HasIO io =>
         io Int
 ftype r n = wrapFFI (`ffi_ftype` n) r
 
+%foreign (libpq "fmod")
+ffi_fmod : ResultHandle -> Int -> PrimIO Int
+
+export
+fmod : HasIO io =>
+       (res : Result s) ->
+       (col : Int) ->
+       io Int
+fmod r n = wrapFFI (`ffi_fmod` n) r
+
 %foreign (libpq "fformat")
 ffi_fformat : ResultHandle -> Int -> PrimIO Int
 
