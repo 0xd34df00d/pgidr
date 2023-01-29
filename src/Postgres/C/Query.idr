@@ -171,6 +171,11 @@ toColumnFormat 0 = Textual
 toColumnFormat 1 = Binary
 toColumnFormat n = Other n
 
+Cast ColumnFormat Int where
+  cast Textual = 0
+  cast Binary = 1
+  cast (Other n) = n
+
 export
 fformat : HasIO io =>
           (res : Result s) ->
