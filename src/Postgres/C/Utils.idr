@@ -1,5 +1,9 @@
 module Postgres.C.Utils
 
+import Data.Buffer as B
+import Data.DPair
+import Data.Vect
+
 %default total
 
 public export
@@ -29,3 +33,26 @@ wrapFFI : (HasIO io, HandleWrapper rawHandle wrappedHandle) =>
           (c : wrappedHandle s) ->
           io a
 wrapFFI ffi = primIO . ffi . getHandle
+
+
+%foreign "C:setStrArrayItem,libpgidr-cbits"
+ffi_setStrArrayItem : (buf : Buffer) -> (index : Int) -> (val : String) -> PrimIO ()
+
+setStrArrayItem : HasIO io => (buf : Buffer) -> (index : Int) -> (val : String) -> io ()
+setStrArrayItem buf index val = primIO $ ffi_setStrArrayItem buf index val
+
+-- TODO uh oh, 64 bits only so far
+export
+toStringArray : HasIO io =>
+                {n : _} ->
+                (params : Vect n (Maybe String)) ->
+                io (Maybe Buffer)
+toStringArray params = do
+  let bytesInPtr = 8
+  Just buf <- B.newBuffer (cast n * bytesInPtr)
+    | Nothing => pure Nothing
+  flip traverse_ (zip (tabulate fst) params) $ \(i, maybeStr) => do
+    case maybeStr of
+         Just str => setStrArrayItem buf (cast i) str
+         Nothing => pure ()
+  pure $ Just buf
