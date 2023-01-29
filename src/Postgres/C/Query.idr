@@ -1,5 +1,6 @@
-module Postgres.C.Query 
+module Postgres.C.Query
 
+import Data.Buffer
 import Data.Fin
 import Data.Vect
 import Derive.Prelude
@@ -223,3 +224,31 @@ getvalueTextual res row col = convert <$> getvalue res row col
   where
     convert : Ptr Bits8 -> String
     convert = asString . prim__castPtr . prim__forgetPtr
+
+
+%foreign (libpq "execParams")
+ffi_execParams : (conn : ConnHandle) ->
+                 (command : String) ->
+                 (nParams : Int) ->
+                 (paramTypes : Ptr Int) ->
+                 (paramValues : Buffer) ->
+                 (paramLengths : Ptr Int) ->
+                 (paramFormats : Ptr Int) ->
+                 (resultFormat : Int) ->
+                 PrimIO UnmanagedResultHandle
+
+export
+execParams : HasIO io =>
+             (conn : Conn s) ->
+             (command : String) ->
+             {n : _} ->
+             (params : Vect n (Maybe String)) ->
+             io (Result s)
+execParams conn command params = do
+  Just paramsArray <- toStringArray params
+    | Nothing => map MkResult $ onCollect nullptr (const $ pure ())
+  uhandle <- wrapFFI (\conn' => ffi_execParams conn' command (cast n) nullptr paramsArray nullptr nullptr (cast Textual)) conn
+  addResultFinalizer uhandle
+  where
+    nullptr : Ptr t
+    nullptr = prim__castPtr prim__getNullAnyPtr
