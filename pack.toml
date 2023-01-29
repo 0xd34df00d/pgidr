@@ -1,0 +1,5 @@
+[custom.all.safe-buffers]
+type = "github"
+url = "https://github.com/0xd34df00d/idris2-safe-buffers"
+commit = "ef83c58ffcd4514d037c784d730afbe6af3170af"
+ipkg = "safe-buffers.ipkg"

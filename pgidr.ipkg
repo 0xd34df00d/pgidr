@@ -8,6 +8,7 @@ sourcedir = "src"
 depends = base
         , contrib
         , elab-util
+        , safe-buffers
 
 modules = Postgres.C
         , Postgres.C.Connection
