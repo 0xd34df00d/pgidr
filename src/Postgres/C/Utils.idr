@@ -24,8 +24,8 @@ interface HandleWrapper (0 raw : Type) (0 wrapper : (0 _ : Type) -> Type) | wrap
   getHandle : wrapper s -> raw
 
 export
-wrapFFI : (HasIO io, HandleWrapper raw wrapper) =>
-          (raw -> PrimIO a) ->
-          (c : wrapper s) ->
+wrapFFI : (HasIO io, HandleWrapper rawHandle wrappedHandle) =>
+          (rawHandle -> PrimIO a) ->
+          (c : wrappedHandle s) ->
           io a
 wrapFFI ffi = primIO . ffi . getHandle
