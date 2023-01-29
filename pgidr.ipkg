@@ -14,3 +14,5 @@ modules = Postgres.C
         , Postgres.C.Connection
         , Postgres.C.Query
         , Postgres.C.Utils
+
+prebuild = "./prebuild.sh"
