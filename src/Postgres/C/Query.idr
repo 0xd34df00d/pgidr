@@ -35,6 +35,11 @@ ffi_clear : UnmanagedResultHandle -> PrimIO ()
 %foreign (libpq "exec")
 ffi_exec : ConnHandle -> String -> PrimIO UnmanagedResultHandle
 
+addResultFinalizer : HasIO io => UnmanagedResultHandle -> io (Result s)
+addResultFinalizer uhandle = do
+  handle <- onCollect uhandle $ primIO . ffi_clear
+  pure $ MkResult handle
+
 export
 exec : HasIO io =>
        (conn : Conn s) ->
@@ -42,8 +47,7 @@ exec : HasIO io =>
        io (Result s)
 exec conn query = do
   uhandle <- wrapFFI (`ffi_exec` query) conn
-  handle <- onCollect uhandle $ primIO . ffi_clear
-  pure $ MkResult handle
+  addResultFinalizer uhandle
 
 
 %foreign (libpq "resultStatus")
