@@ -1,5 +1,6 @@
 module Postgres.Example
 
+import Data.Vect
 import Postgres.C
 
 dumpResult : HasIO io => Result s -> io ()
@@ -38,6 +39,9 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
 
   dropTable conn
   createTable conn
+
+  putStrLn "inserting..."
+  execParams conn "INSERT INTO persons (first_name, last_name, age, country) VALUES ($1, $2, $3, $4)" [Just "John", Just "Doe", Just "42", Nothing] >>= dumpResult
 
   putStrLn "querying..."
   res <- exec conn "SELECT * FROM persons"
