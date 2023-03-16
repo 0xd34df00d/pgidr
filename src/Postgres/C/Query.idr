@@ -225,6 +225,8 @@ getvalueTextual res row col = convert <$> getvalue res row col
     convert : Ptr Bits8 -> String
     convert = asString . prim__castPtr . prim__forgetPtr
 
+nullptr : Ptr t
+nullptr = prim__castPtr prim__getNullAnyPtr
 
 %foreign (libpq "execParams")
 ffi_execParams : (conn : ConnHandle) ->
@@ -237,6 +239,15 @@ ffi_execParams : (conn : ConnHandle) ->
                  (resultFormat : Int) ->
                  PrimIO UnmanagedResultHandle
 
+ffi_execParams' : (conn : ConnHandle) ->
+                  (command : String) ->
+                  (nParams : Int) ->
+                  (paramValues : Buffer) ->
+                  (resultFormat : Int) ->
+                  PrimIO UnmanagedResultHandle
+ffi_execParams' conn command nParams paramValues resultFormat =
+  ffi_execParams conn command nParams nullptr paramValues nullptr nullptr resultFormat
+
 export
 execParams : HasIO io =>
              (conn : Conn s) ->
@@ -247,8 +258,5 @@ execParams : HasIO io =>
 execParams conn command params = do
   Just paramsArray <- toStringArray params
     | Nothing => map MkResult $ onCollect nullptr (const $ pure ())
-  uhandle <- wrapFFI (\conn' => ffi_execParams conn' command (cast n) nullptr paramsArray nullptr nullptr (cast Textual)) conn
+  uhandle <- wrapFFI (\conn' => ffi_execParams' conn' command (cast n) paramsArray (cast Textual)) conn
   addResultFinalizer uhandle
-  where
-    nullptr : Ptr t
-    nullptr = prim__castPtr prim__getNullAnyPtr
