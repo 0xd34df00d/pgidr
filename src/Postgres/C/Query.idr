@@ -252,6 +252,16 @@ ffi_execParams' : (conn : ConnHandle) ->
 ffi_execParams' conn command nParams paramValues resultFormat =
   ffi_execParams conn command nParams nullptr paramValues nullptr nullptr resultFormat
 
+nullGcPtr : HasIO io => io (GCPtr t)
+nullGcPtr = onCollect nullptr (const $ pure ())
+
+withStringArray : HasIO io =>
+                  {n : _} ->
+                  (params : Vect n (Maybe String)) ->
+                  (cont : Buffer -> io (Result s)) ->
+                  io (Result s)
+withStringArray params cont = toStringArray params >>= maybe (MkResult <$> nullGcPtr) cont
+
 export
 execParams : HasIO io =>
              (conn : Conn s) ->
@@ -259,7 +269,5 @@ execParams : HasIO io =>
              {n : _} ->
              (params : Vect n (Maybe String)) ->
              io (Result s)
-execParams conn command params = do
-  Just paramsArray <- toStringArray params
-    | Nothing => map MkResult $ onCollect nullptr (const $ pure ())
+execParams conn command params = withStringArray params $ \paramsArray =>
   wrapFFIResult (\conn' => ffi_execParams' conn' command (cast n) paramsArray (cast Textual)) conn
