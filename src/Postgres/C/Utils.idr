@@ -41,7 +41,9 @@ ffi_setStrArrayItem : (buf : Buffer) -> (index : Int) -> (val : String) -> PrimI
 setStrArrayItem : HasIO io => (buf : Buffer) -> (index : Int) -> (val : String) -> io ()
 setStrArrayItem buf index val = primIO $ ffi_setStrArrayItem buf index val
 
--- TODO uh oh, 64 bits only so far
+%foreign "C:ptrSize,libpgidr-cbits"
+ffi_ptrSize : Int
+
 export
 toStringArray : HasIO io =>
                 {n : _} ->
@@ -49,7 +51,7 @@ toStringArray : HasIO io =>
                 io (Maybe Buffer)
 toStringArray params = do
   let bytesInPtr = 8
-  Just buf <- B.newBuffer (cast n * bytesInPtr)
+  Just buf <- B.newBuffer (cast n * ffi_ptrSize)
     | Nothing => pure Nothing
   flip traverse_ (zip (tabulate fst) params) $ \(i, maybeStr) => do
     case maybeStr of
