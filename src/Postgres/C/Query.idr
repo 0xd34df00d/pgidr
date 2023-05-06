@@ -289,3 +289,24 @@ prepare : HasIO io =>
           (query : String) ->
           io (Result s)
 prepare conn stmtName query = wrapFFIResult (\conn' => ffi_prepare conn' stmtName query 0 nullptr) conn
+
+%foreign (libpq "execPrepared")
+ffi_execPrepared : (conn : ConnHandle) ->
+                   (stmtName : String) ->
+                   (nParams : Int) ->
+                   (paramValues : Buffer) ->
+                   (paramLengths : Ptr Int) ->
+                   (paramFormats : Ptr Int) ->
+                   (resultFormat : Int) ->
+                   PrimIO UnmanagedResultHandle
+
+export
+execPrepared : HasIO io =>
+               (conn : Conn s) ->
+               (stmtName : String) ->
+               {n : _} ->
+               (params : Vect n (Maybe String)) ->
+               io (Result s)
+execPrepared conn stmtName params =
+  withStringArray params $ \paramsArray =>
+    wrapFFIResult (\conn' => ffi_execPrepared conn' stmtName (cast n) paramsArray nullptr nullptr (cast Textual)) conn
