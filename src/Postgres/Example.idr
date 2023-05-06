@@ -61,6 +61,9 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
   rowsCnt <- ntuples res
   printLn (rowsCnt, fieldsCnt)
 
+  putStrLn "names:"
+  flip traverse [0 .. fieldsCnt - 1] (fname res) >>= printLn
+
   putStrLn "formats:"
   flip traverse [0 .. fieldsCnt - 1] (fformat res) >>= printLn
 
