@@ -269,5 +269,23 @@ execParams : HasIO io =>
              {n : _} ->
              (params : Vect n (Maybe String)) ->
              io (Result s)
-execParams conn command params = withStringArray params $ \paramsArray =>
-  wrapFFIResult (\conn' => ffi_execParams' conn' command (cast n) paramsArray (cast Textual)) conn
+execParams conn command params =
+  withStringArray params $ \paramsArray =>
+    wrapFFIResult (\conn' => ffi_execParams' conn' command (cast n) paramsArray (cast Textual)) conn
+
+
+%foreign (libpq "prepare")
+ffi_prepare : (conn : ConnHandle) ->
+              (stmtName : String) ->
+              (query : String) ->
+              (nParams : Int) ->
+              (paramTypes : Ptr Int) ->
+              PrimIO UnmanagedResultHandle
+
+export
+prepare : HasIO io =>
+          (conn : Conn s) ->
+          (stmtName : String) ->
+          (query : String) ->
+          io (Result s)
+prepare conn stmtName query = wrapFFIResult (\conn' => ffi_prepare conn' stmtName query 0 nullptr) conn
