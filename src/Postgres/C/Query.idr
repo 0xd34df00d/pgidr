@@ -41,14 +41,18 @@ addResultFinalizer uhandle = do
   handle <- onCollect uhandle $ primIO . ffi_clear
   pure $ MkResult handle
 
+wrapFFIResult : (HasIO io) =>
+                (ConnHandle -> PrimIO UnmanagedResultHandle) ->
+                (c : Conn s) ->
+                io (Result s)
+wrapFFIResult ffi conn = wrapFFI ffi conn >>= addResultFinalizer
+
 export
 exec : HasIO io =>
        (conn : Conn s) ->
        (query : String) ->
        io (Result s)
-exec conn query = do
-  uhandle <- wrapFFI (`ffi_exec` query) conn
-  addResultFinalizer uhandle
+exec conn query = wrapFFIResult (`ffi_exec` query) conn
 
 
 %foreign (libpq "resultStatus")
@@ -258,5 +262,4 @@ execParams : HasIO io =>
 execParams conn command params = do
   Just paramsArray <- toStringArray params
     | Nothing => map MkResult $ onCollect nullptr (const $ pure ())
-  uhandle <- wrapFFI (\conn' => ffi_execParams' conn' command (cast n) paramsArray (cast Textual)) conn
-  addResultFinalizer uhandle
+  wrapFFIResult (\conn' => ffi_execParams' conn' command (cast n) paramsArray (cast Textual)) conn
