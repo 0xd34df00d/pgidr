@@ -40,8 +40,17 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
   dropTable conn
   createTable conn
 
+  let insertQuery = "INSERT INTO persons (first_name, last_name, age, country) VALUES ($1, $2, $3, $4)"
+
   putStrLn "inserting..."
-  execParams conn "INSERT INTO persons (first_name, last_name, age, country) VALUES ($1, $2, $3, $4)" [Just "John", Just "Doe", Just "42", Nothing] >>= dumpResult
+  execParams conn insertQuery [Just "John", Just "Doe", Just "42", Nothing] >>= dumpResult
+
+  putStrLn "preparing..."
+  prepare conn "inserter" insertQuery >>= dumpResult
+
+  putStrLn "inserting more..."
+  execPrepared conn "inserter" [Just "Jane", Just "Doe", Just "36", Just "us"] >>= dumpResult
+  execPrepared conn "inserter" [Just "Uncle", Just "Bob", Just "10", Nothing] >>= dumpResult
 
   putStrLn "querying..."
   res <- exec conn "SELECT * FROM persons"
