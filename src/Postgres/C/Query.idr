@@ -140,6 +140,17 @@ nfields : HasIO io =>
 nfields = wrapFFI ffi_nfields
 
 
+%foreign (libpq "fname")
+ffi_fname : ResultHandle -> Int -> PrimIO BorrowedString
+
+export
+fname : HasIO io =>
+        (res : Result s) ->
+        (column : Int) ->
+        io String
+fname res col = asString <$> wrapFFI (`ffi_fname` col) res
+
+
 %foreign (libpq "ftype")
 ffi_ftype : ResultHandle -> Int -> PrimIO Int
 
