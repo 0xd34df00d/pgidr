@@ -62,21 +62,21 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
   printLn (rowsCnt, fieldsCnt)
 
   putStrLn "names:"
-  flip traverse [0 .. fieldsCnt - 1] (fname res) >>= printLn
+  for [0 .. fieldsCnt - 1] (fname res) >>= printLn
 
   putStrLn "formats:"
-  flip traverse [0 .. fieldsCnt - 1] (fformat res) >>= printLn
+  for [0 .. fieldsCnt - 1] (fformat res) >>= printLn
 
   putStrLn "mods:"
-  flip traverse [0 .. fieldsCnt - 1] (fmod res) >>= printLn
+  for [0 .. fieldsCnt - 1] (fmod res) >>= printLn
 
   putStrLn "types:"
-  flip traverse [0 .. fieldsCnt - 1] (ftype res) >>= printLn
+  for [0 .. fieldsCnt - 1] (ftype res) >>= printLn
 
   putStrLn "values:"
-  flip traverse_ [0 .. rowsCnt - 1] $ \row => do
+  for_ [0 .. rowsCnt - 1] $ \row => do
     putStr "| "
-    flip traverse_ [0 .. fieldsCnt - 1] $ \col => do
+    for_ [0 .. fieldsCnt - 1] $ \col => do
       getvalueTextual res row col >>= putStr
       putStr " | "
     putStrLn ""
