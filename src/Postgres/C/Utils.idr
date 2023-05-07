@@ -35,6 +35,18 @@ wrapFFI : (HasIO io, HandleWrapper rawHandle wrappedHandle) =>
 wrapFFI ffi = primIO . ffi . getHandle
 
 
+export
+forTo : (Applicative f, Num n, Ord n, Range n, Neg n) => (start, end : n) -> (n -> f b) -> f (List b)
+forTo start end f =
+  if start >= end
+     then pure []
+     else for [start .. end - 1] f
+
+export
+forTo_ : (Applicative f, Num n, Ord n, Range n, Neg n) => (start, end : n) -> (n -> f b) -> f ()
+forTo_ start end f = forTo start end f $> ()
+
+
 %foreign "C:setStrArrayItem,libpgidr-cbits"
 ffi_setStrArrayItem : (buf : Buffer) -> (index : Int) -> (val : String) -> PrimIO ()
 

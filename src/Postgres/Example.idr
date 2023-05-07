@@ -2,6 +2,7 @@ module Postgres.Example
 
 import Data.Vect
 import Postgres.C
+import Postgres.C.Utils
 
 dumpResult : HasIO io => Result s -> io ()
 dumpResult res = do
@@ -62,21 +63,21 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
   printLn (rowsCnt, fieldsCnt)
 
   putStrLn "names:"
-  for [0 .. fieldsCnt - 1] (fname res) >>= printLn
+  forTo 0 fieldsCnt (fname res) >>= printLn
 
   putStrLn "formats:"
-  for [0 .. fieldsCnt - 1] (fformat res) >>= printLn
+  forTo 0 fieldsCnt (fformat res) >>= printLn
 
   putStrLn "mods:"
-  for [0 .. fieldsCnt - 1] (fmod res) >>= printLn
+  forTo 0 fieldsCnt (fmod res) >>= printLn
 
   putStrLn "types:"
-  for [0 .. fieldsCnt - 1] (ftype res) >>= printLn
+  forTo 0 fieldsCnt (ftype res) >>= printLn
 
   putStrLn "values:"
-  for_ [0 .. rowsCnt - 1] $ \row => do
+  forTo_ 0 rowsCnt $ \row => do
     putStr "| "
-    for_ [0 .. fieldsCnt - 1] $ \col => do
+    forTo_ 0 fieldsCnt $ \col => do
       getvalueTextual res row col >>= putStr
       putStr " | "
     putStrLn ""
