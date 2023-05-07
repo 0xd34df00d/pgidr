@@ -5,10 +5,24 @@ import Postgres.C
 %default total
 
 %prefix_record_projections off
-record SignatureElem where
-  constructor MkSE
-  name : String
-  ty : Type
+
+interface PgType ty where
+  toTextual : ty -> String
+  fromTextual : String -> Either String ty
+
+PgType String where
+  toTextual = id
+  fromTextual = pure
+
+PgType Int where
+  toTextual = cast
+  fromTextual = pure . cast -- TODO better error reporting
+
+data SignatureElem : Type where
+  MkSE : (name : String) ->
+         (ty : Type) ->
+         {auto pgType : PgType ty} ->
+         SignatureElem
 
 Signature : Type
 Signature = List SignatureElem
@@ -18,6 +32,7 @@ data Tuple : Signature -> Type where
   (::)  : {name : _} ->
           {sig : _} ->
           (val : ty) ->
+          {auto postgresable : PgType ty} ->
           (rest : Tuple sig) ->
           Tuple (MkSE name ty :: sig)
 
