@@ -4,8 +4,14 @@ import Postgres.C
 
 %default total
 
+%prefix_record_projections off
+record SignatureElem where
+  constructor MkSE
+  name : String
+  ty : Type
+
 Signature : Type
-Signature = List (String, Type)
+Signature = List SignatureElem
 
 data Tuple : Signature -> Type where
   Nil   : Tuple []
@@ -13,10 +19,10 @@ data Tuple : Signature -> Type where
           {sig : _} ->
           (val : ty) ->
           (rest : Tuple sig) ->
-          Tuple ((name, ty) :: sig)
+          Tuple (MkSE name ty :: sig)
 
 Person : Type
-Person = Tuple [("first_name", String), ("last_name", String), ("age", Int)]
+Person = Tuple [MkSE "first_name" String, MkSE "last_name" String, MkSE "age" Int]
 
 sampleName : Person
 sampleName = [ "John", "Doe", 42 ]
