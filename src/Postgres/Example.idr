@@ -3,6 +3,8 @@ module Postgres.Example
 import Data.Vect
 import Postgres.C
 
+import Postgres.Typed.Schema
+
 dumpResult : HasIO io => Result s -> io ()
 dumpResult res = do
   resultStatus res >>= printLn
