@@ -39,7 +39,7 @@ data Tuple : Signature -> Type where
   (::)  : {name : _} ->
           {sig : _} ->
           (val : ty) ->
-          {auto postgresable : PgType ty} ->
+          {auto pgType : PgType ty} ->
           (rest : Tuple sig) ->
           Tuple (MkSE name ty :: sig)
 
