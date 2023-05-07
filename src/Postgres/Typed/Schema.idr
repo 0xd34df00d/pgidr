@@ -3,8 +3,11 @@ module Postgres.Typed.Schema
 import Postgres.C
 
 %default total
-
 %prefix_record_projections off
+
+record UnknownPgType where
+  constructor MkUPT
+  rawContents : String
 
 interface PgType ty where
   toTextual : ty -> String
@@ -17,6 +20,10 @@ PgType String where
 PgType Int where
   toTextual = cast
   fromTextual = pure . cast -- TODO better error reporting
+
+PgType UnknownPgType where
+  toTextual = .rawContents
+  fromTextual = pure . MkUPT
 
 data SignatureElem : Type where
   MkSE : (name : String) ->
