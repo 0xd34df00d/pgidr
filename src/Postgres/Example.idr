@@ -2,7 +2,6 @@ module Postgres.Example
 
 import Data.Vect
 import Postgres.C
-import Postgres.C.Utils
 
 dumpResult : HasIO io => Result s -> io ()
 dumpResult res = do
