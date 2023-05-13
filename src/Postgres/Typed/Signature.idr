@@ -18,7 +18,7 @@ Signature : Type
 Signature = List SignatureElem
 
 data PgTySub : (ty, ty' : Type) -> Type where
-  Refl      : ty `PgTySub` ty'
+  Refl      : ty `PgTySub` ty
   Nullable  : Maybe ty `PgTySub` ty
   Trans     : ty₁ `PgTySub` ty₂ ->
               ty₂ `PgTySub` ty₃ ->
