@@ -2,28 +2,10 @@ module Postgres.Typed.Schema
 
 import Postgres.C
 
+import Postgres.Typed.PgType
+import Postgres.Typed.Signature
+
 %default total
-%prefix_record_projections off
-
-record UnknownPgType where
-  constructor MkUPT
-  rawContents : String
-
-interface PgType ty where
-  toTextual : ty -> String
-  fromTextual : String -> Either String ty
-
-PgType String where
-  toTextual = id
-  fromTextual = pure
-
-PgType Int where
-  toTextual = cast
-  fromTextual = pure . cast -- TODO better error reporting
-
-PgType UnknownPgType where
-  toTextual = .rawContents
-  fromTextual = pure . MkUPT
 
 
 ReadRawSig : Type
@@ -35,16 +17,6 @@ resultSig : HasIO io =>
 resultSig res = do
   cols <- nfields res
   forTo 0 cols $ \col => (,) <$> fname res col <*> ftype res col
-
-
-data SignatureElem : Type where
-  MkSE : (name : String) ->
-         (ty : Type) ->
-         {auto pgType : PgType ty} ->
-         SignatureElem
-
-Signature : Type
-Signature = List SignatureElem
 
 
 readRawSig2Signature : (Int -> (ty ** PgType ty)) ->
