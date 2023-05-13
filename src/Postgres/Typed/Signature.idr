@@ -36,8 +36,18 @@ data ElemSubList : (e : SignatureElem) -> (sig : Signature) -> Type where
   ESLThere  : e `ElemSubList` rest ->
               e `ElemSubList` _  :: rest
 
--- TODO terribly inefficient to do at runtime since it's quadratic,
--- but works for a PoC
+||| ``sig `SigSub` sig'``
+||| means that a tuple with the signature `sig'`
+||| can be safely read into a tuple with the signature `sig`,
+||| perhaps with some loss of extra fields.
+|||
+||| Roughly speaking, it means that the set of fields in `sig`
+||| is a subset of the set of fields in `sig'`,
+||| and for each field its type in `sig`
+||| defines a superset of values of the corresponding type in `sig'`.
+|||
+||| As an example, we surely could read [("name", String), ("lastname", String)]
+||| into a [("lastname", Maybe String)].
 data SigSub : (sig, sig' : Signature) -> Type where
   MkSS : All (`ElemSubList` sig') sig ->
          sig `SigSub` sig'
@@ -61,6 +71,8 @@ elemSubList : (e : SignatureElem) -> (sig : Signature) -> Dec (e `ElemSubList` s
 elemSubList _ [] = No uninhabited
 elemSubList e (e' :: rest) = ?elemSubList_rhs_1
 
+-- TODO terribly inefficient to do at runtime since it's quadratic,
+-- but works for a PoC
 sigSub : (sig, sig' : Signature) -> Dec (sig `SigSub` sig')
 sigSub [] sig' = Yes (MkSS [])
 sigSub (e :: sig) sig' = ?sigSub_rhs_1
