@@ -39,7 +39,8 @@ data ElemSubList : (e : SignatureElem) -> (sig : Signature) -> Type where
 ||| ``sig `SigSub` sig'``
 ||| means that a tuple with the signature `sig'`
 ||| can be safely read into a tuple with the signature `sig`,
-||| perhaps with some loss of extra fields.
+||| perhaps with some loss of extra fields,
+||| but without loss of data for each field.
 |||
 ||| Roughly speaking, it means that the set of fields in `sig`
 ||| is a subset of the set of fields in `sig'`,
