@@ -46,6 +46,13 @@ data SignatureElem : Type where
 Signature : Type
 Signature = List SignatureElem
 
+
+readRawSig2Signature : (Int -> (ty ** PgType ty)) ->
+                       ReadRawSig ->
+                       Signature
+readRawSig2Signature lookup = map $ \(name, typeCode) => let (res ** _) = lookup typeCode in MkSE name res
+
+
 data Tuple : Signature -> Type where
   Nil   : Tuple []
   (::)  : {name : _} ->
