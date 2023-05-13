@@ -25,6 +25,18 @@ PgType UnknownPgType where
   toTextual = .rawContents
   fromTextual = pure . MkUPT
 
+
+ReadRawSig : Type
+ReadRawSig = List (String, Int)
+
+resultSig : HasIO io =>
+            (res : Result s) ->
+            io ReadRawSig
+resultSig res = do
+  cols <- nfields res
+  forTo 0 cols $ \col => (,) <$> fname res col <*> ftype res col
+
+
 data SignatureElem : Type where
   MkSE : (name : String) ->
          (ty : Type) ->
