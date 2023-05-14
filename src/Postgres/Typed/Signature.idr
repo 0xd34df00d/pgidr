@@ -53,8 +53,9 @@ data SigSub : (sig, sig' : Signature) -> Type where
   MkSS : All (`ElemSubList` sig') sig ->
          sig `SigSub` sig'
 
-pgTySub : (ty, ty' : Type) -> (PgType ty, PgType ty') => Dec (ty `PgTySub` ty')
-pgTySub ty ty' = ?pgTySub_rhs_1
+pgTySub : (ty, ty' : Type) -> PgType ty' => Dec (ty `PgTySub` ty')
+pgTySub ty ty' = case decEqTy {ty = ty'} ty of
+                      case_val => ?pgTySub_rhs_1
 
 elemSub : (e, e' : SignatureElem) -> Dec (e `ElemSub` e')
 elemSub (MkSE name ty) (MkSE name' ty') =
