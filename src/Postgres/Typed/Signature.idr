@@ -8,6 +8,18 @@ import Postgres.Typed.PgType
 %default total
 
 public export
+Universe : Type
+Universe = List (ty : Type ** PgType ty)
+
+infix 7 `∊`
+
+public export
+data ∊ : (ty : Type) -> (u : Universe) -> Type where
+  Here  : ty `∊` ((ty ** _) :: _)
+  There : ty `∊` u ->
+          ty `∊` (_ :: u)
+
+public export
 data SignatureElem : Type where
   MkSE : (name : String) ->
          (ty : Type) ->
