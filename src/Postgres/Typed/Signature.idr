@@ -27,13 +27,18 @@ data ∊ : (ty : Type) -> (u : Universe) -> Type where
   There : ty `∊` u ->
           ty `∊` (_ :: u)
 
+public export
+stripMaybe : Type -> Type
+stripMaybe (Maybe ty) = ty
+stripMaybe ty = ty
+
 parameters {default DefU u : Universe}
   public export
   data SignatureElem : Type where
     MkSE : (name : String) ->
            (ty : Type) ->
-           PgType ty =>
-           ty `∊` u =>
+           PgType (stripMaybe ty) =>
+           stripMaybe ty `∊` u =>
            SignatureElem
 
   public export
