@@ -27,7 +27,7 @@ data ∊ : (ty : Type) -> (u : Universe) -> Type where
   There : ty `∊` u ->
           ty `∊` (_ :: u)
 
-parameters (u : Universe)
+parameters {default DefU u : Universe}
   public export
   data SignatureElem : Type where
     MkSE : (name : String) ->
