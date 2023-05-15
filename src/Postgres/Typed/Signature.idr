@@ -11,6 +11,14 @@ public export
 Universe : Type
 Universe = List (ty : Type ** PgType ty)
 
+public export
+uni : (ty : Type) -> (dict : PgType ty) => (a : Type ** PgType a)
+uni ty = (ty ** dict)
+
+public export
+DefU : Universe
+DefU = [uni Int, uni String]
+
 infix 7 `∊`
 
 public export
