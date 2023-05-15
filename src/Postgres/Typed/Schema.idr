@@ -19,23 +19,25 @@ resultSig res = do
   forTo 0 cols $ \col => (,) <$> fname res col <*> ftype res col
 
 
-readRawSig2Signature : (Int -> (ty ** PgType ty)) ->
+readRawSig2Signature : {u : Universe} ->
+                       (Int -> (ty ** (PgType ty, ty `∊` u))) ->
                        ReadRawSig ->
-                       Signature
-readRawSig2Signature lookup = map $ \(name, typeCode) => let (res ** _) = lookup typeCode in MkSE name res
+                       Signature u
+readRawSig2Signature lookup = map $ \(name, typeCode) => let (res ** _) = lookup typeCode in MkSE u name res
 
 
-data Tuple : Signature -> Type where
+data Tuple : Signature u -> Type where
   Nil   : Tuple []
   (::)  : {name : _} ->
           {sig : _} ->
           (val : ty) ->
-          {auto pgType : PgType ty} ->
+          PgType ty =>
+          ty `∊` u =>
           (rest : Tuple sig) ->
-          Tuple (MkSE name ty :: sig)
+          Tuple (MkSE u name ty :: sig)
 
 Person : Type
-Person = Tuple [MkSE "first_name" String, MkSE "last_name" String, MkSE "age" Int]
+Person = Tuple [MkSE DefU "first_name" String, MkSE DefU "last_name" String, MkSE DefU "age" Int]
 
 sampleName : Person
 sampleName = [ "John", "Doe", 42 ]

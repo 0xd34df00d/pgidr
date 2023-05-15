@@ -19,17 +19,20 @@ data ∊ : (ty : Type) -> (u : Universe) -> Type where
   There : ty `∊` u ->
           ty `∊` (_ :: u)
 
-public export
-data SignatureElem : Type where
-  MkSE : (name : String) ->
-         (ty : Type) ->
-         {auto pgType : PgType ty} ->
-         SignatureElem
+parameters (u : Universe)
+  public export
+  data SignatureElem : Type where
+    MkSE : (name : String) ->
+           (ty : Type) ->
+           PgType ty =>
+           ty `∊` u =>
+           SignatureElem
 
-public export
-Signature : Type
-Signature = List SignatureElem
+  public export
+  Signature : Type
+  Signature = List SignatureElem
 
+{-
 data PgTySub : (ty, ty' : Type) -> Type where
   Refl      : ty `PgTySub` ty
   Nullable  : Maybe ty `PgTySub` ty
@@ -84,3 +87,4 @@ elemSubList e (e' :: rest) = ?elemSubList_rhs_1
 sigSub : (sig, sig' : Signature) -> Dec (sig `SigSub` sig')
 sigSub [] sig' = Yes (MkSS [])
 sigSub (e :: sig) sig' = ?sigSub_rhs_1
+-}
