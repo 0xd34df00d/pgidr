@@ -41,6 +41,16 @@ parameters {default DefU u : Universe}
            stripMaybe ty `∊` u =>
            SignatureElem
 
+  infix 7 @:
+
+  public export
+  (@:) : (name : String) ->
+         (ty : Type) ->
+         PgType ty =>
+         ty `∊` u =>
+         SignatureElem
+  name @: ty = MkSE name ty
+
   public export
   Signature : Type
   Signature = List SignatureElem
