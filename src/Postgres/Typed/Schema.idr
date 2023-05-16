@@ -24,16 +24,19 @@ readRawSig2Signature : {u : Universe} ->
                        ReadRawSig ->
                        Signature {u}
 readRawSig2Signature lookup =
-  map $ \(name, typeCode) => let (ty ** _) = lookup typeCode in field {u} name ty
+  map $ \(name, typeCode) => let (ty ** _) = lookup typeCode in field name ty
 
 
-data Tuple : {u : Universe} -> Signature {u} -> Type where
-  Nil   : Tuple []
+data Tuple' : (u : Universe) -> Signature {u} -> Type where
+  Nil   : Tuple' u []
   (::)  : (val : ty) ->
           PgType ty =>
           ty `∊` u =>
-          (rest : Tuple sig) ->
-          Tuple (field {u} name ty :: sig)
+          (rest : Tuple' u sig) ->
+          Tuple' u (field name ty :: sig)
+
+Tuple : Signature {u = DefU} -> Type
+Tuple = Tuple' _
 
 Person : Type
 Person = Tuple ["first_name" @: String, "last_name" @: String, "age" @: Int]

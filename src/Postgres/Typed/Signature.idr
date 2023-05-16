@@ -30,7 +30,7 @@ data ∊ : (ty : Type) -> (u : Universe) -> Type where
 public export
 data Nullability = Nullable | NonNullable
 
-parameters {default DefU u : Universe}
+parameters {u : Universe}
   public export
   data SignatureElem : Type where
     MkSE : (name : String) ->
