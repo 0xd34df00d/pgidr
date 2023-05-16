@@ -25,6 +25,11 @@ PgType Int where
   fromTextual = pure . cast -- TODO better error reporting
 
 public export
+PgType Integer where
+  toTextual = cast
+  fromTextual = pure . cast -- TODO better error reporting
+
+public export
 PgType UnknownPgType where
   toTextual = .rawContents
   fromTextual = pure . MkUPT
