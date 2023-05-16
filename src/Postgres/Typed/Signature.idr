@@ -28,17 +28,16 @@ data ∊ : (ty : Type) -> (u : Universe) -> Type where
           ty `∊` (_ :: u)
 
 public export
-stripMaybe : Type -> Type
-stripMaybe (Maybe ty) = ty
-stripMaybe ty = ty
+data Nullability = Nullable | NonNullable
 
 parameters {default DefU u : Universe}
   public export
   data SignatureElem : Type where
     MkSE : (name : String) ->
            (ty : Type) ->
-           PgType (stripMaybe ty) =>
-           stripMaybe ty `∊` u =>
+           Nullability ->
+           PgType ty =>
+           ty `∊` u =>
            SignatureElem
 
   infix 7 @:
