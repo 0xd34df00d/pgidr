@@ -17,7 +17,7 @@ uni ty = (ty ** dict)
 
 public export
 DefU : Universe
-DefU = [uni Int, uni String]
+DefU = [uni Int, uni Integer, uni String]
 
 infix 7 `∊`
 
