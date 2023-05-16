@@ -30,6 +30,12 @@ data ∊ : (ty : Type) -> (u : Universe) -> Type where
 public export
 data Nullability = Nullable | NonNullable
 
+public export %inline %tcinline
+noMaybe : Type -> Type
+noMaybe ty = case ty of
+                  Maybe ty => ty
+                  ty => ty
+
 parameters {u : Universe}
   public export
   data SignatureElem : Type where
@@ -40,16 +46,17 @@ parameters {u : Universe}
            ty `∊` u =>
            SignatureElem
 
-  infix 7 @:
+  infixl 7 @:
 
   public export
-  (@:), field : (name : String) ->
+  (@:) : (name : String) ->
          (ty : Type) ->
-         PgType ty =>
-         ty `∊` u =>
+         PgType (noMaybe ty) =>
+         noMaybe ty `∊` u =>
          SignatureElem
-  name @: ty = MkSE name ty NonNullable
-  field = (@:)
+  name @: ty = MkSE name (noMaybe ty) $ case ty of
+                                             Maybe ty => Nullable
+                                             ty => NonNullable
 
   public export
   Signature : Type

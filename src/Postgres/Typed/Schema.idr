@@ -20,29 +20,33 @@ resultSig res = do
 
 
 readRawSig2Signature : {u : Universe} ->
-                       (lookup : Int -> (ty ** (PgType ty, ty `∊` u))) ->
+                       (lookup : Int -> (ty ** (PgType (noMaybe ty), noMaybe ty `∊` u))) ->
                        ReadRawSig ->
                        Signature {u}
 readRawSig2Signature lookup =
-  map $ \(name, typeCode) => let (ty ** _) = lookup typeCode in field name ty
+  map $ \(name, typeCode) => let (ty ** _) = lookup typeCode in
+                                 name @: ty
 
 
 data Tuple' : (u : Universe) -> Signature {u} -> Type where
   Nil   : Tuple' u []
   (::)  : (val : ty) ->
-          PgType ty =>
-          ty `∊` u =>
+          PgType (noMaybe ty) =>
+          noMaybe ty `∊` u =>
           (rest : Tuple' u sig) ->
-          Tuple' u (field name ty :: sig)
+          Tuple' u (name @: ty :: sig)
 
 Tuple : Signature {u = DefU} -> Type
 Tuple = Tuple' _
 
 Person : Type
-Person = Tuple ["first_name" @: String, "last_name" @: String, "age" @: Int]
+Person = Tuple ["first_name" @: String, "last_name" @: String, "age" @: Integer]
 
 sampleName : Person
 sampleName = [ "John", "Doe", 42 ]
 
 Person' : Type
-Person' = Tuple ["first_name" @: String, "last_name" @: String, "age" @: Int]
+Person' = Tuple ["first_name" @: String, "last_name" @: String, "age" @: Maybe Integer]
+
+sampleName' : Person'
+sampleName' = [ "John", "Doe", Just 42 ]
