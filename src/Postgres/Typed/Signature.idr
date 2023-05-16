@@ -44,12 +44,13 @@ parameters {default DefU u : Universe}
   infix 7 @:
 
   public export
-  (@:) : (name : String) ->
+  (@:), field : (name : String) ->
          (ty : Type) ->
          PgType ty =>
          ty `∊` u =>
          SignatureElem
-  name @: ty = MkSE name ty
+  name @: ty = MkSE name ty NonNullable
+  field = (@:)
 
   public export
   Signature : Type

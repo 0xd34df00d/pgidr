@@ -24,7 +24,7 @@ readRawSig2Signature : {u : Universe} ->
                        ReadRawSig ->
                        Signature {u}
 readRawSig2Signature lookup =
-  map $ \(name, typeCode) => let (ty ** _) = lookup typeCode in MkSE {u} name ty
+  map $ \(name, typeCode) => let (ty ** _) = lookup typeCode in field {u} name ty
 
 
 data Tuple : {u : Universe} -> Signature {u} -> Type where
@@ -35,13 +35,13 @@ data Tuple : {u : Universe} -> Signature {u} -> Type where
           PgType (stripMaybe ty) =>
           stripMaybe ty `∊` u =>
           (rest : Tuple sig) ->
-          Tuple (MkSE {u} name ty :: sig)
+          Tuple (field {u} name ty :: sig)
 
 Person : Type
-Person = Tuple [MkSE "first_name" String, MkSE "last_name" String, MkSE "age" Int]
+Person = Tuple ["first_name" @: String, "last_name" @: String, "age" @: Int]
 
 sampleName : Person
 sampleName = [ "John", "Doe", 42 ]
 
 Person' : Type
-Person' = Tuple [MkSE "first_name" String, MkSE "last_name" String, MkSE "age" (Maybe Int)]
+Person' = Tuple ["first_name" @: String, "last_name" @: String, "age" @: Int]
