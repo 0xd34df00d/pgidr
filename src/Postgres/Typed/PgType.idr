@@ -14,7 +14,6 @@ interface PgType ty where
   toTextual : ty -> String
   fromTextual : String -> Either String ty
 
--- TODO consider whether it's possible to prove these without believe_me
 public export
 PgType String where
   toTextual = id
