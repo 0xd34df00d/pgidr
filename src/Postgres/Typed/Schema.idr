@@ -28,16 +28,16 @@ readRawSig2Signature lookup =
                                  name @: ty
 
 
-data Tuple' : (u : Universe) -> Signature {u} -> Type where
-  Nil   : Tuple' u []
+data Tuple' : {u : Universe} -> Signature {u} -> Type where
+  Nil   : Tuple' []
   (::)  : (val : ty) ->
           PgType (noMaybe ty) =>
           noMaybe ty `∊` u =>
-          (rest : Tuple' u sig) ->
-          Tuple' u (name @: ty :: sig)
+          (rest : Tuple' sig) ->
+          Tuple' {u} (name @: ty :: sig)
 
 Tuple : Signature {u = DefU} -> Type
-Tuple = Tuple' _
+Tuple = Tuple'
 
 Person : Type
 Person = Tuple ["first_name" @: String, "last_name" @: String, "age" @: Integer]
