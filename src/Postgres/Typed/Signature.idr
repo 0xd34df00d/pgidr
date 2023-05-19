@@ -60,19 +60,42 @@ parameters {u : Universe}
   Signature : Type
   Signature = List SignatureElem
 
+  public export
+  data NullSub : (n, n' : Nullability) -> Type where
+    NSRefl : n `NullSub` n
+    NSMaybe : Nullable `NullSub` NonNullable
+
+  export
+  nullSub : (n, n' : _) -> Dec (n `NullSub` n')
+  nullSub Nullable Nullable = Yes NSRefl
+  nullSub Nullable NonNullable = Yes NSMaybe
+  nullSub NonNullable Nullable = No $ \case NSRefl impossible
+                                            NSMaybe impossible
+  nullSub NonNullable NonNullable = Yes NSRefl
+
+  public export
+  data ElemSub : (e, e' : SignatureElem) -> Type where
+    MkES : n `NullSub` n' ->
+           PgType ty =>
+           ty `∊` u =>
+           MkSE name ty n `ElemSub` MkSE name ty n'
+
+  elemSubSameNames : ty1 `∊` u =>
+                     ty2 `∊` u =>
+                     MkSE n1 ty1 null1 `ElemSub` MkSE n2 ty2 null2 ->
+                     n1 = n2
+  elemSubSameNames (MkES _) = Refl
+
+  export
+  elemSub : (e, e' : _) -> Dec (e `ElemSub` e')
+  elemSub (MkSE name1 ty1 null1) (MkSE name2 ty2 null2) =
+    case decEq name1 name2 of
+         No contra => No $ contra . elemSubSameNames
+         Yes Refl =>
+          case _ of
+               case_val => ?w1
+
 {-
-data PgTySub : (ty, ty' : Type) -> Type where
-  Refl      : ty `PgTySub` ty
-  Nullable  : Maybe ty `PgTySub` ty
-  Trans     : ty₁ `PgTySub` ty₂ ->
-              ty₂ `PgTySub` ty₃ ->
-              ty₁ `PgTySub` ty₃
-
-data ElemSub : (e, e' : SignatureElem) -> Type where
-  MkES : (PgType pgty, PgType pgty') =>
-         pgty `PgTySub` pgty' ->
-         MkSE n pgty `ElemSub` MkSE n pgty'
-
 data ElemSubList : (e : SignatureElem) -> (sig : Signature) -> Type where
   ESLHere   : e `ElemSub` e' ->
               e `ElemSubList` e' :: rest
@@ -95,12 +118,6 @@ data ElemSubList : (e : SignatureElem) -> (sig : Signature) -> Type where
 data SigSub : (sig, sig' : Signature) -> Type where
   MkSS : All (`ElemSubList` sig') sig ->
          sig `SigSub` sig'
-
-elemSub : (e, e' : SignatureElem) -> Dec (e `ElemSub` e')
-elemSub (MkSE name ty) (MkSE name' ty') =
-  case name `decEq` name' of
-       Yes Refl => ?elemSub_ty
-       No contra => No $ \(MkES _) => contra Refl
 
 Uninhabited (ElemSubList e []) where
   uninhabited (ESLHere x) impossible
