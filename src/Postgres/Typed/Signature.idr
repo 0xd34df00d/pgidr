@@ -27,6 +27,16 @@ data ∊ : (ty : Type) -> (u : Universe) -> Type where
   There : ty `∊` u ->
           ty `∊` (_ :: u)
 
+inDecEq : (in1 : ty1 `∊` u) ->
+          (in2 : ty2 `∊` u) ->
+          Dec (in1 = in2)
+inDecEq Here Here = Yes Refl
+inDecEq Here (There x) = No $ \case Refl impossible
+inDecEq (There in1) Here = No $ \case Refl impossible
+inDecEq (There in1) (There in2) = case in1 `inDecEq` in2 of
+                                       Yes Refl => Yes Refl
+                                       No contra => No $ \case Refl => contra Refl
+
 public export
 data Nullability = Nullable | NonNullable
 
@@ -42,7 +52,7 @@ parameters {u : Universe}
     MkSE : (name : String) ->
            (ty : Type) ->
            Nullability ->
-           ty `∊` u =>
+           {auto ∊u : ty `∊` u} ->
            SignatureElem
 
   infixl 7 @:
@@ -76,23 +86,36 @@ parameters {u : Universe}
   public export
   data ElemSub : (e, e' : SignatureElem) -> Type where
     MkES : n `NullSub` n' ->
-           ty `∊` u =>
+           {auto ∊u : ty `∊` u} ->
            MkSE name ty n `ElemSub` MkSE name ty n'
 
   elemSubSameNames : ty1 `∊` u =>
                      ty2 `∊` u =>
-                     MkSE n1 ty1 null1 `ElemSub` MkSE n2 ty2 null2 ->
+                     MkSE n1 ty1 _ `ElemSub` MkSE n2 ty2 _ ->
                      n1 = n2
   elemSubSameNames (MkES _) = Refl
 
+  elemSubSameTypes : {auto in1 : ty1 `∊` u} ->
+                     {auto in2 : ty2 `∊` u} ->
+                     MkSE _ ty1 null1 `ElemSub` MkSE _ ty2 null2 ->
+                     in1 = in2
+  elemSubSameTypes (MkES _) = Refl
+
+  elemSubNullSub : ty `∊` u ->
+                   MkSE _ ty null1 `ElemSub` MkSE _ ty null2 ->
+                   null1 `NullSub` null2
+  elemSubNullSub _ (MkES prf) = prf
+
   export
   elemSub : (e, e' : _) -> Dec (e `ElemSub` e')
-  elemSub (MkSE name1 ty1 null1) (MkSE name2 ty2 null2) =
+  elemSub (MkSE name1 ty1 null1 {∊u = in1}) (MkSE name2 ty2 null2 {∊u = in2}) =
     case decEq name1 name2 of
          No contra => No $ contra . elemSubSameNames
-         Yes Refl =>
-          case _ of
-               case_val => ?w1
+         Yes Refl => case in1 `inDecEq` in2 of
+                          No contra => No $ contra . elemSubSameTypes
+                          Yes Refl => case null1 `nullSub` null2 of
+                                           Yes prf => Yes (MkES prf {∊u = in2})
+                                           No contra => No $ contra . elemSubNullSub in2
 
 {-
 data ElemSubList : (e : SignatureElem) -> (sig : Signature) -> Type where
