@@ -76,7 +76,6 @@ parameters {u : Universe}
   public export
   data ElemSub : (e, e' : SignatureElem) -> Type where
     MkES : n `NullSub` n' ->
-           PgType ty =>
            ty `∊` u =>
            MkSE name ty n `ElemSub` MkSE name ty n'
 
