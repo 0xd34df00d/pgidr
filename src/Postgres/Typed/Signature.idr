@@ -42,7 +42,6 @@ parameters {u : Universe}
     MkSE : (name : String) ->
            (ty : Type) ->
            Nullability ->
-           PgType ty =>
            ty `∊` u =>
            SignatureElem
 
@@ -51,7 +50,6 @@ parameters {u : Universe}
   public export
   (@:) : (name : String) ->
          (ty : Type) ->
-         PgType (noMaybe ty) =>
          noMaybe ty `∊` u =>
          SignatureElem
   name @: ty = MkSE name (noMaybe ty) $ case ty of

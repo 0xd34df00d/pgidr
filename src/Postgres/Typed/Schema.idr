@@ -20,7 +20,7 @@ resultSig res = do
 
 
 readRawSig2Signature : {u : Universe} ->
-                       (lookup : Int -> (ty ** (PgType (noMaybe ty), noMaybe ty `∊` u))) ->
+                       (lookup : Int -> (ty ** noMaybe ty `∊` u)) ->
                        ReadRawSig ->
                        Signature {u}
 readRawSig2Signature lookup =
@@ -31,7 +31,6 @@ readRawSig2Signature lookup =
 data Tuple' : {u : Universe} -> Signature {u} -> Type where
   Nil   : Tuple' []
   (::)  : (val : ty) ->
-          PgType (noMaybe ty) =>
           noMaybe ty `∊` u =>
           (rest : Tuple' sig) ->
           Tuple' {u} (name @: ty :: sig)
