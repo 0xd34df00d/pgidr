@@ -117,13 +117,31 @@ parameters {u : Universe}
                                            Yes prf => Yes (MkES prf {∊u = in2})
                                            No contra => No $ contra . elemSubNullSub in2
 
-{-
-data ElemSubList : (e : SignatureElem) -> (sig : Signature) -> Type where
-  ESLHere   : e `ElemSub` e' ->
-              e `ElemSubList` e' :: rest
-  ESLThere  : e `ElemSubList` rest ->
-              e `ElemSubList` _  :: rest
+  public export
+  data ElemSubList : (e : SignatureElem) -> (sig : Signature) -> Type where
+    ESLHere   : e `ElemSub` e' ->
+                e `ElemSubList` e' :: rest
+    ESLThere  : e `ElemSubList` rest ->
+                e `ElemSubList` _  :: rest
 
+  eslElimVoid : Not (e `ElemSub` e') ->
+                Not (e `ElemSubList` rest) ->
+                Not (e `ElemSubList` (e' :: rest))
+  eslElimVoid contra _ (ESLHere prf) = contra prf
+  eslElimVoid _ contra' (ESLThere prf) = contra' prf
+
+  export
+  elemSubList : (e : SignatureElem) -> (sig : Signature) -> Dec (e `ElemSubList` sig)
+  elemSubList _ [] = No $ \case ESLHere impossible
+                                ESLThere impossible
+  elemSubList e (e' :: rest) =
+    case e `elemSub` e' of
+         Yes prf => Yes (ESLHere prf)
+         No contra => case e `elemSubList` rest of
+                           Yes prf => Yes (ESLThere prf)
+                           No contra' => No $ eslElimVoid contra contra'
+
+{-
 ||| ``sig `SigSub` sig'``
 ||| means that a tuple with the signature `sig'`
 ||| can be safely read into a tuple with the signature `sig`,
@@ -141,13 +159,7 @@ data SigSub : (sig, sig' : Signature) -> Type where
   MkSS : All (`ElemSubList` sig') sig ->
          sig `SigSub` sig'
 
-Uninhabited (ElemSubList e []) where
-  uninhabited (ESLHere x) impossible
-  uninhabited (ESLThere x) impossible
 
-elemSubList : (e : SignatureElem) -> (sig : Signature) -> Dec (e `ElemSubList` sig)
-elemSubList _ [] = No uninhabited
-elemSubList e (e' :: rest) = ?elemSubList_rhs_1
 
 -- TODO terribly inefficient to do at runtime since it's quadratic,
 -- but works for a PoC
