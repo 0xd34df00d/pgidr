@@ -141,29 +141,38 @@ parameters {u : Universe}
                            Yes prf => Yes (ESLThere prf)
                            No contra' => No $ eslElimVoid contra contra'
 
-{-
-||| ``sig `SigSub` sig'``
-||| means that a tuple with the signature `sig'`
-||| can be safely read into a tuple with the signature `sig`,
-||| perhaps with some loss of extra fields,
-||| but without loss of data for each field.
-|||
-||| Roughly speaking, it means that the set of fields in `sig`
-||| is a subset of the set of fields in `sig'`,
-||| and for each field its type in `sig`
-||| defines a superset of values of the corresponding type in `sig'`.
-|||
-||| As an example, we surely could read [("name", String), ("lastname", String)]
-||| into a [("lastname", Maybe String)].
-data SigSub : (sig, sig' : Signature) -> Type where
-  MkSS : All (`ElemSubList` sig') sig ->
-         sig `SigSub` sig'
+  ||| ``sig `SigSub` sig'``
+  ||| means that a tuple with the signature `sig'`
+  ||| can be safely read into a tuple with the signature `sig`,
+  ||| perhaps with some loss of extra fields,
+  ||| but without loss of data for each field.
+  |||
+  ||| Roughly speaking, it means that the set of fields in `sig`
+  ||| is a subset of the set of fields in `sig'`,
+  ||| and for each field its type in `sig`
+  ||| defines a superset of values of the corresponding type in `sig'`.
+  |||
+  ||| As an example, we surely could read [("name", String), ("lastname", String)]
+  ||| into a [("lastname", Maybe String)].
+  data SigSub : (sig, sig' : Signature) -> Type where
+    MkSS : All (`ElemSubList` sig') sig ->
+           sig `SigSub` sig'
 
+  sigSubHead : e :: sig `SigSub` sig' ->
+               e `ElemSubList` sig'
+  sigSubHead (MkSS (prf :: _)) = prf
 
+  sigSubTail : e :: sig `SigSub` sig' ->
+               sig `SigSub` sig'
+  sigSubTail (MkSS (_ :: prfs)) = MkSS prfs
 
--- TODO terribly inefficient to do at runtime since it's quadratic,
--- but works for a PoC
-sigSub : (sig, sig' : Signature) -> Dec (sig `SigSub` sig')
-sigSub [] sig' = Yes (MkSS [])
-sigSub (e :: sig) sig' = ?sigSub_rhs_1
--}
+  -- TODO terribly inefficient to do at runtime since it's quadratic,
+  -- but works for a PoC
+  sigSub : (sig, sig' : Signature) -> Dec (sig `SigSub` sig')
+  sigSub [] sig' = Yes (MkSS [])
+  sigSub (e :: sig) sig' =
+    case e `elemSubList` sig' of
+         No contra => No $ contra . sigSubHead
+         Yes prf => case sig `sigSub` sig' of
+                         No contra => No $ contra . sigSubTail
+                         Yes (MkSS prfs) => Yes (MkSS (prf :: prfs))
