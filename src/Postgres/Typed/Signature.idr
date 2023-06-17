@@ -71,7 +71,7 @@ parameters {u : Universe}
   Signature = List SignatureElem
 
   namespace NullSub
-    infix 6 <:
+    infix 6 <:, <:?
 
     public export
     data (<:) : (n, n' : Nullability) -> Type where
@@ -79,15 +79,15 @@ parameters {u : Universe}
       NSMaybe : NonNullable <: Nullable
 
     export
-    nullSub : (n, n' : _) -> Dec (n <: n')
-    nullSub Nullable Nullable = Yes NSRefl
-    nullSub Nullable NonNullable = No $ \case NSRefl impossible
-                                              NSMaybe impossible
-    nullSub NonNullable Nullable = Yes NSMaybe
-    nullSub NonNullable NonNullable = Yes NSRefl
+    (<:?) : (n, n' : _) -> Dec (n <: n')
+    Nullable <:? Nullable = Yes NSRefl
+    Nullable <:? NonNullable = No $ \case NSRefl impossible
+                                          NSMaybe impossible
+    NonNullable <:? Nullable = Yes NSMaybe
+    NonNullable <:? NonNullable = Yes NSRefl
 
   namespace ElemSub
-    infix 6 <:
+    infix 6 <:, <:?
 
     public export
     data (<:) : (e, e' : SignatureElem) -> Type where
@@ -113,13 +113,13 @@ parameters {u : Universe}
     elemSubNullSub _ (MkES prf) = prf
 
     export
-    elemSub : (e, e' : SignatureElem) -> Dec (e <: e')
-    elemSub (MkSE name1 ty1 null1 {∊u = in1}) (MkSE name2 ty2 null2 {∊u = in2}) =
+    (<:?) : (e, e' : SignatureElem) -> Dec (e <: e')
+    (MkSE name1 ty1 null1 {∊u = in1}) <:? (MkSE name2 ty2 null2 {∊u = in2}) =
       case decEq name1 name2 of
            No contra => No $ contra . elemSubSameNames
            Yes Refl => case in1 `inDecEq` in2 of
                             No contra => No $ contra . elemSubSameTypes
-                            Yes Refl => case null1 `nullSub` null2 of
+                            Yes Refl => case null1 <:? null2 of
                                              Yes prf => Yes (MkES prf {∊u = in2})
                                              No contra => No $ contra . elemSubNullSub in2
 
@@ -141,13 +141,13 @@ parameters {u : Universe}
   elemSubList _ [] = No $ \case ESLHere impossible
                                 ESLThere impossible
   elemSubList e (e' :: rest) =
-    case e `elemSub` e' of
+    case e <:? e' of
          Yes prf => Yes (ESLHere prf)
          No contra => case e `elemSubList` rest of
                            Yes prf => Yes (ESLThere prf)
                            No contra' => No $ eslElimVoid contra contra'
 
-  infix 6 <:
+  infix 6 <:, <:?
   ||| ``sig <: sig'``
   ||| means that a tuple with the signature `sig`
   ||| can be safely converted into a tuple with the signature `sig'`,
@@ -180,11 +180,11 @@ parameters {u : Universe}
   -- TODO terribly inefficient to do at runtime since it's quadratic,
   -- but works for a PoC
   export
-  sigSub : (sig, sig' : Signature) -> Dec (sig <: sig')
-  sigSub sig [] = Yes (MkSS [])
-  sigSub sig (e :: sig') =
+  (<:?) : (sig, sig' : Signature) -> Dec (sig <: sig')
+  sig <:? [] = Yes (MkSS [])
+  sig <:? e :: sig' =
     case e `elemSubList` sig of
          No contra => No $ contra . sigSubHead
-         Yes prf => case sig `sigSub` sig' of
+         Yes prf => case sig <:? sig' of
                          No contra => No $ contra . sigSubTail
                          Yes (MkSS prfs) => Yes (MkSS (prf :: prfs))
