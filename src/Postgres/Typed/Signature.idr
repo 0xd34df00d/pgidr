@@ -148,19 +148,22 @@ parameters {u : Universe}
                            No contra' => No $ eslElimVoid contra contra'
 
   infix 6 <:
-  ||| ``sig `SigSub` sig'``
-  ||| means that a tuple with the signature `sig'`
-  ||| can be safely read into a tuple with the signature `sig`,
+  ||| ``sig <: sig'``
+  ||| means that a tuple with the signature `sig`
+  ||| can be safely converted into a tuple with the signature `sig'`,
   ||| perhaps with some loss of extra fields,
   ||| but without loss of data for each field.
   |||
-  ||| Roughly speaking, it means that the set of fields in `sig`
-  ||| is a subset of the set of fields in `sig'`,
-  ||| and for each field its type in `sig`
-  ||| defines a superset of values of the corresponding type in `sig'`.
+  ||| Roughly speaking, it means that the set of fields in `sig'`
+  ||| is a subset of the set of fields in `sig`,
+  ||| and for each field its type in `sig'`
+  ||| defines a superset of values of the corresponding type in `sig`.
   |||
-  ||| As an example, we surely could read [("name", String), ("lastname", String)]
-  ||| into a [("lastname", Maybe String)].
+  ||| As an example, we surely could convert `[("name", String), ("lastname", String)]`
+  ||| into a `[("lastname", Maybe String)]`, hence
+  ||| ```
+  ||| [("name", String), ("lastname", String)] <: [("lastname", Maybe String)]
+  ||| ```
   public export
   data (<:) : (sig, sig' : Signature) -> Type where
     MkSS : All (`ElemSubList` sig) sig' ->
