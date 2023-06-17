@@ -123,14 +123,15 @@ parameters {u : Universe}
                                              Yes prf => Yes (MkES prf {∊u = in2})
                                              No contra => No $ contra . elemSubNullSub in2
 
+  ||| Denotes that there exists an `e' ∊ sig` such that `e' <: e`.
   public export
   data ElemSubList : (e : SignatureElem) -> (sig : Signature) -> Type where
-    ESLHere   : e <: e' ->
+    ESLHere   : e' <: e ->
                 e `ElemSubList` e' :: rest
     ESLThere  : e `ElemSubList` rest ->
                 e `ElemSubList` _  :: rest
 
-  eslElimVoid : Not (e <: e') ->
+  eslElimVoid : Not (e' <: e) ->
                 Not (e `ElemSubList` rest) ->
                 Not (e `ElemSubList` (e' :: rest))
   eslElimVoid contra _ (ESLHere prf) = contra prf
@@ -141,7 +142,7 @@ parameters {u : Universe}
   elemSubList _ [] = No $ \case ESLHere impossible
                                 ESLThere impossible
   elemSubList e (e' :: rest) =
-    case e <:? e' of
+    case e' <:? e of
          Yes prf => Yes (ESLHere prf)
          No contra => case e `elemSubList` rest of
                            Yes prf => Yes (ESLThere prf)
