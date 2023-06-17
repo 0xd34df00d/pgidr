@@ -154,6 +154,7 @@ parameters {u : Universe}
   |||
   ||| As an example, we surely could read [("name", String), ("lastname", String)]
   ||| into a [("lastname", Maybe String)].
+  public export
   data SigSub : (sig, sig' : Signature) -> Type where
     MkSS : All (`ElemSubList` sig') sig ->
            sig `SigSub` sig'
@@ -168,6 +169,7 @@ parameters {u : Universe}
 
   -- TODO terribly inefficient to do at runtime since it's quadratic,
   -- but works for a PoC
+  export
   sigSub : (sig, sig' : Signature) -> Dec (sig `SigSub` sig')
   sigSub [] sig' = Yes (MkSS [])
   sigSub (e :: sig) sig' =
