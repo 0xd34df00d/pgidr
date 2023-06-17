@@ -73,14 +73,14 @@ parameters {u : Universe}
   public export
   data NullSub : (n, n' : Nullability) -> Type where
     NSRefl : n `NullSub` n
-    NSMaybe : Nullable `NullSub` NonNullable
+    NSMaybe : NonNullable `NullSub` Nullable
 
   export
   nullSub : (n, n' : _) -> Dec (n `NullSub` n')
   nullSub Nullable Nullable = Yes NSRefl
-  nullSub Nullable NonNullable = Yes NSMaybe
-  nullSub NonNullable Nullable = No $ \case NSRefl impossible
+  nullSub Nullable NonNullable = No $ \case NSRefl impossible
                                             NSMaybe impossible
+  nullSub NonNullable Nullable = Yes NSMaybe
   nullSub NonNullable NonNullable = Yes NSRefl
 
   public export
