@@ -38,6 +38,9 @@ data Tuple' : {u : Universe} -> Signature {u} -> Type where
 Tuple : Signature {u = DefU} -> Type
 Tuple = Tuple'
 
+signatureOf : (ty : Type) -> {s : _} -> (ty = Tuple' {u} s) => Signature {u}
+signatureOf _ = s
+
 Person : Type
 Person = Tuple ["first_name" @: String, "last_name" @: String, "age" @: Integer]
 
