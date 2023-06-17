@@ -70,61 +70,67 @@ parameters {u : Universe}
   Signature : Type
   Signature = List SignatureElem
 
-  public export
-  data NullSub : (n, n' : Nullability) -> Type where
-    NSRefl : n `NullSub` n
-    NSMaybe : NonNullable `NullSub` Nullable
+  namespace NullSub
+    infix 6 <:
 
-  export
-  nullSub : (n, n' : _) -> Dec (n `NullSub` n')
-  nullSub Nullable Nullable = Yes NSRefl
-  nullSub Nullable NonNullable = No $ \case NSRefl impossible
-                                            NSMaybe impossible
-  nullSub NonNullable Nullable = Yes NSMaybe
-  nullSub NonNullable NonNullable = Yes NSRefl
+    public export
+    data (<:) : (n, n' : Nullability) -> Type where
+      NSRefl : n <: n
+      NSMaybe : NonNullable <: Nullable
 
-  public export
-  data ElemSub : (e, e' : SignatureElem) -> Type where
-    MkES : n `NullSub` n' ->
-           {auto ∊u : ty `∊` u} ->
-           MkSE name ty n `ElemSub` MkSE name ty n'
+    export
+    nullSub : (n, n' : _) -> Dec (n <: n')
+    nullSub Nullable Nullable = Yes NSRefl
+    nullSub Nullable NonNullable = No $ \case NSRefl impossible
+                                              NSMaybe impossible
+    nullSub NonNullable Nullable = Yes NSMaybe
+    nullSub NonNullable NonNullable = Yes NSRefl
 
-  elemSubSameNames : ty1 `∊` u =>
-                     ty2 `∊` u =>
-                     MkSE n1 ty1 _ `ElemSub` MkSE n2 ty2 _ ->
-                     n1 = n2
-  elemSubSameNames (MkES _) = Refl
+  namespace ElemSub
+    infix 6 <:
 
-  elemSubSameTypes : {auto in1 : ty1 `∊` u} ->
-                     {auto in2 : ty2 `∊` u} ->
-                     MkSE _ ty1 null1 `ElemSub` MkSE _ ty2 null2 ->
-                     in1 = in2
-  elemSubSameTypes (MkES _) = Refl
+    public export
+    data (<:) : (e, e' : SignatureElem) -> Type where
+      MkES : n <: n' ->
+             {auto ∊u : ty `∊` u} ->
+             MkSE name ty n <: MkSE name ty n'
 
-  elemSubNullSub : ty `∊` u ->
-                   MkSE _ ty null1 `ElemSub` MkSE _ ty null2 ->
-                   null1 `NullSub` null2
-  elemSubNullSub _ (MkES prf) = prf
+    elemSubSameNames : ty1 `∊` u =>
+                       ty2 `∊` u =>
+                       MkSE n1 ty1 _ <: MkSE n2 ty2 _ ->
+                       n1 = n2
+    elemSubSameNames (MkES _) = Refl
 
-  export
-  elemSub : (e, e' : _) -> Dec (e `ElemSub` e')
-  elemSub (MkSE name1 ty1 null1 {∊u = in1}) (MkSE name2 ty2 null2 {∊u = in2}) =
-    case decEq name1 name2 of
-         No contra => No $ contra . elemSubSameNames
-         Yes Refl => case in1 `inDecEq` in2 of
-                          No contra => No $ contra . elemSubSameTypes
-                          Yes Refl => case null1 `nullSub` null2 of
-                                           Yes prf => Yes (MkES prf {∊u = in2})
-                                           No contra => No $ contra . elemSubNullSub in2
+    elemSubSameTypes : {auto in1 : ty1 `∊` u} ->
+                       {auto in2 : ty2 `∊` u} ->
+                       MkSE _ ty1 null1 <: MkSE _ ty2 null2 ->
+                       in1 = in2
+    elemSubSameTypes (MkES _) = Refl
+
+    elemSubNullSub : ty `∊` u ->
+                     MkSE _ ty null1 <: MkSE _ ty null2 ->
+                     null1 <: null2
+    elemSubNullSub _ (MkES prf) = prf
+
+    export
+    elemSub : (e, e' : SignatureElem) -> Dec (e <: e')
+    elemSub (MkSE name1 ty1 null1 {∊u = in1}) (MkSE name2 ty2 null2 {∊u = in2}) =
+      case decEq name1 name2 of
+           No contra => No $ contra . elemSubSameNames
+           Yes Refl => case in1 `inDecEq` in2 of
+                            No contra => No $ contra . elemSubSameTypes
+                            Yes Refl => case null1 `nullSub` null2 of
+                                             Yes prf => Yes (MkES prf {∊u = in2})
+                                             No contra => No $ contra . elemSubNullSub in2
 
   public export
   data ElemSubList : (e : SignatureElem) -> (sig : Signature) -> Type where
-    ESLHere   : e `ElemSub` e' ->
+    ESLHere   : e <: e' ->
                 e `ElemSubList` e' :: rest
     ESLThere  : e `ElemSubList` rest ->
                 e `ElemSubList` _  :: rest
 
-  eslElimVoid : Not (e `ElemSub` e') ->
+  eslElimVoid : Not (e <: e') ->
                 Not (e `ElemSubList` rest) ->
                 Not (e `ElemSubList` (e' :: rest))
   eslElimVoid contra _ (ESLHere prf) = contra prf
@@ -141,6 +147,7 @@ parameters {u : Universe}
                            Yes prf => Yes (ESLThere prf)
                            No contra' => No $ eslElimVoid contra contra'
 
+  infix 6 <:
   ||| ``sig `SigSub` sig'``
   ||| means that a tuple with the signature `sig'`
   ||| can be safely read into a tuple with the signature `sig`,
@@ -155,22 +162,22 @@ parameters {u : Universe}
   ||| As an example, we surely could read [("name", String), ("lastname", String)]
   ||| into a [("lastname", Maybe String)].
   public export
-  data SigSub : (sig, sig' : Signature) -> Type where
+  data (<:) : (sig, sig' : Signature) -> Type where
     MkSS : All (`ElemSubList` sig') sig ->
-           sig `SigSub` sig'
+           sig <: sig'
 
-  sigSubHead : e :: sig `SigSub` sig' ->
+  sigSubHead : e :: sig <: sig' ->
                e `ElemSubList` sig'
   sigSubHead (MkSS (prf :: _)) = prf
 
-  sigSubTail : e :: sig `SigSub` sig' ->
-               sig `SigSub` sig'
+  sigSubTail : e :: sig <: sig' ->
+               sig <: sig'
   sigSubTail (MkSS (_ :: prfs)) = MkSS prfs
 
   -- TODO terribly inefficient to do at runtime since it's quadratic,
   -- but works for a PoC
   export
-  sigSub : (sig, sig' : Signature) -> Dec (sig `SigSub` sig')
+  sigSub : (sig, sig' : Signature) -> Dec (sig <: sig')
   sigSub [] sig' = Yes (MkSS [])
   sigSub (e :: sig) sig' =
     case e `elemSubList` sig' of
