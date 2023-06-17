@@ -163,14 +163,14 @@ parameters {u : Universe}
   ||| into a [("lastname", Maybe String)].
   public export
   data (<:) : (sig, sig' : Signature) -> Type where
-    MkSS : All (`ElemSubList` sig') sig ->
+    MkSS : All (`ElemSubList` sig) sig' ->
            sig <: sig'
 
-  sigSubHead : e :: sig <: sig' ->
-               e `ElemSubList` sig'
+  sigSubHead : sig <: e :: sig' ->
+               e `ElemSubList` sig
   sigSubHead (MkSS (prf :: _)) = prf
 
-  sigSubTail : e :: sig <: sig' ->
+  sigSubTail : sig <: e :: sig' ->
                sig <: sig'
   sigSubTail (MkSS (_ :: prfs)) = MkSS prfs
 
@@ -178,9 +178,9 @@ parameters {u : Universe}
   -- but works for a PoC
   export
   sigSub : (sig, sig' : Signature) -> Dec (sig <: sig')
-  sigSub [] sig' = Yes (MkSS [])
-  sigSub (e :: sig) sig' =
-    case e `elemSubList` sig' of
+  sigSub sig [] = Yes (MkSS [])
+  sigSub sig (e :: sig') =
+    case e `elemSubList` sig of
          No contra => No $ contra . sigSubHead
          Yes prf => case sig `sigSub` sig' of
                          No contra => No $ contra . sigSubTail
