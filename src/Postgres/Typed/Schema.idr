@@ -11,27 +11,27 @@ import Postgres.Typed.Signature
 ReadRawSig : Type
 ReadRawSig = List (String, Int)
 
-resultSig : (res : Result s) ->
-            ReadRawSig
-resultSig res =
-  map (\col => (fname res col, ftype res col)) [0 .. nfields res]
+resultRawSig : (res : Result s) ->
+               ReadRawSig
+resultRawSig res = (\col => (fname res col, ftype res col)) <$> [0 .. nfields res]
 
+parameters {u : Universe}
+  TypeLookup : Type
+  TypeLookup = Int -> (ty ** noMaybe ty `∊` u)
 
-readRawSig2Signature : {u : Universe} ->
-                       (lookup : Int -> (ty ** noMaybe ty `∊` u)) ->
-                       ReadRawSig ->
-                       Signature {u}
-readRawSig2Signature lookup =
-  map $ \(name, typeCode) => let (ty ** _) = lookup typeCode in
-                                 name @: ty
+  readRawSig2Signature : (lookup : TypeLookup) ->
+                         ReadRawSig ->
+                         Signature {u}
+  readRawSig2Signature lookup =
+    map $ \(name, typeCode) => let (ty ** _) = lookup typeCode in
+                                   name @: ty
 
-
-data Tuple' : {u : Universe} -> Signature {u} -> Type where
-  Nil   : Tuple' []
-  (::)  : (val : ty) ->
-          noMaybe ty `∊` u =>
-          (rest : Tuple' sig) ->
-          Tuple' {u} (name @: ty :: sig)
+  data Tuple' : Signature {u} -> Type where
+    Nil   : Tuple' []
+    (::)  : (val : ty) ->
+            noMaybe ty `∊` u =>
+            (rest : Tuple' sig) ->
+            Tuple' (name @: ty :: sig)
 
 Tuple : Signature {u = DefU} -> Type
 Tuple = Tuple'
