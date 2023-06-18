@@ -121,58 +121,53 @@ resultErrorMessage = map asString . wrapFFI ffi_resultErrorMessage
 
 
 %foreign (libpq "ntuples")
-ffi_ntuples : ResultHandle -> PrimIO Int
+ffi_ntuples : ResultHandle -> Int
 
 export
-ntuples : HasIO io =>
-          (res : Result s) ->
-          io Int
-ntuples = wrapFFI ffi_ntuples
+ntuples : (res : Result s) ->
+          Int
+ntuples = wrapFFIpure ffi_ntuples
 
 
 %foreign (libpq "nfields")
-ffi_nfields : ResultHandle -> PrimIO Int
+ffi_nfields : ResultHandle -> Int
 
 export
-nfields : HasIO io =>
-          (res : Result s) ->
-          io Int
-nfields = wrapFFI ffi_nfields
+nfields : (res : Result s) ->
+          Int
+nfields = wrapFFIpure ffi_nfields
 
 
 %foreign (libpq "fname")
-ffi_fname : ResultHandle -> Int -> PrimIO BorrowedString
+ffi_fname : ResultHandle -> Int -> BorrowedString
 
 export
-fname : HasIO io =>
-        (res : Result s) ->
+fname : (res : Result s) ->
         (column : Int) ->
-        io String
-fname res col = asString <$> wrapFFI (`ffi_fname` col) res
+        String
+fname res col = asString $ wrapFFIpure (`ffi_fname` col) res
 
 
 %foreign (libpq "ftype")
-ffi_ftype : ResultHandle -> Int -> PrimIO Int
+ffi_ftype : ResultHandle -> Int -> Int
 
 export
-ftype : HasIO io =>
-        (res : Result s) ->
+ftype : (res : Result s) ->
         (col : Int) ->
-        io Int
-ftype r n = wrapFFI (`ffi_ftype` n) r
+        Int
+ftype r n = wrapFFIpure (`ffi_ftype` n) r
 
 %foreign (libpq "fmod")
-ffi_fmod : ResultHandle -> Int -> PrimIO Int
+ffi_fmod : ResultHandle -> Int -> Int
 
 export
-fmod : HasIO io =>
-       (res : Result s) ->
+fmod : (res : Result s) ->
        (col : Int) ->
-       io Int
-fmod r n = wrapFFI (`ffi_fmod` n) r
+       Int
+fmod r n = wrapFFIpure (`ffi_fmod` n) r
 
 %foreign (libpq "fformat")
-ffi_fformat : ResultHandle -> Int -> PrimIO Int
+ffi_fformat : ResultHandle -> Int -> Int
 
 namespace ColumnFormat
   public export
@@ -193,49 +188,44 @@ Cast ColumnFormat Int where
   cast (Other n) = n
 
 export
-fformat : HasIO io =>
-          (res : Result s) ->
+fformat : (res : Result s) ->
           (col : Int) ->
-          io ColumnFormat
-fformat res col = toColumnFormat <$> wrapFFI (`ffi_fformat` col) res
+          ColumnFormat
+fformat res col = toColumnFormat $ wrapFFIpure (`ffi_fformat` col) res
 
 
 %foreign (libpq "getisnull")
-ffi_getisnull : ResultHandle -> Int -> Int -> PrimIO Int
+ffi_getisnull : ResultHandle -> Int -> Int -> Int
 
 export
-getisnull : HasIO io =>
-            (res : Result s) ->
+getisnull : (res : Result s) ->
             (row, col : Int) ->
-            io Bool
-getisnull res row col = (== 1) <$> wrapFFI (\h => ffi_getisnull h row col) res
+            Bool
+getisnull res row col = (== 1) $ wrapFFIpure (\h => ffi_getisnull h row col) res
 
 %foreign (libpq "getlength")
-ffi_getlength : ResultHandle -> Int -> Int -> PrimIO Int
+ffi_getlength : ResultHandle -> Int -> Int -> Int
 
 export
-getlength : HasIO io =>
-            (res : Result s) ->
+getlength : (res : Result s) ->
             (row, col : Int) ->
-            io Int
-getlength res row col = wrapFFI (\h => ffi_getlength h row col) res
+            Int
+getlength res row col = wrapFFIpure (\h => ffi_getlength h row col) res
 
 %foreign (libpq "getvalue")
-ffi_getvalue : ResultHandle -> Int -> Int -> PrimIO (Ptr Bits8)
+ffi_getvalue : ResultHandle -> Int -> Int -> Ptr Bits8
 
 export
-getvalue : HasIO io =>
-           (res : Result s) ->
+getvalue : (res : Result s) ->
            (row, col : Int) ->
-           io (Ptr Bits8)
-getvalue res row col = wrapFFI (\h => ffi_getvalue h row col) res
+           Ptr Bits8
+getvalue res row col = wrapFFIpure (\h => ffi_getvalue h row col) res
 
 export
-getvalueTextual : HasIO io =>
-                  (res : Result s) ->
+getvalueTextual : (res : Result s) ->
                   (row, col : Int) ->
-                  io String
-getvalueTextual res row col = convert <$> getvalue res row col
+                  String
+getvalueTextual res row col = convert $ getvalue res row col
   where
     convert : Ptr Bits8 -> String
     convert = asString . prim__castPtr . prim__forgetPtr
