@@ -34,6 +34,13 @@ wrapFFI : (HasIO io, HandleWrapper rawHandle wrappedHandle) =>
           io a
 wrapFFI ffi = primIO . ffi . getHandle
 
+export
+wrapFFIpure : HandleWrapper rawHandle wrappedHandle =>
+              (rawHandle -> a) ->
+              (c : wrappedHandle s) ->
+              a
+wrapFFIpure ffi = ffi . getHandle
+
 
 export
 forTo : (Applicative f, Num n, Ord n, Range n, Neg n) => (start, end : n) -> (n -> f b) -> f (List b)
