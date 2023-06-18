@@ -22,6 +22,18 @@ createTable conn = do
   res <- exec conn "CREATE TABLE persons (pid SERIAL PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, age INTEGER NOT NULL, country TEXT)"
   dumpResult res
 
+Person : Type
+Person = Tuple ["first_name" @: String, "last_name" @: String, "age" @: Integer]
+
+sampleName : Person
+sampleName = [ "John", "Doe", 42 ]
+
+Person' : Type
+Person' = Tuple ["first_name" @: String, "last_name" @: String, "age" @: Maybe Integer]
+
+sampleName' : Person'
+sampleName' = [ "John", "Doe", Just 42 ]
+
 {-
 Assuming you've run
 ```
