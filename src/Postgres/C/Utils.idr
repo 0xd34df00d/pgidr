@@ -2,6 +2,7 @@ module Postgres.C.Utils
 
 import Data.Buffer as B
 import Data.DPair
+import Data.List
 import Data.Vect
 
 %default total
@@ -41,16 +42,15 @@ wrapFFIpure : HandleWrapper rawHandle wrappedHandle =>
               a
 wrapFFIpure ffi = ffi . getHandle
 
-
 export
-forTo : (Applicative f, Num n, Ord n, Range n, Neg n) => (start, end : n) -> (n -> f b) -> f (List b)
+forTo : (Applicative f, Num n, Ord n, Range n) => (start, end : n) -> (n -> f b) -> f (List b)
 forTo start end f =
   if start >= end
      then pure []
-     else for [start .. end - 1] f
+     else for (fromMaybe [] $ init' [start .. end]) f
 
 export
-forTo_ : (Applicative f, Num n, Ord n, Range n, Neg n) => (start, end : n) -> (n -> f b) -> f ()
+forTo_ : (Applicative f, Num n, Ord n, Range n) => (start, end : n) -> (n -> f b) -> f ()
 forTo_ start end f = forTo start end f $> ()
 
 
