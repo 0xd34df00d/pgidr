@@ -13,7 +13,7 @@ ReadRawSig = List (String, Int)
 
 resultRawSig : (res : Result s) ->
                ReadRawSig
-resultRawSig res = (\col => (fname res col, ftype res col)) <$> [0 .. nfields res]
+resultRawSig res = [ (fname res col, ftype res col) | col <- [0 .. nfields res] ]
 
 parameters {u : Universe}
   TypeLookup : Type
