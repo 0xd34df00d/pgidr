@@ -59,26 +59,26 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
   dumpResult res
 
   putStrLn "shape:"
-  fieldsCnt <- nfields res
-  rowsCnt <- ntuples res
+  let fieldsCnt = nfields res
+      rowsCnt = ntuples res
   printLn (rowsCnt, fieldsCnt)
 
   putStrLn "names:"
-  forTo 0 fieldsCnt (fname res) >>= printLn
+  forTo_ 0 fieldsCnt $ printLn . fname res
 
   putStrLn "formats:"
-  forTo 0 fieldsCnt (fformat res) >>= printLn
+  forTo_ 0 fieldsCnt $ printLn . fformat res
 
   putStrLn "mods:"
-  forTo 0 fieldsCnt (fmod res) >>= printLn
+  forTo_ 0 fieldsCnt $ printLn . fmod res
 
   putStrLn "types:"
-  forTo 0 fieldsCnt (ftype res) >>= printLn
+  forTo_ 0 fieldsCnt $ printLn . ftype res
 
   putStrLn "values:"
   forTo_ 0 rowsCnt $ \row => do
     putStr "| "
     forTo_ 0 fieldsCnt $ \col => do
-      getvalueTextual res row col >>= putStr
+      putStr $ getvalueTextual res row col
       putStr " | "
     putStrLn ""
