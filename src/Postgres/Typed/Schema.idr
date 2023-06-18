@@ -11,12 +11,10 @@ import Postgres.Typed.Signature
 ReadRawSig : Type
 ReadRawSig = List (String, Int)
 
-resultSig : HasIO io =>
-            (res : Result s) ->
-            io ReadRawSig
-resultSig res = do
-  cols <- nfields res
-  forTo 0 cols $ \col => (,) <$> fname res col <*> ftype res col
+resultSig : (res : Result s) ->
+            ReadRawSig
+resultSig res =
+  map (\col => (fname res col, ftype res col)) [0 .. nfields res]
 
 
 readRawSig2Signature : {u : Universe} ->
