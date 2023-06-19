@@ -15,7 +15,7 @@ resultRawSig : (res : Result s) ->
                ReadRawSig
 resultRawSig res = case nfields res of
                         0 => []
-                        cols => [ (fname res col, ftype res col) | col <- [0 .. cols - 1] ]
+                        S lastCol => [ (fname res col, ftype res col) | col <- [0 .. lastCol] ]
 
 parameters {u : Universe}
   TypeLookup : Type
