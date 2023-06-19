@@ -28,6 +28,15 @@ parameters {u : Universe}
     map $ \(name, typeCode) => let (ty ** _) = lookup typeCode in
                                    name @: ty
 
+  resultSig : (lookup : TypeLookup) ->
+              (res : Result s) ->
+              Signature {u}
+  resultSig lookup res = case nfields res of
+                              0 => []
+                              S lastCol => [ fname res col @:* lookup (ftype res col)
+                                           | col <- [0 .. lastCol]
+                                           ]
+
   public export
   data Tuple' : Signature {u} -> Type where
     Nil   : Tuple' []
