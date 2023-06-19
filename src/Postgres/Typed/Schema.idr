@@ -22,9 +22,15 @@ TypeLookup : {u : Universe} -> Type
 TypeLookup = Int -> (ty ** noMaybe ty `∊` u)
 
 parameters {u : Universe} (lookup : TypeLookup {u})
+  resultSig'go : (res : Result s) ->
+                 (rem, col : Nat) ->
+                 Signature {u}
+  resultSig'go res Z _ = []
+  resultSig'go res (S n) col = (fname res col @:* lookup (ftype res col)) :: resultSig'go res n (S col)
+
   resultSig : (res : Result s) ->
               Signature {u}
-  resultSig res = go (nfields res) 0
+  resultSig res = resultSig'go res (nfields res) 0
     where
       go : (rem : Nat) -> (col : Nat) -> Signature {u}
       go Z _ = []
