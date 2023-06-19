@@ -56,7 +56,6 @@ parameters {u : Universe}
            SignatureElem
 
   infixl 7 @:
-
   public export
   (@:) : (name : String) ->
          (ty : Type) ->
@@ -65,6 +64,13 @@ parameters {u : Universe}
   name @: ty = MkSE name (noMaybe ty) $ case ty of
                                              Maybe ty => Nullable
                                              ty => NonNullable
+
+  infixl 7 @:*
+  public export %inline %tcinline
+  (@:*) : (name : String) ->
+          (ty ** noMaybe ty `∊` u) ->
+          SignatureElem
+  (@:*) name (ty ** _) = name @: ty
 
   public export
   Signature : Type
