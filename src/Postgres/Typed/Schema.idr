@@ -18,11 +18,11 @@ parameters {u : Universe}
   resultSig : (lookup : TypeLookup) ->
               (res : Result s) ->
               Signature {u}
-  resultSig lookup res = case nfields res of
-                              0 => []
-                              S lastCol => [ fname res col @:* lookup (ftype res col)
-                                           | col <- [0 .. lastCol]
-                                           ]
+  resultSig lookup res = go (nfields res) 0
+    where
+      go : (rem : Nat) -> (col : Nat) -> Signature {u}
+      go Z _ = []
+      go (S n) col = (fname res col @:* lookup (ftype res col)) :: go n (S col)
 
   public export
   data Tuple' : Signature {u} -> Type where
