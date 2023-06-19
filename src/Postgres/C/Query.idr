@@ -125,8 +125,8 @@ ffi_ntuples : ResultHandle -> Int
 
 export
 ntuples : (res : Result s) ->
-          Int
-ntuples = wrapFFIpure ffi_ntuples
+          Nat
+ntuples = cast . wrapFFIpure ffi_ntuples
 
 
 %foreign (libpq "nfields")
@@ -134,8 +134,8 @@ ffi_nfields : ResultHandle -> Int
 
 export
 nfields : (res : Result s) ->
-          Int
-nfields = wrapFFIpure ffi_nfields
+          Nat
+nfields = cast . wrapFFIpure ffi_nfields
 
 
 %foreign (libpq "fname")
@@ -143,9 +143,9 @@ ffi_fname : ResultHandle -> Int -> BorrowedString
 
 export
 fname : (res : Result s) ->
-        (column : Int) ->
+        (column : Nat) ->
         String
-fname res col = asString $ wrapFFIpure (`ffi_fname` col) res
+fname res col = asString $ wrapFFIpure (`ffi_fname` cast col) res
 
 
 %foreign (libpq "ftype")
@@ -153,18 +153,18 @@ ffi_ftype : ResultHandle -> Int -> Int
 
 export
 ftype : (res : Result s) ->
-        (col : Int) ->
+        (col : Nat) ->
         Int
-ftype r n = wrapFFIpure (`ffi_ftype` n) r
+ftype res col = wrapFFIpure (`ffi_ftype` cast col) res
 
 %foreign (libpq "fmod")
 ffi_fmod : ResultHandle -> Int -> Int
 
 export
 fmod : (res : Result s) ->
-       (col : Int) ->
+       (col : Nat) ->
        Int
-fmod r n = wrapFFIpure (`ffi_fmod` n) r
+fmod res col = wrapFFIpure (`ffi_fmod` cast col) res
 
 %foreign (libpq "fformat")
 ffi_fformat : ResultHandle -> Int -> Int
@@ -189,9 +189,9 @@ Cast ColumnFormat Int where
 
 export
 fformat : (res : Result s) ->
-          (col : Int) ->
+          (col : Nat) ->
           ColumnFormat
-fformat res col = toColumnFormat $ wrapFFIpure (`ffi_fformat` col) res
+fformat res col = toColumnFormat $ wrapFFIpure (`ffi_fformat` cast col) res
 
 
 %foreign (libpq "getisnull")
@@ -199,31 +199,31 @@ ffi_getisnull : ResultHandle -> Int -> Int -> Int
 
 export
 getisnull : (res : Result s) ->
-            (row, col : Int) ->
+            (row, col : Nat) ->
             Bool
-getisnull res row col = (== 1) $ wrapFFIpure (\h => ffi_getisnull h row col) res
+getisnull res row col = (== 1) $ wrapFFIpure (\h => ffi_getisnull h (cast row) (cast col)) res
 
 %foreign (libpq "getlength")
 ffi_getlength : ResultHandle -> Int -> Int -> Int
 
 export
 getlength : (res : Result s) ->
-            (row, col : Int) ->
+            (row, col : Nat) ->
             Int
-getlength res row col = wrapFFIpure (\h => ffi_getlength h row col) res
+getlength res row col = wrapFFIpure (\h => ffi_getlength h (cast row) (cast col)) res
 
 %foreign (libpq "getvalue")
 ffi_getvalue : ResultHandle -> Int -> Int -> Ptr Bits8
 
 export
 getvalue : (res : Result s) ->
-           (row, col : Int) ->
+           (row, col : Nat) ->
            Ptr Bits8
-getvalue res row col = wrapFFIpure (\h => ffi_getvalue h row col) res
+getvalue res row col = wrapFFIpure (\h => ffi_getvalue h (cast row) (cast col)) res
 
 export
 getvalueTextual : (res : Result s) ->
-                  (row, col : Int) ->
+                  (row, col : Nat) ->
                   String
 getvalueTextual res row col = convert $ getvalue res row col
   where
