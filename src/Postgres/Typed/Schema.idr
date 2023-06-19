@@ -11,22 +11,9 @@ import public Postgres.Typed.Signature
 ReadRawSig : Type
 ReadRawSig = List (String, Int)
 
-resultRawSig : (res : Result s) ->
-               ReadRawSig
-resultRawSig res = case nfields res of
-                        0 => []
-                        S lastCol => [ (fname res col, ftype res col) | col <- [0 .. lastCol] ]
-
 parameters {u : Universe}
   TypeLookup : Type
   TypeLookup = Int -> (ty ** noMaybe ty `∊` u)
-
-  readRawSig2Signature : (lookup : TypeLookup) ->
-                         ReadRawSig ->
-                         Signature {u}
-  readRawSig2Signature lookup =
-    map $ \(name, typeCode) => let (ty ** _) = lookup typeCode in
-                                   name @: ty
 
   resultSig : (lookup : TypeLookup) ->
               (res : Result s) ->
