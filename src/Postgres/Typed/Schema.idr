@@ -31,10 +31,22 @@ parameters {u : Universe} (lookup : TypeLookup {u})
   resultSig : (res : Result s) ->
               Signature {u}
   resultSig res = resultSig'go res (nfields res) 0
+
+  resultAt : (res : Result s) ->
+             (row : Nat) ->
+             Tuple' (resultSig res)
+  resultAt res row = go (nfields res) 0
     where
-      go : (rem : Nat) -> (col : Nat) -> Signature {u}
+      go : (rem : Nat) -> (col : Nat) -> Tuple' (resultSig'go res rem col)
       go Z _ = []
-      go (S n) col = (fname res col @:* lookup (ftype res col)) :: go n (S col)
+      go (S n) col with (lookup $ ftype res col)
+        _ | (ty ** _) = ?val :: go n (S col)
+
+  resultSet : (res : Result s) ->
+              List (Tuple' (resultSig res))
+  resultSet res = case ntuples res of
+                       0 => []
+                       S lastRow => [ resultAt res row | row <- [0 .. lastRow] ]
 
 public export
 Tuple : Signature {u = DefU} -> Type
