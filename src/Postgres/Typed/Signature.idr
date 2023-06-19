@@ -27,6 +27,11 @@ data ∊ : (ty : Type) -> (u : Universe) -> Type where
   There : ty `∊` u ->
           ty `∊` (_ :: u)
 
+public export
+uniTypeIsPgType : (ty : Type) -> {u : Universe} -> (prf : ty `∊` u) -> PgType ty
+uniTypeIsPgType ty Here = %search
+uniTypeIsPgType ty (There prf) = uniTypeIsPgType ty prf
+
 inDecEq : (in1 : ty1 `∊` u) ->
           (in2 : ty2 `∊` u) ->
           Dec (in1 = in2)
