@@ -5,6 +5,10 @@ module Postgres.Typed.PgType
 %prefix_record_projections off
 
 public export
+ConvertError : Type
+ConvertError = String
+
+public export
 record UnknownPgType where
   constructor MkUPT
   rawContents : String
@@ -12,7 +16,7 @@ record UnknownPgType where
 public export
 interface PgType ty where
   toTextual : ty -> String
-  fromTextual : String -> Either String ty
+  fromTextual : String -> Either ConvertError ty
 
 public export
 PgType String where
