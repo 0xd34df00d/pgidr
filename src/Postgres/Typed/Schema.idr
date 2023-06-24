@@ -7,9 +7,6 @@ import public Postgres.Typed.Signature
 
 %default total
 
-ReadRawSig : Type
-ReadRawSig = List (String, Int)
-
 public export
 data Tuple' : {u : Universe} -> Signature {u} -> Type where
   Nil   : Tuple' []
