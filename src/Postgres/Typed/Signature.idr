@@ -45,12 +45,6 @@ inDecEq (There in1) (There in2) = case in1 `inDecEq` in2 of
 public export
 data Nullability = Nullable | NonNullable
 
-public export %inline %tcinline
-noMaybe : Type -> Type
-noMaybe ty = case ty of
-                  Maybe ty => ty
-                  ty => ty
-
 parameters {u : Universe}
   public export
   data SignatureElem : Type where
