@@ -13,8 +13,11 @@ record UnknownPgType where
   constructor MkUPT
   rawContents : String
 
+Show UnknownPgType where
+  show = const "<unknown>"
+
 public export
-interface PgType ty where
+interface Show ty => PgType ty where
   toTextual : ty -> String
   fromTextual : String -> Either PgTyParseError ty
 
