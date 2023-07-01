@@ -69,13 +69,6 @@ parameters {u : Universe}
   name @: ty = MkSE name ty NonNullable
   name @:? ty = MkSE name ty Nullable
 
-  infixl 7 @:*
-  public export %inline %tcinline
-  (@:*) : (name : String) ->
-          (ty ** noMaybe ty `∊` u) ->
-          SignatureElem
-  (@:*) name (ty ** _) = name @: ty
-
   public export
   Signature : Type
   Signature = List SignatureElem
