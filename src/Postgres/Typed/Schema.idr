@@ -18,6 +18,8 @@ data Tuple' : {u : Universe} -> Signature {u} -> Type where
 TypeLookup : {u : Universe} -> Type
 TypeLookup = Int -> (ty ** noMaybe ty `∊` u)
 
+data ConvertError = PgTyParseError PgTyParseError
+
 parameters {u : Universe} (lookup : TypeLookup {u})
   resultSig'go : (res : Result s) ->
                  (rem, col : Nat) ->

@@ -5,8 +5,8 @@ module Postgres.Typed.PgType
 %prefix_record_projections off
 
 public export
-ConvertError : Type
-ConvertError = String
+PgTyParseError : Type
+PgTyParseError = String
 
 public export
 record UnknownPgType where
@@ -16,7 +16,7 @@ record UnknownPgType where
 public export
 interface PgType ty where
   toTextual : ty -> String
-  fromTextual : String -> Either ConvertError ty
+  fromTextual : String -> Either PgTyParseError ty
 
 public export
 PgType String where
