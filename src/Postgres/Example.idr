@@ -29,7 +29,7 @@ sampleName : Person
 sampleName = [ "John", "Doe", 42 ]
 
 Person' : Type
-Person' = Tuple ["first_name" @: String, "last_name" @: String, "age" @: Maybe Integer]
+Person' = Tuple ["first_name" @: String, "last_name" @: String, "age" @:? Integer]
 
 sampleName' : Person'
 sampleName' = [ "John", "Doe", Just 42 ]
