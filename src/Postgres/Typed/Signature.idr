@@ -20,7 +20,6 @@ DefU : Universe
 DefU = [uni Int, uni Integer, uni String, uni UnknownPgType]
 
 infix 7 `∊`
-
 public export
 data ∊ : (ty : Type) -> (u : Universe) -> Type where
   Here  : ty `∊` ((ty ** _) :: _)
@@ -32,6 +31,17 @@ public export
 uniTypeIsPgType : (0 ty : Type) -> {u : Universe} -> (prf : ty `∊` u) -> PgType ty
 uniTypeIsPgType ty Here = %search
 uniTypeIsPgType ty (There prf) = uniTypeIsPgType ty prf
+
+public export
+TypeLookup : {u : Universe} -> Type
+TypeLookup = Int -> (ty ** ty `∊` u)
+
+export
+defLookup : TypeLookup {u = DefU}
+defLookup 23 = (Integer ** %search)
+defLookup 25 = (String ** %search)
+defLookup _ = (UnknownPgType ** %search)
+
 
 inDecEq : (in1 : ty1 `∊` u) ->
           (in2 : ty2 `∊` u) ->

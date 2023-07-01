@@ -41,9 +41,6 @@ Show (Tuple' sig) where
           printVal v = name ++ " = " ++ show v ++ go False rest
 
 public export
-TypeLookup : {u : Universe} -> Type
-TypeLookup = Int -> (ty ** ty `∊` u)
-
 data ConvertError = PgTyParseError PgTyParseError
 
 parameters {u : Universe} (lookup : TypeLookup {u})
