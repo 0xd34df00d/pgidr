@@ -24,6 +24,22 @@ data Tuple' : {u : Universe} -> Signature {u} -> Type where
           (rest : Tuple' {u} sig) ->
           Tuple' {u} (MkSE name ty isNull :: sig)
 
+Show (Tuple' sig) where
+  show tup = "(" ++ go True tup ++ ")"
+    where
+      go : Bool -> Tuple' sig' -> String
+      go _ [] = ""
+      go isFirst ((::) {inPrf} {isNull} {name} val rest) =
+        let pref : String = if isFirst then "" else ", "
+         in case isNull of
+                 Nullable => case val of
+                                  Nothing => pref ++ name ++ " is null" ++ go False rest
+                                  Just val => pref ++ printVal val
+                 NonNullable => pref ++ printVal val
+        where
+          printVal : Show ty => ty -> String
+          printVal v = name ++ " = " ++ show v ++ go False rest
+
 public export
 TypeLookup : {u : Universe} -> Type
 TypeLookup = Int -> (ty ** ty `∊` u)
