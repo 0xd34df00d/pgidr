@@ -18,7 +18,8 @@ applyIsNull NonNullable ty = ty
 public export
 data Tuple' : {u : Universe} -> Signature {u} -> Type where
   Nil   : Tuple' []
-  (::)  : ty `∊` u =>
+  (::)  : {u, sig, isNull, name : _} ->
+          {auto inPrf : ty `∊` u} ->
           (val : applyIsNull isNull ty) ->
           (rest : Tuple' {u} sig) ->
           Tuple' {u} (MkSE name ty isNull :: sig)
