@@ -7,16 +7,25 @@ import public Postgres.Typed.Signature
 
 %default total
 
+nullable : Result s -> (col : Nat) -> Nullability
+nullable res col = if fnullable res col then Nullable else NonNullable
+
+public export
+applyIsNull : Nullability -> Type -> Type
+applyIsNull Nullable ty = Maybe ty
+applyIsNull NonNullable ty = ty
+
 public export
 data Tuple' : {u : Universe} -> Signature {u} -> Type where
   Nil   : Tuple' []
-  (::)  : (val : ty) ->
-          noMaybe ty `∊` u =>
+  (::)  : ty `∊` u =>
+          (val : applyIsNull isNull ty) ->
           (rest : Tuple' {u} sig) ->
-          Tuple' {u} (name @: ty :: sig)
+          Tuple' {u} (MkSE name ty isNull :: sig)
 
+public export
 TypeLookup : {u : Universe} -> Type
-TypeLookup = Int -> (ty ** noMaybe ty `∊` u)
+TypeLookup = Int -> (ty ** ty `∊` u)
 
 data ConvertError = PgTyParseError PgTyParseError
 
@@ -25,7 +34,8 @@ parameters {u : Universe} (lookup : TypeLookup {u})
                  (rem, col : Nat) ->
                  Signature {u}
   resultSig'go res Z _ = []
-  resultSig'go res (S n) col = (fname res col @:* lookup (ftype res col)) :: resultSig'go res n (S col)
+  resultSig'go res (S n) col = let (ty ** _) = lookup $ ftype res col
+                                in MkSE (fname res col) ty (nullable res col) :: resultSig'go res n (S col)
 
   resultSig : (res : Result s) ->
               Signature {u}
@@ -34,8 +44,14 @@ parameters {u : Universe} (lookup : TypeLookup {u})
   convert : (res : Result s) ->
             (row, col : Nat) ->
             (ty : Type) ->
-            (prf : noMaybe ty `∊` u) ->
-            Either ConvertError ty
+            PgType ty =>
+            Either ConvertError (applyIsNull (nullable res col) ty)
+  convert res row col ty with (nullable res col)
+    _ | Nullable = if getisnull res row col
+                      then pure Nothing
+                      else bimap PgTyParseError Just $ fromTextual (getvalueTextual res row col)
+    _ | NonNullable = mapFst PgTyParseError $ fromTextual (getvalueTextual res row col)
+
   resultAt : (res : Result s) ->
              (row : Nat) ->
              Either ConvertError (Tuple' (resultSig res))
@@ -44,7 +60,8 @@ parameters {u : Universe} (lookup : TypeLookup {u})
       go : (rem : Nat) -> (col : Nat) -> Either ConvertError (Tuple' (resultSig'go res rem col))
       go Z _ = pure []
       go (S n) col with (lookup $ ftype res col)
-        _ | (ty ** prf) = do val <- convert res row col ty prf
+        _ | (ty ** prf) = do let prf' = uniTypeIsPgType ty prf
+                             val <- convert res row col ty
                              rest <- go n (S col)
                              pure $ val :: rest
 
