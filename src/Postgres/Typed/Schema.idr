@@ -60,8 +60,7 @@ parameters {u : Universe} (lookup : TypeLookup {u})
       go : (rem : Nat) -> (col : Nat) -> Either ConvertError (Tuple' (resultSig'go res rem col))
       go Z _ = pure []
       go (S n) col with (lookup $ ftype res col)
-        _ | (ty ** prf) = do let prf' = uniTypeIsPgType ty prf
-                             val <- convert res row col ty
+        _ | (ty ** prf) = do val <- convert res row col ty
                              rest <- go n (S col)
                              pure $ val :: rest
 

@@ -27,6 +27,7 @@ data ∊ : (ty : Type) -> (u : Universe) -> Type where
   There : ty `∊` u ->
           ty `∊` (_ :: u)
 
+%hint
 public export
 uniTypeIsPgType : (0 ty : Type) -> {u : Universe} -> (prf : ty `∊` u) -> PgType ty
 uniTypeIsPgType ty Here = %search
