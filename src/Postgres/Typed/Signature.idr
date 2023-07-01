@@ -60,15 +60,14 @@ parameters {u : Universe}
            {auto ∊u : ty `∊` u} ->
            SignatureElem
 
-  infixl 7 @:
+  infixl 7 @:, @:?
   public export
-  (@:) : (name : String) ->
-         (ty : Type) ->
-         noMaybe ty `∊` u =>
-         SignatureElem
-  name @: ty = MkSE name (noMaybe ty) $ case ty of
-                                             Maybe ty => Nullable
-                                             ty => NonNullable
+  (@:), (@:?) : (name : String) ->
+                (ty : Type) ->
+                ty `∊` u =>
+                SignatureElem
+  name @: ty = MkSE name ty NonNullable
+  name @:? ty = MkSE name ty Nullable
 
   infixl 7 @:*
   public export %inline %tcinline
