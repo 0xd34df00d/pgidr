@@ -24,6 +24,7 @@ data Tuple' : {u : Universe} -> Signature {u} -> Type where
           (rest : Tuple' {u} sig) ->
           Tuple' {u} (MkSE name ty isNull :: sig)
 
+export
 Show (Tuple' sig) where
   show tup = "(" ++ go True tup ++ ")"
     where
@@ -42,6 +43,10 @@ Show (Tuple' sig) where
 
 public export
 data ConvertError = PgTyParseError PgTyParseError
+
+export
+Show ConvertError where
+  show (PgTyParseError str) = "Type parse error: " ++ str
 
 parameters {u : Universe} (lookup : TypeLookup {u})
   resultSig'go : (res : Result s) ->
@@ -78,6 +83,7 @@ parameters {u : Universe} (lookup : TypeLookup {u})
                              rest <- go n (S col)
                              pure $ val :: rest
 
+  public export
   resultSet : (res : Result s) ->
               List (Either ConvertError (Tuple' (resultSig res)))
   resultSet res = case ntuples res of
