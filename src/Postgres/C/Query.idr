@@ -321,12 +321,20 @@ execPrepared conn stmtName params =
   withStringArray params $ \paramsArray =>
     wrapFFIResult (\conn' => ffi_execPrepared conn' stmtName (cast n) paramsArray nullptr nullptr (cast Textual)) conn
 
+public export
+ColI : Result s -> Type
+ColI res = Fin (nfields res)
+
+public export
+RowI : Result s -> Type
+RowI res = Fin (ntuples res)
+
 namespace Bounded
   public export
   BoundedC : Type -> Type
   BoundedC a = forall s.
                (res : Result s) ->
-               (col : Fin (nfields res)) ->
+               (col : ColI res) ->
                a
 
   wrapC : (forall s. Result s -> Nat -> a) ->
@@ -337,8 +345,8 @@ namespace Bounded
   BoundedRC : Type -> Type
   BoundedRC a = forall s.
                 (res : Result s) ->
-                (col : Fin (nfields res)) ->
-                (row : Fin (ntuples res)) ->
+                (col : ColI res) ->
+                (row : RowI res) ->
                 a
 
   wrapRC : (forall s. Result s -> Nat -> Nat -> a) ->
