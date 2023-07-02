@@ -61,7 +61,7 @@ parameters {u : Universe}
   data SignatureElem : Type where
     MkSE : (name : String) ->
            (ty : Type) ->
-           Nullability ->
+           (isNull : Nullability) ->
            {auto ∊u : ty `∊` u} ->
            SignatureElem
 
