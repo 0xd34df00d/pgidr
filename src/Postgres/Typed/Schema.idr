@@ -84,11 +84,11 @@ parameters {u : Universe} (lookup : TypeLookup {u})
                              pure $ val :: rest
 
   public export
-  resultSet : (res : Result s) ->
-              List (Either ConvertError (Tuple' (resultSig res)))
-  resultSet res = case ntuples res of
-                       0 => []
-                       S lastRow => [ resultAt res row | row <- [0 .. lastRow] ]
+  fullResultSet : (res : Result s) ->
+                  List (Either ConvertError (Tuple' (resultSig res)))
+  fullResultSet res = case ntuples res of
+                           0 => []
+                           S lastRow => [ resultAt res row | row <- [0 .. lastRow] ]
 
 public export
 Tuple : Signature {u = DefU} -> Type
