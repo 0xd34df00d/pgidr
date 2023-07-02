@@ -143,7 +143,7 @@ ffi_fname : ResultHandle -> Int -> BorrowedString
 
 export
 fname : (res : Result s) ->
-        (column : Nat) ->
+        (col : Nat) ->
         String
 fname res col = asString $ wrapFFIpure (`ffi_fname` cast col) res
 
