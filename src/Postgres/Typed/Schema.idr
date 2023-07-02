@@ -11,11 +11,6 @@ nullable : Result s -> (col : Nat) -> Nullability
 nullable res col = if fnullable res col then Nullable else NonNullable
 
 public export
-applyIsNull : Nullability -> Type -> Type
-applyIsNull Nullable ty = Maybe ty
-applyIsNull NonNullable ty = ty
-
-public export
 data Tuple' : {u : Universe} -> Signature {u} -> Type where
   Nil   : Tuple' []
   (::)  : {u, sig, isNull, name : _} ->
