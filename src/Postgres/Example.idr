@@ -94,3 +94,5 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
       putStr $ getvalueTextual res row col
       putStr " | "
     putStrLn ""
+
+  printLn $ resultSet defLookup res
