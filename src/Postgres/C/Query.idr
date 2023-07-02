@@ -320,3 +320,63 @@ execPrepared : HasIO io =>
 execPrepared conn stmtName params =
   withStringArray params $ \paramsArray =>
     wrapFFIResult (\conn' => ffi_execPrepared conn' stmtName (cast n) paramsArray nullptr nullptr (cast Textual)) conn
+
+namespace Bounded
+  public export
+  BoundedC : Type -> Type
+  BoundedC a = forall s.
+               (res : Result s) ->
+               (col : Fin (nfields res)) ->
+               a
+
+  wrapC : (forall s. Result s -> Nat -> a) ->
+          BoundedC a
+  wrapC f res = f res . finToNat
+
+  public export
+  BoundedRC : Type -> Type
+  BoundedRC a = forall s.
+                (res : Result s) ->
+                (col : Fin (nfields res)) ->
+                (row : Fin (ntuples res)) ->
+                a
+
+  wrapRC : (forall s. Result s -> Nat -> Nat -> a) ->
+           BoundedRC a
+  wrapRC f res row col = f res (finToNat row) (finToNat col)
+
+  export
+  fname : BoundedC String
+  fname = wrapC fname
+
+  export
+  ftype : BoundedC Int
+  ftype = wrapC ftype
+
+  export
+  fmod : BoundedC Int
+  fmod = wrapC fmod
+
+  export
+  fformat : BoundedC ColumnFormat
+  fformat = wrapC fformat
+
+  export
+  getisnull : BoundedRC Bool
+  getisnull = wrapRC getisnull
+
+  export
+  fnullable : BoundedC Bool
+  fnullable = wrapC fnullable
+
+  export
+  getlength : BoundedRC Int
+  getlength = wrapRC getlength
+
+  export
+  getvalue : BoundedRC (Ptr Bits8)
+  getvalue = wrapRC getvalue
+
+  export
+  getvalueTextual : BoundedRC String
+  getvalueTextual = wrapRC getvalueTextual
