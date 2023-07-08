@@ -388,3 +388,9 @@ namespace Bounded
   export
   getvalueTextual : BoundedRC String
   getvalueTextual = wrapRC getvalueTextual
+
+  export
+  onColumns : (f : BoundedC a) ->
+              (res : Result s) ->
+              Vect (nfields res) a
+  onColumns f res = tabulate (f res)
