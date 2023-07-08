@@ -345,8 +345,8 @@ namespace Bounded
   BoundedRC : Type -> Type
   BoundedRC a = forall s.
                 (res : Result s) ->
-                (col : ColI res) ->
                 (row : RowI res) ->
+                (col : ColI res) ->
                 a
 
   wrapRC : (forall s. Result s -> Nat -> Nat -> a) ->
