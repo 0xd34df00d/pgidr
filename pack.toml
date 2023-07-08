@@ -1,3 +1,9 @@
+[custom.all.indexed-vect]
+type = "github"
+url = "https://github.com/0xd34df00d/idris2-indexed-vect"
+commit = "038dd60a86bfe0edbe993aea0fc35cb3b31f8db1"
+ipkg = "indexed-vect.ipkg"
+
 [custom.all.safe-buffers]
 type = "github"
 url = "https://github.com/0xd34df00d/idris2-safe-buffers"
