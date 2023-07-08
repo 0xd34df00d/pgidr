@@ -1,5 +1,9 @@
 module Postgres.Typed.Schema
 
+import Data.Vect
+import Data.Vect.Indexed
+import Data.Vect.Quantifiers
+
 import Postgres.C
 
 import public Postgres.Typed.PgType
@@ -7,7 +11,8 @@ import public Postgres.Typed.Signature
 
 %default total
 
-nullable : Result s -> (col : Nat) -> Nullability
+public export
+nullable : (res : Result s) -> (col : ColI res) -> Nullability
 nullable res col = if fnullable res col then Nullable else NonNullable
 
 public export
@@ -43,7 +48,19 @@ export
 Show ConvertError where
   show (PgTyParseError str) = "Type parse error: " ++ str
 
+ColumnNullables : (res : Result s) -> Type
+ColumnNullables res = IVect (nfields res) (\col => (n : Nullability ** n = nullable res col))
+
+collectNullables : (res : Result s) ->
+                   ColumnNullables res
+collectNullables res = tabulate (\col => (nullable res col ** Refl))
+
+erasedBy : IVect n tyf -> ({idx : Fin n} -> tyf idx -> a) -> Vect n a
+erasedBy [] f = []
+erasedBy (x :: xs) f = f x :: erasedBy xs f
+
 parameters {u : Universe} (lookup : TypeLookup {u})
+{-
   resultSig'go : (res : Result s) ->
                  (rem, col : Nat) ->
                  Signature {u}
@@ -92,3 +109,4 @@ Tuple = Tuple'
 public export
 signatureOf : (ty : Type) -> {s : _} -> (ty = Tuple' {u} s) => Signature {u}
 signatureOf _ = s
+-}
