@@ -60,6 +60,17 @@ erasedBy [] f = []
 erasedBy (x :: xs) f = f x :: erasedBy xs f
 
 parameters {u : Universe} (lookup : TypeLookup {u})
+  resultSig : (res : Result s) ->
+              (nullsPrfs : ColumnNullables res) ->
+              Signature {u}
+  resultSig res nullsPrfs =
+    let types = ftype `onColumns` res
+        names = fname `onColumns` res
+        nulls = nullsPrfs `erasedBy` fst
+        f : (Int, String, Nullability) -> Signature {u} -> Signature {u}
+        f = \(tyCode, name, nullable), rest => let (ty ** _) = lookup tyCode
+                                                in MkSE name ty nullable :: rest
+     in foldr f [] (zip3 types names nulls)
 {-
   resultSig'go : (res : Result s) ->
                  (rem, col : Nat) ->
