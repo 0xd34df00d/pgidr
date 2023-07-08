@@ -67,10 +67,10 @@ parameters {u : Universe} (lookup : TypeLookup {u})
     let types = ftype `onColumns` res
         names = fname `onColumns` res
         nulls = nullsPrfs `erasedBy` fst
-        f : (Int, String, Nullability) -> Signature {u} -> Signature {u}
-        f = \(tyCode, name, nullable), rest => let (ty ** _) = lookup tyCode
-                                                in MkSE name ty nullable :: rest
-     in foldr f [] (zip3 types names nulls)
+        f : Int -> String -> Nullability -> SignatureElem {u}
+        f = \tyCode, name, nullable => let (ty ** _) = lookup tyCode
+                                        in MkSE name ty nullable
+     in toList (zipWith3 f types names nulls)
 {-
   resultSig'go : (res : Result s) ->
                  (rem, col : Nat) ->
