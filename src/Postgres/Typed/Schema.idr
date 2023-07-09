@@ -88,7 +88,7 @@ parameters {u : Universe} (lookup : TypeLookup {u})
              (sig : Signature (nfields res) {u}) ->
              (row : RowI res) ->
              Either ConvertError (Tuple' sig)
-  resultAt res sig row = go (range {len = nfields res}) sig
+  resultAt res sig row = go range sig
     where
       go : Vect n (Fin (nfields res)) ->
            (sig : Signature n {u}) ->
