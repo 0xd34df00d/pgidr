@@ -16,9 +16,10 @@ nullable : (res : Result s) -> (col : ColI res) -> Nullability
 nullable res col = if fnullable res col then Nullable else NonNullable
 
 public export
-data Tuple' : {u : Universe} -> Signature {u} -> Type where
+data Tuple' : {u : Universe} -> Signature n {u} -> Type where
   Nil   : Tuple' []
-  (::)  : {u, sig, isNull, name : _} ->
+  (::)  : {u, isNull, name : _} ->
+          {sig : Signature n {u}} ->
           {auto inPrf : ty `∊` u} ->
           (val : applyIsNull isNull ty) ->
           (rest : Tuple' {u} sig) ->
@@ -58,14 +59,14 @@ collectNullables res = tabulate (\col => nullable res col)
 parameters {u : Universe} (lookup : TypeLookup {u})
   resultSig : (res : Result s) ->
               (nulls : ColumnNullables res) ->
-              Signature {u}
+              Signature (nfields res) {u}
   resultSig res nulls =
     let types = ftype `onColumns` res
         names = fname `onColumns` res
         f : Int -> String -> Nullability -> SignatureElem {u}
         f = \tyCode, name, nullable => let (ty ** _) = lookup tyCode
                                         in MkSE name ty nullable
-     in toList (zipWith3 f types names nulls)
+     in zipWith3 f types names nulls
 
   convert : (res : Result s) ->
             (nulls : ColumnNullables res) ->

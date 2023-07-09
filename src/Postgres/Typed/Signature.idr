@@ -1,6 +1,7 @@
 module Postgres.Typed.Signature
 
-import Data.List.Quantifiers
+import Data.Vect
+import Data.Vect.Quantifiers
 import Decidable.Equality
 
 import Postgres.Typed.PgType
@@ -80,8 +81,8 @@ parameters {u : Universe}
   name @:? ty = MkSE name ty Nullable
 
   public export
-  Signature : Type
-  Signature = List SignatureElem
+  Signature : Nat -> Type
+  Signature n = Vect n SignatureElem
 
   namespace NullSub
     infix 6 <:, <:?
@@ -138,7 +139,7 @@ parameters {u : Universe}
 
   ||| Denotes that there exists an `e' ∊ sig` such that `e' <: e`.
   public export
-  data ElemSubList : (e : SignatureElem) -> (sig : Signature) -> Type where
+  data ElemSubList : (e : SignatureElem) -> (sig : Signature n) -> Type where
     ESLHere   : e' <: e ->
                 e `ElemSubList` e' :: rest
     ESLThere  : e `ElemSubList` rest ->
@@ -151,7 +152,7 @@ parameters {u : Universe}
   eslElimVoid _ contra' (ESLThere prf) = contra' prf
 
   export
-  elemSubList : (e : SignatureElem) -> (sig : Signature) -> Dec (e `ElemSubList` sig)
+  elemSubList : (e : SignatureElem) -> (sig : Signature n) -> Dec (e `ElemSubList` sig)
   elemSubList _ [] = No $ \case ESLHere impossible
                                 ESLThere impossible
   elemSubList e (e' :: rest) =
@@ -179,7 +180,7 @@ parameters {u : Universe}
   ||| [("name", String), ("lastname", String)] <: [("lastname", Maybe String)]
   ||| ```
   public export
-  data (<:) : (sig, sig' : Signature) -> Type where
+  data (<:) : (sig : Signature n) -> (sig' : Signature n') -> Type where
     MkSS : All (`ElemSubList` sig) sig' ->
            sig <: sig'
 
@@ -194,7 +195,7 @@ parameters {u : Universe}
   -- TODO terribly inefficient to do at runtime since it's quadratic,
   -- but works for a PoC
   export
-  (<:?) : (sig, sig' : Signature) -> Dec (sig <: sig')
+  (<:?) : (sig : Signature n) -> (sig' : Signature n') -> Dec (sig <: sig')
   sig <:? [] = Yes (MkSS [])
   sig <:? e :: sig' =
     case e `elemSubList` sig of
