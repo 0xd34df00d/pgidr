@@ -77,12 +77,12 @@ parameters {u : Universe} (lookup : TypeLookup {u})
             (n : Nullability) ->
             Either ConvertError (applyIsNull n ty)
   convert res row col ty n =
-    let value = fromTextual $ getvalueTextual res row col in
+    let text = getvalueTextual res row col in
     case n of
-         NonNullable => mapFst PgTyParseError value
+         NonNullable => mapFst PgTyParseError $ fromTextual text
          Nullable => if getisnull res row col
                         then pure Nothing
-                        else bimap PgTyParseError Just value
+                        else bimap PgTyParseError Just $ fromTextual text
 
 {-
   resultAt : (res : Result s) ->
