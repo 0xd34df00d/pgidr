@@ -72,16 +72,6 @@ parameters {u : Universe} (lookup : TypeLookup {u})
                                         in MkSE name ty nullable
      in toList (zipWith3 f types names nulls)
 {-
-  resultSig'go : (res : Result s) ->
-                 (rem, col : Nat) ->
-                 Signature {u}
-  resultSig'go res Z _ = []
-  resultSig'go res (S n) col = let (ty ** _) = lookup $ ftype res col
-                                in MkSE (fname res col) ty (nullable res col) :: resultSig'go res n (S col)
-
-  resultSig : (res : Result s) ->
-              Signature {u}
-  resultSig res = resultSig'go res (nfields res) 0
 
   convert : (res : Result s) ->
             (row, col : Nat) ->
