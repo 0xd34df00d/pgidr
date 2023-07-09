@@ -71,19 +71,21 @@ parameters {u : Universe} (lookup : TypeLookup {u})
         f = \tyCode, name, nullable => let (ty ** _) = lookup tyCode
                                         in MkSE name ty nullable
      in toList (zipWith3 f types names nulls)
-{-
 
   convert : (res : Result s) ->
-            (row, col : Nat) ->
+            (nullsPrfs : ColumnNullables res) ->
+            (row : RowI res) ->
+            (col : ColI res) ->
             (ty : Type) ->
             PgType ty =>
-            Either ConvertError (applyIsNull (nullable res col) ty)
-  convert res row col ty with (nullable res col)
+            Either ConvertError (applyIsNull (fst $ col `index` nullsPrfs) ty)
+  convert res nullsPrfs row col ty with (fst $ col `index` nullsPrfs)
     _ | Nullable = if getisnull res row col
                       then pure Nothing
                       else bimap PgTyParseError Just $ fromTextual (getvalueTextual res row col)
     _ | NonNullable = mapFst PgTyParseError $ fromTextual (getvalueTextual res row col)
 
+{-
   resultAt : (res : Result s) ->
              (row : Nat) ->
              Either ConvertError (Tuple' (resultSig res))
