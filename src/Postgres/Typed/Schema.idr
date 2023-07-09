@@ -84,19 +84,22 @@ parameters {u : Universe} (lookup : TypeLookup {u})
                         then pure Nothing
                         else bimap PgTyParseError Just $ fromTextual text
 
-{-
   resultAt : (res : Result s) ->
-             (row : Nat) ->
-             Either ConvertError (Tuple' (resultSig res))
-  resultAt res row = go (nfields res) 0
+             (sig : Signature (nfields res) {u}) ->
+             (row : RowI res) ->
+             Either ConvertError (Tuple' sig)
+  resultAt res sig row = go (range {len = nfields res}) sig
     where
-      go : (rem : Nat) -> (col : Nat) -> Either ConvertError (Tuple' (resultSig'go res rem col))
-      go Z _ = pure []
-      go (S n) col with (lookup $ ftype res col)
-        _ | (ty ** prf) = do val <- convert res row col ty
-                             rest <- go n (S col)
-                             pure $ val :: rest
+      go : Vect n (Fin (nfields res)) ->
+           (sig : Signature n {u}) ->
+           Either ConvertError (Tuple' sig)
+      go [] [] = pure []
+      go (col :: cols) (MkSE _ ty isNull :: sigs)
+        = do val <- convert res row col ty isNull
+             rest <- go cols sigs
+             pure $val :: rest
 
+{-
   public export
   fullResultSet : (res : Result s) ->
                   List (Either ConvertError (Tuple' (resultSig res)))
