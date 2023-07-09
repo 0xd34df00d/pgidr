@@ -74,11 +74,11 @@ parameters {u : Universe} (lookup : TypeLookup {u})
             (col : ColI res) ->
             (ty : Type) ->
             PgType ty =>
-            (n : Nullability) ->
-            Either ConvertError (applyIsNull n ty)
-  convert res row col ty n =
+            (isNull : Nullability) ->
+            Either ConvertError (applyIsNull isNull ty)
+  convert res row col ty isNull =
     let text = getvalueTextual res row col in
-    case n of
+    case isNull of
          NonNullable => mapFst PgTyParseError $ fromTextual text
          Nullable => if getisnull res row col
                         then pure Nothing
