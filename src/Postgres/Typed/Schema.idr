@@ -49,37 +49,32 @@ Show ConvertError where
   show (PgTyParseError str) = "Type parse error: " ++ str
 
 ColumnNullables : (res : Result s) -> Type
-ColumnNullables res = IVect (nfields res) (\col => (n : Nullability ** n = nullable res col))
+ColumnNullables res = Vect (nfields res) Nullability
 
 collectNullables : (res : Result s) ->
                    ColumnNullables res
-collectNullables res = tabulate (\col => (nullable res col ** Refl))
-
-erasedBy : IVect n tyf -> ({idx : Fin n} -> tyf idx -> a) -> Vect n a
-erasedBy [] f = []
-erasedBy (x :: xs) f = f x :: erasedBy xs f
+collectNullables res = tabulate (\col => nullable res col)
 
 parameters {u : Universe} (lookup : TypeLookup {u})
   resultSig : (res : Result s) ->
-              (nullsPrfs : ColumnNullables res) ->
+              (nulls : ColumnNullables res) ->
               Signature {u}
-  resultSig res nullsPrfs =
+  resultSig res nulls =
     let types = ftype `onColumns` res
         names = fname `onColumns` res
-        nulls = nullsPrfs `erasedBy` fst
         f : Int -> String -> Nullability -> SignatureElem {u}
         f = \tyCode, name, nullable => let (ty ** _) = lookup tyCode
                                         in MkSE name ty nullable
      in toList (zipWith3 f types names nulls)
 
   convert : (res : Result s) ->
-            (nullsPrfs : ColumnNullables res) ->
+            (nulls : ColumnNullables res) ->
             (row : RowI res) ->
             (col : ColI res) ->
             (ty : Type) ->
             PgType ty =>
-            Either ConvertError (applyIsNull (fst $ col `index` nullsPrfs) ty)
-  convert res nullsPrfs row col ty with (fst $ col `index` nullsPrfs)
+            Either ConvertError (applyIsNull (col `index` nulls) ty)
+  convert res nulls row col ty with (col `index` nulls)
     _ | Nullable = if getisnull res row col
                       then pure Nothing
                       else bimap PgTyParseError Just $ fromTextual (getvalueTextual res row col)
