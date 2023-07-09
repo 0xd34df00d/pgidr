@@ -56,6 +56,7 @@ collectNullables : (res : Result s) ->
                    ColumnNullables res
 collectNullables res = tabulate (\col => nullable res col)
 
+
 parameters {u : Universe} (lookup : TypeLookup {u})
   resultSig : (res : Result s) ->
               (nulls : ColumnNullables res) ->
@@ -69,17 +70,19 @@ parameters {u : Universe} (lookup : TypeLookup {u})
      in zipWith3 f types names nulls
 
   convert : (res : Result s) ->
-            (nulls : ColumnNullables res) ->
             (row : RowI res) ->
             (col : ColI res) ->
             (ty : Type) ->
             PgType ty =>
-            Either ConvertError (applyIsNull (col `index` nulls) ty)
-  convert res nulls row col ty with (col `index` nulls)
-    _ | Nullable = if getisnull res row col
-                      then pure Nothing
-                      else bimap PgTyParseError Just $ fromTextual (getvalueTextual res row col)
-    _ | NonNullable = mapFst PgTyParseError $ fromTextual (getvalueTextual res row col)
+            (n : Nullability) ->
+            Either ConvertError (applyIsNull n ty)
+  convert res row col ty n =
+    let value = fromTextual $ getvalueTextual res row col in
+    case n of
+         NonNullable => mapFst PgTyParseError value
+         Nullable => if getisnull res row col
+                        then pure Nothing
+                        else bimap PgTyParseError Just value
 
 {-
   resultAt : (res : Result s) ->
