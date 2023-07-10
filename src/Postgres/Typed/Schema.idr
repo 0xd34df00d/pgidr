@@ -104,12 +104,10 @@ parameters {u : Universe} (lookup : TypeLookup {u})
                   Vect (ntuples res) (Either ConvertError (Tuple' (resultSig res (collectNullables res))))
   fullResultSet res = map (resultAt res (resultSig res (collectNullables res))) range
 
-{-
 public export
-Tuple : Signature {u = DefU} -> Type
+Tuple : Signature n {u = DefU} -> Type
 Tuple = Tuple'
 
 public export
-signatureOf : (ty : Type) -> {s : _} -> (ty = Tuple' {u} s) => Signature {u}
+signatureOf : (ty : Type) -> {s : Signature n {u}} -> (ty = Tuple' {u} s) => Signature n {u}
 signatureOf _ = s
--}
