@@ -99,14 +99,12 @@ parameters {u : Universe} (lookup : TypeLookup {u})
              rest <- go cols sigs
              pure $val :: rest
 
-{-
   public export
   fullResultSet : (res : Result s) ->
-                  List (Either ConvertError (Tuple' (resultSig res)))
-  fullResultSet res = case ntuples res of
-                           0 => []
-                           S lastRow => [ resultAt res row | row <- [0 .. lastRow] ]
+                  Vect (ntuples res) (Either ConvertError (Tuple' (resultSig res (collectNullables res))))
+  fullResultSet res = map (resultAt res (resultSig res (collectNullables res))) range
 
+{-
 public export
 Tuple : Signature {u = DefU} -> Type
 Tuple = Tuple'
