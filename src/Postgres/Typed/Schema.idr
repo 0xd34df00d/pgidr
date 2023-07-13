@@ -103,7 +103,7 @@ parameters {u : Universe} (lookup : TypeLookup {u})
   fullResultSet : (res : Result s) ->
                   Vect (ntuples res) (Either ConvertError (Tuple' (resultSig res (collectNullables res))))
   fullResultSet res with (resultSig res (collectNullables res))
-    _ | sig = map (resultAt res sig) range
+    _ | sig = resultAt res sig <$> range
 
 public export
 Tuple : Signature n {u = DefU} -> Type
