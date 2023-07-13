@@ -94,10 +94,9 @@ parameters {u : Universe} (lookup : TypeLookup {u})
            (sig : Signature n {u}) ->
            Either ConvertError (Tuple' sig)
       go [] [] = pure []
-      go (col :: cols) (MkSE _ ty isNull :: sigs)
-        = do val <- convert res row col ty isNull
-             rest <- go cols sigs
-             pure $val :: rest
+      go (col :: cols) (MkSE _ ty isNull :: sigs) = (::)
+                                                <$> convert res row col ty isNull
+                                                <*> go cols sigs
 
   public export
   fullResultSet : (res : Result s) ->
