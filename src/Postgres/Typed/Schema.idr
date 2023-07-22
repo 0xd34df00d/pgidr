@@ -84,11 +84,11 @@ parameters {u : Universe} (lookup : TypeLookup {u})
                         then pure Nothing
                         else bimap PgTyParseError Just $ fromTextual text
 
-  resultAtRow : (res : Result s) ->
-                (sig : Signature (nfields res) {u}) ->
-                (row : RowI res) ->
-                Either ConvertError (Tuple' sig)
-  resultAtRow res sig row = go range sig
+  fullResultAtRow : (res : Result s) ->
+                    (sig : Signature (nfields res) {u}) ->
+                    (row : RowI res) ->
+                    Either ConvertError (Tuple' sig)
+  fullResultAtRow res sig row = go range sig
     where
     go : Vect n (Fin (nfields res)) ->
          (sig : Signature n {u}) ->
@@ -102,7 +102,7 @@ parameters {u : Universe} (lookup : TypeLookup {u})
   fullResultSet : (res : Result s) ->
                   Vect (ntuples res) (Either ConvertError (Tuple' (resultSig res (collectNullables res))))
   fullResultSet res with (resultSig res (collectNullables res))
-    _ | sig = resultAtRow res sig <$> range
+    _ | sig = fullResultAtRow res sig <$> range
 
 public export
 Tuple : Signature n {u = DefU} -> Type
