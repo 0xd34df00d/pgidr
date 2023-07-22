@@ -88,20 +88,20 @@ toResultStatus n = case integerToFin (cast n) (length knownStatuses) of
                         Nothing => Other n
                         Just idx => idx `index` knownStatuses
   where
-    knownStatuses : Vect ? ResultStatus
-    knownStatuses = [ EmptyQuery
-                    , CommandOk
-                    , TuplesOk
-                    , CopyOut
-                    , CopyIn
-                    , BadResponse
-                    , NonfatalError
-                    , FatalError
-                    , CopyBoth
-                    , SingleTuple
-                    , PipelineSync
-                    , PipelineAborted
-                    ]
+  knownStatuses : Vect ? ResultStatus
+  knownStatuses = [ EmptyQuery
+                  , CommandOk
+                  , TuplesOk
+                  , CopyOut
+                  , CopyIn
+                  , BadResponse
+                  , NonfatalError
+                  , FatalError
+                  , CopyBoth
+                  , SingleTuple
+                  , PipelineSync
+                  , PipelineAborted
+                  ]
 
 export
 resultStatus : HasIO io =>
@@ -236,8 +236,8 @@ getvalueTextual : (res : Result s) ->
                   String
 getvalueTextual res row col = convert $ getvalue res row col
   where
-    convert : Ptr Bits8 -> String
-    convert = asString . prim__castPtr . prim__forgetPtr
+  convert : Ptr Bits8 -> String
+  convert = asString . prim__castPtr . prim__forgetPtr
 
 nullptr : Ptr t
 nullptr = prim__castPtr prim__getNullAnyPtr

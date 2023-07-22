@@ -29,18 +29,18 @@ export
 Show (Tuple' sig) where
   show tup = "(" ++ go True tup ++ ")"
     where
-      go : Bool -> Tuple' sig' -> String
-      go _ [] = ""
-      go isFirst ((::) {inPrf} {isNull} {name} val rest) =
-        let pref : String = if isFirst then "" else ", "
-         in case isNull of
-                 Nullable => case val of
-                                  Nothing => pref ++ name ++ " is null" ++ go False rest
-                                  Just val => pref ++ printVal val
-                 NonNullable => pref ++ printVal val
-        where
-          printVal : Show ty => ty -> String
-          printVal v = name ++ " = " ++ show v ++ go False rest
+    go : Bool -> Tuple' sig' -> String
+    go _ [] = ""
+    go isFirst ((::) {inPrf} {isNull} {name} val rest) =
+      let pref : String = if isFirst then "" else ", "
+       in case isNull of
+               Nullable => case val of
+                                Nothing => pref ++ name ++ " is null" ++ go False rest
+                                Just val => pref ++ printVal val
+               NonNullable => pref ++ printVal val
+      where
+      printVal : Show ty => ty -> String
+      printVal v = name ++ " = " ++ show v ++ go False rest
 
 public export
 data ConvertError = PgTyParseError PgTyParseError
@@ -90,13 +90,13 @@ parameters {u : Universe} (lookup : TypeLookup {u})
                 Either ConvertError (Tuple' sig)
   resultAtRow res sig row = go range sig
     where
-      go : Vect n (Fin (nfields res)) ->
-           (sig : Signature n {u}) ->
-           Either ConvertError (Tuple' sig)
-      go [] [] = pure []
-      go (col :: cols) (MkSE _ ty isNull :: sigs) = (::)
-                                                <$> convert res row col ty isNull
-                                                <*> go cols sigs
+    go : Vect n (Fin (nfields res)) ->
+         (sig : Signature n {u}) ->
+         Either ConvertError (Tuple' sig)
+    go [] [] = pure []
+    go (col :: cols) (MkSE _ ty isNull :: sigs) = (::)
+                                              <$> convert res row col ty isNull
+                                              <*> go cols sigs
 
   public export
   fullResultSet : (res : Result s) ->
