@@ -180,29 +180,20 @@ parameters {u : Universe}
   ||| [("name", String), ("lastname", String)] <: [("lastname", Maybe String)]
   ||| ```
   public export
-  data (<:) : (sig : Signature n) -> (sig' : Signature n') -> Type where
-    MkSS : All (`ElemSubList` sig) sig' ->
-           sig <: sig'
-
-  sigSubHead : sig <: e :: sig' ->
-               e `ElemSubList` sig
-  sigSubHead (MkSS (prf :: _)) = prf
-
-  sigSubTail : sig <: e :: sig' ->
-               sig <: sig'
-  sigSubTail (MkSS (_ :: prfs)) = MkSS prfs
+  (<:) : (sig : Signature n) -> (sig' : Signature n') -> Type
+  sig <: sig' = All (`ElemSubList` sig) sig'
 
   -- TODO terribly inefficient to do at runtime since it's quadratic,
   -- but works for a PoC
   export
   (<:?) : (sig : Signature n) -> (sig' : Signature n') -> Dec (sig <: sig')
-  sig <:? [] = Yes (MkSS [])
+  sig <:? [] = Yes []
   sig <:? e :: sig' =
     case e `elemSubList` sig of
-         No contra => No $ contra . sigSubHead
+         No contra => No $ contra . head
          Yes prf => case sig <:? sig' of
-                         No contra => No $ contra . sigSubTail
-                         Yes (MkSS prfs) => Yes (MkSS (prf :: prfs))
+                         No contra => No $ contra . tail
+                         Yes prfs => Yes $ prf :: prfs
 
   eslToIndex : {sig : Signature n} ->
                ElemSubList e sig ->
@@ -214,5 +205,5 @@ parameters {u : Universe}
                 {sig' : Signature n'} ->
                 (subPrf : sig <: sig') ->
                 Vect n' (Fin n)
-  indexesInto (MkSS []) = []
-  indexesInto (MkSS (esl :: esls)) = eslToIndex esl :: indexesInto (MkSS esls)
+  indexesInto [] = []
+  indexesInto (esl :: esls) = eslToIndex esl :: indexesInto esls
