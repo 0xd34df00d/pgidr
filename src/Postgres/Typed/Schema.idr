@@ -84,11 +84,12 @@ parameters {u : Universe} (lookup : TypeLookup {u})
                         then pure Nothing
                         else bimap PgTyParseError Just $ fromTextual text
 
-  fullResultAtRow : (res : Result s) ->
-                    (sig : Signature (nfields res) {u}) ->
-                    (row : RowI res) ->
-                    Either ConvertError (Tuple' sig)
-  fullResultAtRow res sig row = go range sig
+  resultAtRow' : (res : Result s) ->
+                 (row : RowI res) ->
+                 (cols : Vect ncols (Fin (nfields res))) ->
+                 (sig : Signature ncols {u}) ->
+                 Either ConvertError (Tuple' sig)
+  resultAtRow' res row = go
     where
     go : Vect n (Fin (nfields res)) ->
          (sig : Signature n {u}) ->
@@ -98,11 +99,33 @@ parameters {u : Universe} (lookup : TypeLookup {u})
                                               <$> convert res row col ty isNull
                                               <*> go cols sigs
 
-  public export
+  fullResultAtRow : (res : Result s) ->
+                    (sig : Signature (nfields res) {u}) ->
+                    (row : RowI res) ->
+                    Either ConvertError (Tuple' sig)
+  fullResultAtRow res sig row = resultAtRow' res row range sig
+
+  export
   fullResultSet : (res : Result s) ->
                   Vect (ntuples res) (Either ConvertError (Tuple' (resultSig res (collectNullables res))))
   fullResultSet res with (resultSig res (collectNullables res))
     _ | sig = fullResultAtRow res sig <$> range
+
+  resultAtRow : (res : Result s) ->
+                (sig : Signature n {u}) ->
+                (0 fullSig : Signature (nfields res) {u}) ->
+                (subPrf : fullSig <: sig) ->
+                (row : RowI res) ->
+                Either ConvertError (Tuple' sig)
+  resultAtRow res sig _ subPrf row = resultAtRow' res row (indexesInto subPrf) sig
+
+  export
+  resultSet : (res : Result s) ->
+              (sig : Signature n {u}) ->
+              resultSig res (collectNullables res) <: sig ->
+              Vect (ntuples res) (Either ConvertError (Tuple' sig))
+  resultSet res sig subPrf with (resultSig res (collectNullables res))
+    _ | fullSig = resultAtRow res sig fullSig subPrf <$> range
 
 public export
 Tuple : Signature n {u = DefU} -> Type
