@@ -205,14 +205,14 @@ parameters {u : Universe}
   sigSubRefl [] = []
   sigSubRefl (x :: xs) = ESLHere (elemSubRefl x) :: mapProperty ESLThere (sigSubRefl xs)
 
-  eslToIndex : {sig : Signature n} ->
+  eslToIndex : {0 sig : Signature n} ->
                ElemSubList e sig ->
                Fin n
   eslToIndex (ESLHere _) = FZ
   eslToIndex (ESLThere rest) = FS (eslToIndex rest)
 
-  indexesInto : {sig : Signature n} ->
-                {sig' : Signature n'} ->
+  indexesInto : {0 sig : Signature n} ->
+                {0 sig' : Signature n'} ->
                 (subPrf : sig <: sig') ->
                 Vect n' (Fin n)
   indexesInto [] = []
