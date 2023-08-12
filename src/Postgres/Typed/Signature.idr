@@ -211,6 +211,7 @@ parameters {u : Universe}
   eslToIndex (ESLHere _) = FZ
   eslToIndex (ESLThere rest) = FS (eslToIndex rest)
 
+  export
   indexesInto : {0 sig : Signature n} ->
                 {0 sig' : Signature n'} ->
                 (subPrf : sig <: sig') ->
