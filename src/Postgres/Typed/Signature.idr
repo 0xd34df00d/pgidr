@@ -203,3 +203,16 @@ parameters {u : Universe}
          Yes prf => case sig <:? sig' of
                          No contra => No $ contra . sigSubTail
                          Yes (MkSS prfs) => Yes (MkSS (prf :: prfs))
+
+  eslToIndex : {sig : Signature n} ->
+               ElemSubList e sig ->
+               Fin n
+  eslToIndex (ESLHere _) = FZ
+  eslToIndex (ESLThere rest) = FS (eslToIndex rest)
+
+  indexesInto : {sig : Signature n} ->
+                {sig' : Signature n'} ->
+                (subPrf : sig <: sig') ->
+                Vect n' (Fin n)
+  indexesInto (MkSS []) = []
+  indexesInto (MkSS (esl :: esls)) = eslToIndex esl :: indexesInto (MkSS esls)
