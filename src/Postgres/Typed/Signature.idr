@@ -137,6 +137,11 @@ parameters {u : Universe}
                                              Yes prf => Yes (MkES prf {∊u = in2})
                                              No contra => No $ contra . elemSubNullSub in2
 
+    export
+    elemSubRefl : (e : SignatureElem) ->
+                  e <: e
+    elemSubRefl (MkSE name ty isNull) = MkES NSRefl
+
   ||| Denotes that there exists an `e' ∊ sig` such that `e' <: e`.
   public export
   data ElemSubList : (e : SignatureElem) -> (sig : Signature n) -> Type where
