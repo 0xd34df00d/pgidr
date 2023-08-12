@@ -200,6 +200,11 @@ parameters {u : Universe}
                          No contra => No $ contra . tail
                          Yes prfs => Yes $ prf :: prfs
 
+  sigSubRefl : (sig : Signature n) ->
+               sig <: sig
+  sigSubRefl [] = []
+  sigSubRefl (x :: xs) = ESLHere (elemSubRefl x) :: mapProperty ESLThere (sigSubRefl xs)
+
   eslToIndex : {sig : Signature n} ->
                ElemSubList e sig ->
                Fin n
