@@ -16,10 +16,10 @@ nullable : (res : Result s) -> (col : ColI res) -> Nullability
 nullable res col = if fnullable res col then Nullable else NonNullable
 
 public export
-data Tuple' : {u : Universe} -> Signature n {u} -> Type where
+data Tuple' : {u : Universe} -> Signature {u} n -> Type where
   Nil   : Tuple' []
   (::)  : {u, isNull, name : _} ->
-          {sig : Signature n {u}} ->
+          {sig : Signature {u} n} ->
           {auto inPrf : ty `∊` u} ->
           (val : applyIsNull isNull ty) ->
           (rest : Tuple' {u} sig) ->
@@ -60,7 +60,7 @@ collectNullables res = tabulate (\col => nullable res col)
 parameters {u : Universe} (lookup : TypeLookup {u})
   resultSig : (res : Result s) ->
               (nulls : ColumnNullables res) ->
-              Signature (nfields res) {u}
+              Signature {u} (nfields res)
   resultSig res nulls =
     let types = ftype `onColumns` res
         names = fname `onColumns` res
@@ -87,12 +87,12 @@ parameters {u : Universe} (lookup : TypeLookup {u})
   resultAtRow' : (res : Result s) ->
                  (row : RowI res) ->
                  (cols : Vect ncols (Fin (nfields res))) ->
-                 (sig : Signature ncols {u}) ->
+                 (sig : Signature {u} ncols) ->
                  Either ConvertError (Tuple' sig)
   resultAtRow' res row = go
     where
     go : Vect n (Fin (nfields res)) ->
-         (sig : Signature n {u}) ->
+         (sig : Signature {u} n) ->
          Either ConvertError (Tuple' sig)
     go [] [] = pure []
     go (col :: cols) (MkSE _ ty isNull :: sigs) = (::)
@@ -100,7 +100,7 @@ parameters {u : Universe} (lookup : TypeLookup {u})
                                               <*> go cols sigs
 
   resultAtRow : (res : Result s) ->
-                (sig : Signature (nfields res) {u}) ->
+                (sig : Signature {u} (nfields res)) ->
                 (row : RowI res) ->
                 Either ConvertError (Tuple' sig)
   resultAtRow res sig row = resultAtRow' res row range sig
@@ -116,5 +116,5 @@ Tuple : Signature n {u = DefU} -> Type
 Tuple = Tuple'
 
 public export
-signatureOf : (ty : Type) -> {s : Signature n {u}} -> (ty = Tuple' {u} s) => Signature n {u}
+signatureOf : (ty : Type) -> {s : Signature {u} n} -> (ty = Tuple' {u} s) => Signature {u} n
 signatureOf _ = s
