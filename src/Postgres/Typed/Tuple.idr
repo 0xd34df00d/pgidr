@@ -6,8 +6,7 @@ import public Postgres.Typed.Signature
 public export
 data Tuple : Signature n -> Type where
   Nil   : Tuple []
-  (::)  : {isNull, name : _} ->
-          {sig : Signature n} ->
+  (::)  : {isNull, name, sig : _} ->
           PgType ty =>
           (val : applyIsNull isNull ty) ->
           (rest : Tuple sig) ->
