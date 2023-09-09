@@ -1,8 +1,6 @@
 module Postgres.Typed.Schema
 
 import Data.Vect
-import Data.Vect.Indexed
-import Data.Vect.Quantifiers
 
 import Postgres.C
 
