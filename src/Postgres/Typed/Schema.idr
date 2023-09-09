@@ -111,22 +111,6 @@ parameters {u : Universe} (lookup : TypeLookup {u})
   fullResultSet res with (resultSig res (collectNullables res))
     _ | sig = fullResultAtRow res sig <$> range
 
-  resultAtRow : (res : Result s) ->
-                (sig : Signature n {u}) ->
-                (0 fullSig : Signature (nfields res) {u}) ->
-                (subPrf : fullSig <: sig) ->
-                (row : RowI res) ->
-                Either ConvertError (Tuple' sig)
-  resultAtRow res sig _ subPrf row = resultAtRow' res row (indexesInto subPrf) sig
-
-  export
-  resultSet : (res : Result s) ->
-              (sig : Signature n {u}) ->
-              resultSig res (collectNullables res) <: sig ->
-              Vect (ntuples res) (Either ConvertError (Tuple' sig))
-  resultSet res sig subPrf with (resultSig res (collectNullables res))
-    _ | fullSig = resultAtRow res sig fullSig subPrf <$> range
-
 public export
 Tuple : Signature n {u = DefU} -> Type
 Tuple = Tuple'
