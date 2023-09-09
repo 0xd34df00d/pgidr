@@ -99,17 +99,17 @@ parameters {u : Universe} (lookup : TypeLookup {u})
                                               <$> convert res row col ty isNull
                                               <*> go cols sigs
 
-  fullResultAtRow : (res : Result s) ->
-                    (sig : Signature (nfields res) {u}) ->
-                    (row : RowI res) ->
-                    Either ConvertError (Tuple' sig)
-  fullResultAtRow res sig row = resultAtRow' res row range sig
+  resultAtRow : (res : Result s) ->
+                (sig : Signature (nfields res) {u}) ->
+                (row : RowI res) ->
+                Either ConvertError (Tuple' sig)
+  resultAtRow res sig row = resultAtRow' res row range sig
 
   export
-  fullResultSet : (res : Result s) ->
-                  Vect (ntuples res) (Either ConvertError (Tuple' (resultSig res (collectNullables res))))
-  fullResultSet res with (resultSig res (collectNullables res))
-    _ | sig = fullResultAtRow res sig <$> range
+  resultSet : (res : Result s) ->
+              Vect (ntuples res) (Either ConvertError (Tuple' (resultSig res (collectNullables res))))
+  resultSet res with (resultSig res (collectNullables res))
+    _ | sig = resultAtRow res sig <$> range
 
 public export
 Tuple : Signature n {u = DefU} -> Type

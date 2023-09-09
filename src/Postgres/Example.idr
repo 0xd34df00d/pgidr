@@ -95,4 +95,4 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
       putStr " | "
     putStrLn ""
 
-  printLn $ fullResultSet defLookup res
+  printLn $ resultSet defLookup res
