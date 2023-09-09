@@ -16,22 +16,22 @@ nullable : (res : Result s) -> (col : ColI res) -> Nullability
 nullable res col = if fnullable res col then Nullable else NonNullable
 
 public export
-data Tuple' : {u : Universe} -> Signature {u} n -> Type where
-  Nil   : Tuple' []
-  (::)  : {u, isNull, name : _} ->
-          {sig : Signature {u} n} ->
-          {auto inPrf : ty `∊` u} ->
+data Tuple : Signature n -> Type where
+  Nil   : Tuple []
+  (::)  : {isNull, name : _} ->
+          {sig : Signature n} ->
+          PgType ty =>
           (val : applyIsNull isNull ty) ->
-          (rest : Tuple' {u} sig) ->
-          Tuple' {u} (MkSE name ty isNull :: sig)
+          (rest : Tuple sig) ->
+          Tuple (MkSE name ty isNull :: sig)
 
 export
-Show (Tuple' sig) where
+Show (Tuple sig) where
   show tup = "(" ++ go True tup ++ ")"
     where
-    go : Bool -> Tuple' sig' -> String
+    go : Bool -> Tuple sig' -> String
     go _ [] = ""
-    go isFirst ((::) {inPrf} {isNull} {name} val rest) =
+    go isFirst ((::) {isNull} {name} val rest) =
       let pref : String = if isFirst then "" else ", "
        in case isNull of
                Nullable => case val of
@@ -57,14 +57,14 @@ collectNullables : (res : Result s) ->
 collectNullables res = tabulate (\col => nullable res col)
 
 
-parameters {u : Universe} (lookup : TypeLookup {u})
+parameters (lookup : TypeLookup)
   resultSig : (res : Result s) ->
               (nulls : ColumnNullables res) ->
-              Signature {u} (nfields res)
+              Signature (nfields res)
   resultSig res nulls =
     let types = ftype `onColumns` res
         names = fname `onColumns` res
-        f : Int -> String -> Nullability -> SignatureElem {u}
+        f : Int -> String -> Nullability -> SignatureElem
         f = \tyCode, name, nullable => let (ty ** _) = lookup tyCode
                                         in MkSE name ty nullable
      in zipWith3 f types names nulls
@@ -87,34 +87,30 @@ parameters {u : Universe} (lookup : TypeLookup {u})
   resultAtRow' : (res : Result s) ->
                  (row : RowI res) ->
                  (cols : Vect ncols (Fin (nfields res))) ->
-                 (sig : Signature {u} ncols) ->
-                 Either ConvertError (Tuple' sig)
+                 (sig : Signature ncols) ->
+                 Either ConvertError (Tuple sig)
   resultAtRow' res row = go
     where
     go : Vect n (Fin (nfields res)) ->
-         (sig : Signature {u} n) ->
-         Either ConvertError (Tuple' sig)
+         (sig : Signature n) ->
+         Either ConvertError (Tuple sig)
     go [] [] = pure []
     go (col :: cols) (MkSE _ ty isNull :: sigs) = (::)
                                               <$> convert res row col ty isNull
                                               <*> go cols sigs
 
   resultAtRow : (res : Result s) ->
-                (sig : Signature {u} (nfields res)) ->
+                (sig : Signature (nfields res)) ->
                 (row : RowI res) ->
-                Either ConvertError (Tuple' sig)
+                Either ConvertError (Tuple sig)
   resultAtRow res sig row = resultAtRow' res row range sig
 
   export
   resultSet : (res : Result s) ->
-              Vect (ntuples res) (Either ConvertError (Tuple' (resultSig res (collectNullables res))))
+              Vect (ntuples res) (Either ConvertError (Tuple (resultSig res (collectNullables res))))
   resultSet res with (resultSig res (collectNullables res))
     _ | sig = resultAtRow res sig <$> range
 
 public export
-Tuple : Signature n {u = DefU} -> Type
-Tuple = Tuple'
-
-public export
-signatureOf : (ty : Type) -> {s : Signature {u} n} -> (ty = Tuple' {u} s) => Signature {u} n
+signatureOf : (ty : Type) -> {s : Signature n} -> (ty = Tuple s) => Signature n
 signatureOf _ = s
