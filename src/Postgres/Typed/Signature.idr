@@ -47,3 +47,7 @@ name @:? ty = MkSE name ty Nullable
 public export
 Signature : Nat -> Type
 Signature n = Vect n SignatureElem
+
+public export
+interface HasSignature n (ty : Type) | ty where
+  signature : Signature n

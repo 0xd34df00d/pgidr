@@ -112,5 +112,9 @@ parameters (lookup : TypeLookup)
     _ | sig = resultAtRow res sig <$> range
 
 public export
-signatureOf : (ty : Type) -> {s : Signature n} -> (ty = Tuple s) => Signature n
-signatureOf _ = s
+{s : Signature n} -> HasSignature n (Tuple s) where
+  signature = s
+
+public export
+signatureOf : (ty : Type) -> HasSignature n ty => Signature n
+signatureOf ty = signature {ty}
