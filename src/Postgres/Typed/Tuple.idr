@@ -35,9 +35,23 @@ public export
 interface HasSignature n (ty : Type) | ty where
   signature : Signature n
 
+  toTuple : ty -> Tuple signature
+  fromTuple : Tuple signature -> ty
+
+  fromToId : (v : ty) ->
+             fromTuple (toTuple v) = v
+  toFromId : (v : Tuple signature) ->
+             toTuple (fromTuple v) = v
+
 public export
 {s : Signature n} -> HasSignature n (Tuple s) where
   signature = s
+
+  toTuple = id
+  fromTuple = id
+
+  fromToId v = Refl
+  toFromId v = Refl
 
 public export
 signatureOf : (ty : Type) -> HasSignature n ty => Signature n
