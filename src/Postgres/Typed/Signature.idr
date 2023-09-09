@@ -1,6 +1,6 @@
 module Postgres.Typed.Signature
 
-import Data.Vect
+import public Data.Vect
 import Data.Vect.Quantifiers
 import Decidable.Equality
 
@@ -47,7 +47,3 @@ name @:? ty = MkSE name ty Nullable
 public export
 Signature : Nat -> Type
 Signature n = Vect n SignatureElem
-
-public export
-interface HasSignature n (ty : Type) | ty where
-  signature : Signature n

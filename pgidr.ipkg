@@ -19,5 +19,6 @@ modules = Postgres.C
         , Postgres.Typed.PgType
         , Postgres.Typed.Schema
         , Postgres.Typed.Signature
+        , Postgres.Typed.Tuple
 
 prebuild = "./prebuild.sh"
