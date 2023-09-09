@@ -3,6 +3,8 @@ module Postgres.Typed.Tuple
 import public Postgres.Typed.PgType
 import public Postgres.Typed.Signature
 
+%default total
+
 public export
 data Tuple : Signature n -> Type where
   Nil   : Tuple []
