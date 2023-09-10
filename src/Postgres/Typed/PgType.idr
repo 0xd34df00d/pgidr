@@ -31,11 +31,6 @@ PgType String where
   fromTextual = pure
 
 public export
-PgType Int where
-  toTextual = cast
-  fromTextual = pure . cast -- TODO better error reporting
-
-public export
 PgType Integer where
   toTextual = cast
   fromTextual = pure . cast -- TODO better error reporting
