@@ -28,7 +28,7 @@ fieldsToString fields = case fields of
                              FieldsSome ixes => toString $ (`index` signatureOf ty) <$> ixes
   where
   toString : Vect n SignatureElem -> String
-  toString = concat . intersperse ", " . map columnName
+  toString = concat . intersperse ", " . map (.name)
 
 data DummyTag = DFrom
 record Dummy (tag : DummyTag) where

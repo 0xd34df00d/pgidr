@@ -7,6 +7,7 @@ import Decidable.Equality
 import Postgres.Typed.PgType
 
 %default total
+%prefix_record_projections off
 
 public export
 TypeLookup : Type
@@ -28,12 +29,12 @@ applyIsNull Nullable ty = Maybe ty
 applyIsNull NonNullable ty = ty
 
 public export
-data SignatureElem : Type where
-  MkSE : (name : String) ->
-         (ty : Type) ->
-         (isNull : Nullability) ->
-         PgType ty =>
-         SignatureElem
+record SignatureElem where
+  constructor MkSE
+  name : String
+  type : Type
+  isNull : Nullability
+  {auto pgType : PgType type}
 
 infixl 7 @:, @:?
 public export
@@ -43,10 +44,6 @@ public export
               SignatureElem
 name @: ty = MkSE name ty NonNullable
 name @:? ty = MkSE name ty Nullable
-
-public export
-columnName : SignatureElem -> String
-columnName (MkSE name _ _) = name
 
 public export
 Signature : Nat -> Type
