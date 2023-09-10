@@ -18,6 +18,7 @@ modules = Postgres.C
 
         , Postgres.Typed.PgType
         , Postgres.Typed.Schema
+        , Postgres.Typed.Select
         , Postgres.Typed.Signature
         , Postgres.Typed.Tuple
 
