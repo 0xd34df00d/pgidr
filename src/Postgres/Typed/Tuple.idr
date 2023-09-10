@@ -33,7 +33,8 @@ Show (Tuple sig) where
 
 
 public export
-interface HasSignature n (0 ty : Type) | ty where
+interface IsTableType n (0 ty : Type) | ty where
+  tableName : String
   signature : Signature n
 
   toTuple : ty -> Tuple signature
@@ -45,15 +46,25 @@ interface HasSignature n (0 ty : Type) | ty where
              toTuple (fromTuple v) = v
 
 public export
-{s : Signature n} -> HasSignature n (Tuple s) where
+record NamedTuple (name : String) (s : Signature n) where
+  constructor MkNT
+  columns : Tuple s
+
+public export
+{name : _} -> {s : Signature n} -> IsTableType n (NamedTuple name s) where
+  tableName = name
   signature = s
 
-  toTuple = id
-  fromTuple = id
+  toTuple = columns
+  fromTuple = MkNT
 
-  fromToId v = Refl
+  fromToId (MkNT columns) = Refl
   toFromId v = Refl
 
 public export
-signatureOf : (0 ty : Type) -> HasSignature n ty => Signature n
+tableNameOf : (0 ty : Type) -> IsTableType _ ty => String
+tableNameOf ty = tableName {ty}
+
+public export
+signatureOf : (0 ty : Type) -> IsTableType n ty => Signature n
 signatureOf ty = signature {ty}
