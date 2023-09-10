@@ -1,8 +1,6 @@
 module Postgres.Typed.Signature
 
 import public Data.Vect
-import Data.Vect.Quantifiers
-import Decidable.Equality
 
 import Postgres.Typed.PgType
 
