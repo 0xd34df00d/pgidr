@@ -10,13 +10,13 @@ import Postgres.Typed.PgType
 
 public export
 TypeLookup : Type
-TypeLookup = Int -> (ty ** PgType ty)
+TypeLookup = Int -> SomePgType
 
 export
 defLookup : TypeLookup
-defLookup 23 = (Integer ** %search)
-defLookup 25 = (String ** %search)
-defLookup _ = (UnknownPgType ** %search)
+defLookup 23 = MkSomePgType Integer
+defLookup 25 = MkSomePgType String
+defLookup _ = MkSomePgType UnknownPgType
 
 
 public export

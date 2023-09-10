@@ -22,6 +22,10 @@ interface Show ty => PgType ty where
   fromTextual : String -> Either PgTyParseError ty
 
 public export
+data SomePgType : Type where
+  MkSomePgType : (ty : Type) -> PgType ty => SomePgType
+
+public export
 PgType String where
   toTextual = id
   fromTextual = pure

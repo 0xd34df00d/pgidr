@@ -33,7 +33,7 @@ parameters (lookup : TypeLookup)
     let types = ftype `onColumns` res
         names = fname `onColumns` res
         f : Int -> String -> Nullability -> SignatureElem
-        f = \tyCode, name, nullable => let (ty ** _) = lookup tyCode
+        f = \tyCode, name, nullable => let MkSomePgType ty = lookup tyCode
                                         in MkSE name ty nullable
      in zipWith3 f types names nulls
 
