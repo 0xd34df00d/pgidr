@@ -33,7 +33,7 @@ Show (Tuple sig) where
 
 
 public export
-interface HasSignature n (ty : Type) | ty where
+interface HasSignature n (0 ty : Type) | ty where
   signature : Signature n
 
   toTuple : ty -> Tuple signature
@@ -55,5 +55,5 @@ public export
   toFromId v = Refl
 
 public export
-signatureOf : (ty : Type) -> HasSignature n ty => Signature n
+signatureOf : (0 ty : Type) -> HasSignature n ty => Signature n
 signatureOf ty = signature {ty}
