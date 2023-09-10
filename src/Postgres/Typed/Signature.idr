@@ -45,5 +45,9 @@ name @: ty = MkSE name ty NonNullable
 name @:? ty = MkSE name ty Nullable
 
 public export
+columnName : SignatureElem -> String
+columnName (MkSE name _ _) = name
+
+public export
 Signature : Nat -> Type
 Signature n = Vect n SignatureElem
