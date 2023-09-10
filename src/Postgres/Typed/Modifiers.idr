@@ -32,6 +32,10 @@ Show (idx `index` sig).type => Show (References sig idx) where
   show ref = "Ref(" ++ show (ref.val) ++ ")"
 
 public export
-(PgType (idx `index` sig).type, (idx `index` sig).isNull = NonNullable) => PgType (References sig idx) where
+ValidRefTarget : SignatureElem -> Type
+ValidRefTarget elem = (PgType elem.type, elem.isNull = NonNullable)
+
+public export
+ValidRefTarget (idx `index` sig) => PgType (References sig idx) where
   toTextual = toTextual . (.val)
   fromTextual = map (MkReferences %search) . fromTextual
