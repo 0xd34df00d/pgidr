@@ -39,3 +39,20 @@ public export
 PgType UnknownPgType where
   toTextual = .rawContents
   fromTextual = pure . MkUPT
+
+
+public export
+interface PgType ty => CreatablePgType ty where
+  fieldTypeName : String
+
+public export
+fieldTypeNameOf : (0 ty : Type) -> CreatablePgType ty => String
+fieldTypeNameOf ty = fieldTypeName {ty}
+
+public export
+CreatablePgType String where
+  fieldTypeName = "TEXT"
+
+public export
+CreatablePgType Integer where
+  fieldTypeName = "INTEGER"
