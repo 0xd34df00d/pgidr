@@ -1,41 +1,39 @@
 module Postgres.Typed.Modifiers
 
+import Data.String
+
 import Postgres.Typed.PgType
 import Postgres.Typed.Signature
+import Postgres.Typed.Tuple
 
 %default total
 %prefix_record_projections off
 
 public export
-record PKey (ty : Type) where
-  constructor MkPKey
+data Modifiers : (ty : Type) -> Type where
+  PKey   : Modifiers ty
+  References : (0 other : Type) ->
+               IsTableType n other =>
+               (idx : Fin n) ->
+               {auto isNotNull : (idx `index` signatureOf other).isNull = NonNullable} ->
+               {auto typesMatch : ty = (idx `index` signatureOf other).type} ->
+               Modifiers ty
+
+public export
+Show ty => Show (Modifiers ty) where
+  show PKey = "PRIMARY KEY"
+  show (References other idx) = "REFERENCES(" ++ tableNameOf other ++ "." ++ (idx `index` signatureOf other).name ++ ")"
+
+public export
+record ThatIs (0 ty : Type) (modifiers : List (Modifiers ty)) where
+  constructor MkThatIs
   val : ty
 
 public export
-Show ty => Show (PKey ty) where
-  show pk = "PK(" ++ show (pk.val) ++ ")"
+{modifiers : _} -> Show ty => Show (ThatIs ty modifiers) where
+  show wm = show wm.val ++ " " ++ unwords (show <$> modifiers)
 
 public export
-PgType ty => PgType (PKey ty) where
+{modifiers : _} -> PgType ty => PgType (ThatIs ty modifiers) where
   toTextual = toTextual . .val
-  fromTextual = map MkPKey . fromTextual
-
-
-public export
-record References (sig : Signature n) (idx : Fin n) where
-  constructor MkReferences
-  isNotNull : (idx `index` sig).isNull = NonNullable
-  val : (idx `index` sig).type
-
-public export
-Show (idx `index` sig).type => Show (References sig idx) where
-  show ref = "Ref(" ++ show (ref.val) ++ ")"
-
-public export
-ValidRefTarget : SignatureElem -> Type
-ValidRefTarget elem = (PgType elem.type, elem.isNull = NonNullable)
-
-public export
-ValidRefTarget (idx `index` sig) => PgType (References sig idx) where
-  toTextual = toTextual . (.val)
-  fromTextual = map (MkReferences %search) . fromTextual
+  fromTextual = map MkThatIs . fromTextual
