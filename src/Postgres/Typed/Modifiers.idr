@@ -31,6 +31,8 @@ Show ty => Show (Modifier ty) where
                                 ")"
   show (Default defVal) = "DEFAULT " ++ show defVal
 
+infix 9 `ThatIs`
+
 public export
 record ThatIs (0 ty : Type) (modifiers : List (Modifier ty)) where
   constructor MkThatIs
