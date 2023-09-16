@@ -58,3 +58,7 @@ public export
 {modifiers : _} -> ModifiersValid modifiers => PgType ty => PgType (ty `ThatIs` modifiers) where
   toTextual = toTextual . .val
   fromTextual = map (\v => MkThatIs v) . fromTextual
+
+public export
+{modifiers : _} -> ModifiersValid modifiers => CreatablePgType ty => CreatablePgType (ty `ThatIs` modifiers) where
+  fieldTypeName = fieldTypeNameOf ty ++ " " ++ unwords (show <$> modifiers)
