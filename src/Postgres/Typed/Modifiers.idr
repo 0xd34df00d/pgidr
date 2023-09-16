@@ -1,7 +1,5 @@
 module Postgres.Typed.Modifiers
 
-import Data.List.Elem
-import Data.Vect.Quantifiers
 import Data.String
 
 import Postgres.Typed.PgType
@@ -34,31 +32,19 @@ Show ty => Show (Modifier ty) where
   show (Default defVal) = "DEFAULT " ++ show defVal
 
 public export
-data MVSerialNoPKey : (mods : List (Modifier ty)) -> Type where
-  MVSNP'NoSerial : (Not (Serial `Elem` mods)) -> MVSerialNoPKey mods
-  MVSNP'Serial : (Serial `Elem` mods) ->
-                 (Not (PKey `Elem` mods)) ->
-                 MVSerialNoPKey mods
-
-public export
-0 ModifiersValid : (mods : List (Modifier ty)) -> Type
-ModifiersValid mods = All id [MVSerialNoPKey mods, NonEmpty mods]
-
-public export
 record ThatIs (0 ty : Type) (modifiers : List (Modifier ty)) where
   constructor MkThatIs
   val : ty
-  {auto 0 modifiersValid : ModifiersValid modifiers}
 
 public export
 {modifiers : _} -> Show ty => Show (ty `ThatIs` modifiers) where
   show wm = show wm.val ++ " " ++ unwords (show <$> modifiers)
 
 public export
-{modifiers : _} -> ModifiersValid modifiers => PgType ty => PgType (ty `ThatIs` modifiers) where
+{modifiers : _} -> PgType ty => PgType (ty `ThatIs` modifiers) where
   toTextual = toTextual . .val
   fromTextual = map (\v => MkThatIs v) . fromTextual
 
 public export
-{modifiers : _} -> ModifiersValid modifiers => CreatablePgType ty => CreatablePgType (ty `ThatIs` modifiers) where
+{modifiers : _} -> CreatablePgType ty => CreatablePgType (ty `ThatIs` modifiers) where
   fieldTypeName = fieldTypeNameOf ty ++ " " ++ unwords (show <$> modifiers)
