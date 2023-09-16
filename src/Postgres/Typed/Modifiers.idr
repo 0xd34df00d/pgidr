@@ -41,6 +41,12 @@ public export
   show wm = show wm.val ++ " " ++ unwords (show <$> modifiers)
 
 public export
+{modifiers : _} -> Num ty => Num (ty `ThatIs` modifiers) where
+  fromInteger = MkThatIs . fromInteger
+  v1 * v2 = MkThatIs $ v1.val * v2.val
+  v1 + v2 = MkThatIs $ v1.val + v2.val
+
+public export
 {modifiers : _} -> PgType ty => PgType (ty `ThatIs` modifiers) where
   toTextual = toTextual . .val
   fromTextual = map (\v => MkThatIs v) . fromTextual
