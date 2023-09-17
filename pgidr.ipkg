@@ -16,12 +16,12 @@ modules = Postgres.C
         , Postgres.C.Query
         , Postgres.C.Utils
 
-        , Postgres.Typed.Create
         , Postgres.Typed.Modifiers
         , Postgres.Typed.PgType
         , Postgres.Typed.Schema
-        , Postgres.Typed.Select
         , Postgres.Typed.Signature
         , Postgres.Typed.Tuple
 
+        , Postgres.Typed.Create
+        , Postgres.Typed.Select
 prebuild = "./prebuild.sh"
