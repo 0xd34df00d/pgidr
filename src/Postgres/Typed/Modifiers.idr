@@ -10,9 +10,13 @@ import Postgres.Typed.Tuple
 %prefix_record_projections off
 
 public export
+data PKeySort : (ty : Type) -> Type where
+  PKeyNormal : PKeySort ty
+  PKeySerial : PKeySort Integer
+
+public export
 data Modifier : (ty : Type) -> Type where
-  PKey   : Modifier ty
-  Serial : Modifier Integer
+  PKey : PKeySort ty -> Modifier ty
   References : (0 other : Type) ->
                IsTableType n other =>
                (idx : Fin n) ->
@@ -24,8 +28,9 @@ data Modifier : (ty : Type) -> Type where
 
 public export
 Show ty => Show (Modifier ty) where
-  show PKey = "PRIMARY KEY"
-  show Serial = "SERIAL"
+  show (PKey sort) = case sort of
+                          PKeyNormal => "PRIMARY KEY"
+                          PKeySerial => "SERIAL"
   show (References other idx) = "REFERENCES(" ++
                                 tableNameOf other ++ "." ++ (idx `index` signatureOf other).name ++
                                 ")"
