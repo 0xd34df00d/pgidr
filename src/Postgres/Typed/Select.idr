@@ -46,7 +46,7 @@ select : Dummy DFrom ->
 select _ ty f = f (MkSelect %search FieldsAll OrderNone)
 
 
-public export
+export
 toQuery : Select ty ->
           String
 toQuery (MkSelect _ fields order) =
