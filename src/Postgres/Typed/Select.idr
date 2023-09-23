@@ -6,8 +6,8 @@ import public Postgres.Typed.Tuple
 
 public export
 data Fields : (ty : Type) -> Type where
-  FieldsAll  : IsTableType _ ty => Fields ty
-  FieldsSome : IsTableType n ty =>
+  FieldsAll  : HasSignature _ ty => Fields ty
+  FieldsSome : HasSignature n ty =>
                (ixes : Vect k (Fin n)) ->
                Fields ty
 
@@ -18,7 +18,7 @@ data Order : (ty : Type) -> Type where
 public export
 record Select (ty : Type) where
   constructor MkSelect
-  isTableType : IsTableType colCount ty
+  isTableType : HasSignature colCount ty
   fields : Fields ty
   orderby : Order ty
 
@@ -40,7 +40,7 @@ from = MkDF
 public export
 select : Dummy DFrom ->
          (ty : Type) ->
-         IsTableType n ty =>
+         HasSignature n ty =>
          (Select ty -> Select ty) ->
          Select ty
 select _ ty f = f (MkSelect %search FieldsAll OrderNone)

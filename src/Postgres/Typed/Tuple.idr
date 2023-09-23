@@ -1,70 +1,86 @@
 module Postgres.Typed.Tuple
 
+import Data.List
+
+import Postgres.Typed.Modifiers
 import public Postgres.Typed.PgType
 import public Postgres.Typed.Signature
 
 %default total
 
 public export
-data Tuple : Signature n -> Type where
-  Nil   : Tuple []
-  (::)  : {isNull, name, sig : _} ->
+data Dir = Read | Write
+
+public export
+data EffectiveNullability = Nullable | NonNullable
+
+public export
+computeNullability : List (Modifier ty) -> Dir -> EffectiveNullability
+computeNullability mods dir = case dir of
+                                   Read => columnNull
+                                   Write => case find (\e => isSerial e || isDefaulted e) mods of
+                                                 Just _ => Nullable
+                                                 Nothing => columnNull
+  where
+  columnNull : EffectiveNullability
+  columnNull = case find isNotNull mods of
+                    Just _ => NonNullable
+                    Nothing => Nullable
+
+public export
+computeType : Dir -> (ty : Type) -> List (Modifier ty) -> Type
+computeType dir ty mods = case computeNullability mods dir of
+                               Nullable => Maybe ty
+                               NonNullable => ty
+
+public export
+data Tuple : (dir : Dir) -> Signature n -> Type where
+  Nil   : Tuple dir []
+  (::)  : {name, modifiers, sig : _} ->
           PgType ty =>
-          (val : applyIsNull isNull ty) ->
-          (rest : Tuple sig) ->
-          Tuple (MkSE name ty isNull :: sig)
+          (val : computeType dir ty modifiers) ->
+          (rest : Tuple dir sig) ->
+          Tuple dir (MkSE name ty modifiers :: sig)
 
 export
-Show (Tuple sig) where
-  show tup = "(" ++ go True tup ++ ")"
+{dir : _} -> Show (Tuple dir sig) where
+  show tup = "(" ++ go "" tup ++ ")"
     where
-    go : Bool -> Tuple sig' -> String
+    go : {dir' : _} -> String -> Tuple dir' sig' -> String
     go _ [] = ""
-    go isFirst ((::) {isNull} {name} val rest) =
-      let pref : String = if isFirst then "" else ", "
-       in case isNull of
-               Nullable => case val of
-                                Nothing => pref ++ name ++ " is null" ++ go False rest
-                                Just val => pref ++ printVal val
-               NonNullable => pref ++ printVal val
-      where
-      printVal : Show ty => ty -> String
-      printVal v = name ++ " = " ++ show v ++ go False rest
-
+    go pref ((::) {name} {modifiers} val rest) with (computeNullability modifiers dir')
+      _ | Nullable = case val of
+                          Nothing => pref ++ name ++ " is null" ++ go ", " rest
+                          Just val => pref ++ name ++ " = " ++ show val ++ go ", " rest
+      _ | NonNullable = pref ++ name ++ " = " ++ show val ++ go ", " rest
 
 public export
-interface IsTableType n (0 ty : Type) | ty where
-  tableName : String
-  signature : Signature n
-
-  toTuple : ty -> Tuple signature
-  fromTuple : Tuple signature -> ty
-
-  fromToId : (v : ty) ->
-             fromTuple (toTuple v) = v
-  toFromId : (v : Tuple signature) ->
-             toTuple (fromTuple v) = v
-
-public export
-record NamedTuple (name : String) (s : Signature n) where
+record NamedTuple (name : String) (dir : Dir) (s : Signature n) where
   constructor MkNT
-  columns : Tuple s
+  columns : Tuple dir s
+
 
 public export
-{name : _} -> {s : Signature n} -> IsTableType n (NamedTuple name s) where
+{name : _} -> {s : Signature n} -> HasSignature n (NamedTuple name dir s) where
   tableName = name
   signature = s
 
+{- TODO, if the IsTableType type is needed at all
+public export
+interface HasSignature n ty => IsTableType n (0 ty : Type) | ty where
+  toTuple : ty -> Tuple dir (signatureOf ty)
+  fromTuple : Tuple dir (signatureOf ty) -> ty
+
+  fromToId : (v : ty) ->
+             fromTuple (toTuple v) = v
+  toFromId : (v : Tuple (signatureOf ty)) ->
+             toTuple (fromTuple v) = v
+
+public export
+{name : _} -> {s : Signature n} -> IsTableType n (NamedTuple name s) where
   toTuple = columns
   fromTuple = MkNT
 
   fromToId (MkNT columns) = Refl
   toFromId v = Refl
-
-public export
-tableNameOf : (0 ty : Type) -> IsTableType _ ty => String
-tableNameOf ty = tableName {ty}
-
-public export
-signatureOf : (0 ty : Type) -> IsTableType n ty => Signature n
-signatureOf ty = signature {ty}
+  -}

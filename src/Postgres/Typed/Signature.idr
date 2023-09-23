@@ -19,20 +19,53 @@ defLookup _ = MkSomePgType UnknownPgType
 
 
 public export
-data Nullability = Nullable | NonNullable
+data PKeySort : (ty : Type) -> Type where
+  PKeyNormal : PKeySort ty
+  PKeySerial : PKeySort Integer
 
 public export
-applyIsNull : Nullability -> Type -> Type
-applyIsNull Nullable ty = Maybe ty
-applyIsNull NonNullable ty = ty
+data Modifier : (ty : Type) -> Type
 
 public export
 record SignatureElem where
   constructor MkSE
   name : String
   type : Type
-  isNull : Nullability
+  modifiers : List (Modifier type)
   {auto pgType : PgType type}
+
+public export
+Signature : Nat -> Type
+Signature n = Vect n SignatureElem
+
+public export
+interface HasSignature n (0 ty : Type) | ty where
+  signature : Signature n
+  tableName : String
+
+public export
+signatureOf : (0 ty : Type) ->
+              HasSignature n ty =>
+              Signature n
+signatureOf ty = signature {ty}
+
+public export
+tableNameOf : (0 ty : Type) ->
+              HasSignature _ ty =>
+              String
+tableNameOf ty = tableName {ty}
+
+public export
+data Modifier : (ty : Type) -> Type where
+  PKey : PKeySort ty -> Modifier ty
+  References : (0 other : Type) ->
+               HasSignature n other =>
+               (idx : Fin n) ->
+               {auto typesMatch : ty = (idx `index` signatureOf other).type} ->
+               Modifier ty
+  Default : (defVal : ty) ->
+            Modifier ty
+  NotNull : Modifier ty
 
 infixl 7 @:, @:?
 public export
@@ -40,9 +73,5 @@ public export
               (ty : Type) ->
               PgType ty =>
               SignatureElem
-name @: ty = MkSE name ty NonNullable
-name @:? ty = MkSE name ty Nullable
-
-public export
-Signature : Nat -> Type
-Signature n = Vect n SignatureElem
+name @: ty = MkSE name ty [NotNull]
+name @:? ty = MkSE name ty []
