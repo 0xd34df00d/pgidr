@@ -34,19 +34,19 @@ computeType dir ty mods = case computeNullability mods dir of
                                NonNullable => ty
 
 public export
-data Tuple : (dir : Dir) -> Signature n -> Type where
-  Nil   : Tuple dir []
+data Tuple : Signature n -> (dir : Dir) -> Type where
+  Nil   : Tuple [] dir
   (::)  : {name, modifiers, sig : _} ->
           PgType ty =>
           (val : computeType dir ty modifiers) ->
-          (rest : Tuple dir sig) ->
-          Tuple dir (MkSE name ty modifiers :: sig)
+          (rest : Tuple sig dir) ->
+          Tuple (MkSE name ty modifiers :: sig) dir
 
 export
-{dir : _} -> Show (Tuple dir sig) where
+{dir : _} -> Show (Tuple sig dir) where
   show tup = "(" ++ go "" tup ++ ")"
     where
-    go : {dir' : _} -> String -> Tuple dir' sig' -> String
+    go : {dir' : _} -> String -> Tuple sig' dir' -> String
     go _ [] = ""
     go pref ((::) {name} {modifiers} val rest) with (computeNullability modifiers dir')
       _ | Nullable = case val of
@@ -55,13 +55,13 @@ export
       _ | NonNullable = pref ++ name ++ " = " ++ show val ++ go ", " rest
 
 public export
-record NamedTuple (name : String) (dir : Dir) (s : Signature n) where
+record NamedTuple (name : String) (s : Signature n) (dir : Dir) where
   constructor MkNT
-  columns : Tuple dir s
+  columns : Tuple s dir
 
 
 public export
-{name : _} -> {s : Signature n} -> HasSignature n (NamedTuple name dir s) where
+{name : _} -> {s : Signature n} -> HasSignature n (NamedTuple name s dir) where
   tableName = name
   signature = s
 
