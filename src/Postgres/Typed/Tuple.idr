@@ -61,6 +61,11 @@ record NamedTuple (name : String) (s : Signature n) (dir : Dir) where
 
 
 public export
+{name : _} -> {s : Signature n} -> HasSignature n (NamedTuple name s) where
+  tableName = name
+  signature = s
+
+public export
 {name : _} -> {s : Signature n} -> HasSignature n (NamedTuple name s dir) where
   tableName = name
   signature = s
