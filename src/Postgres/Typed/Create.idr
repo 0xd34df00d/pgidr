@@ -31,7 +31,7 @@ fieldsStr sig alls = concat $ intersperse ", " $ go sig alls
   go (elem :: eRest) (creatable :: cRest) = fieldStr elem :: go eRest cRest
 
 export
-createQuery : (ty : Type) ->
+createQuery : (ty : _) ->
               HasSignature _ ty =>
               All (CreatablePgType . (.type)) (signatureOf ty) ->
               String
@@ -40,7 +40,7 @@ createQuery ty creatables = "CREATE TABLE \{tableNameOf ty} (\{fieldsStr _ creat
 export
 create : HasIO io =>
          Conn s ->
-         (ty : Type) ->
+         (ty : _) ->
          HasSignature _ ty =>
          {alls : All (CreatablePgType . (.type)) (signatureOf ty)} ->
          io (Either String ())
