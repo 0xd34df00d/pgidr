@@ -44,13 +44,13 @@ interface HasSignature n (0 ty : a) | ty where
   tableName : String
 
 public export
-signatureOf : (0 ty : Type) ->
+signatureOf : (0 ty : _) ->
               HasSignature n ty =>
               Signature n
 signatureOf ty = signature {ty}
 
 public export
-tableNameOf : (0 ty : Type) ->
+tableNameOf : (0 ty : _) ->
               HasSignature _ ty =>
               String
 tableNameOf ty = tableName {ty}
