@@ -1,9 +1,14 @@
 module Postgres.Example
 
+import Data.List
 import Data.Vect
 import Postgres.C
 
-import Postgres.Typed.Schema
+import Postgres.Typed.Modifiers
+import Postgres.Typed.Tuple
+
+import Postgres.Typed.Create
+import Postgres.Typed.Select
 
 dumpResult : HasIO io => Result s -> io ()
 dumpResult res = do
@@ -22,17 +27,11 @@ createTable conn = do
   res <- exec conn "CREATE TABLE persons (pid SERIAL PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, age INTEGER NOT NULL, country TEXT)"
   dumpResult res
 
-Person : Type
-Person = Tuple ["first_name" @: String, "last_name" @: String, "age" @: Integer]
+Person : (dir : Dir) -> Type
+Person dir = NamedTuple "persons" dir [MkSE "id" Integer [PKey PKeySerial], "first_name" @: String, "last_name" @: String, "age" @: Integer]
 
-sampleName : Person
-sampleName = [ "John", "Doe", 42 ]
-
-Person' : Type
-Person' = Tuple ["first_name" @: String, "last_name" @: String, "age" @:? Integer]
-
-sampleName' : Person'
-sampleName' = [ "John", "Doe", Just 42 ]
+sampleName : Person Write
+sampleName = MkNT [ Just 1, "John", "Doe", 42 ]
 
 {-
 Assuming you've run
