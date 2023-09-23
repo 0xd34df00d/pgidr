@@ -39,7 +39,7 @@ Signature : Nat -> Type
 Signature n = Vect n SignatureElem
 
 public export
-interface HasSignature n (0 ty : Type) | ty where
+interface HasSignature n (0 ty : a) | ty where
   signature : Signature n
   tableName : String
 
