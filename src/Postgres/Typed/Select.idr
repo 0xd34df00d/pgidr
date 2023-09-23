@@ -5,18 +5,18 @@ import public Postgres.Typed.Tuple
 %default total
 
 public export
-data Fields : (ty : Type) -> Type where
-  FieldsAll  : HasSignature _ ty => Fields ty
+data Fields : (ty : a) -> Type where
+  FieldsAll  : HasSignature n ty => Fields ty
   FieldsSome : HasSignature n ty =>
                (ixes : Vect k (Fin n)) ->
                Fields ty
 
 public export
-data Order : (ty : Type) -> Type where
+data Order : (ty : a) -> Type where
   OrderNone : Order ty
 
 public export
-record Select (ty : Type) where
+record Select (ty : Dir -> Type) where
   constructor MkSelect
   isTableType : HasSignature colCount ty
   fields : Fields ty
@@ -39,7 +39,7 @@ from = MkDF
 
 public export
 select : Dummy DFrom ->
-         (ty : Type) ->
+         (ty : Dir -> Type) ->       -- TODO make `ty : a`
          HasSignature n ty =>
          (Select ty -> Select ty) ->
          Select ty
