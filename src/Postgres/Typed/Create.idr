@@ -17,7 +17,10 @@ modsStr = joinBy " " . map show
 fieldStr : (se : SignatureElem) ->
            CreatablePgType (se.type) =>
            String
-fieldStr (MkSE name type mods) = "\{name} \{fieldTypeNameOf type} \{modsStr mods}"
+fieldStr (MkSE name type mods) =
+  if isSerial `any` mods
+     then "\{name} \{modsStr mods}"
+     else "\{name} \{fieldTypeNameOf type} \{modsStr mods}"
 
 fieldsStr : (sig : Signature _) ->
             All (CreatablePgType . (.type)) sig ->
