@@ -1,6 +1,7 @@
 module Postgres.Typed.Operations.Select
 
 import public Postgres.Typed.Tuple
+import Postgres.Typed.Util
 
 %default total
 
@@ -30,9 +31,7 @@ fieldsToString fields = case fields of
   toString : Vect n SignatureElem -> String
   toString = concat . intersperse ", " . map (.name)
 
-data DummyTag = DFrom
-record Dummy (tag : DummyTag) where
-  constructor MkDF
+data DFrom : Type where
 public export
 from : Dummy DFrom
 from = MkDF

@@ -11,3 +11,7 @@ checkStatus : HasIO io =>
 checkStatus res = resultStatus res >>=
   \case CommandOk => pure $ pure ()
         _ => Left <$> resultErrorMessage res
+
+public export
+record Dummy (tag : Type) where
+  constructor MkDF
