@@ -70,22 +70,20 @@ public export
   tableName = name
   signature = s
 
-{- TODO, if the IsTableType type is needed at all
 public export
-interface HasSignature n ty => IsTableType n (0 ty : Type) | ty where
-  toTuple : ty -> Tuple dir (signatureOf ty)
-  fromTuple : Tuple dir (signatureOf ty) -> ty
+interface HasSignature n ty => IsRecordType n (0 ty : Dir -> Type) | ty where
+  toTuple : ty dir -> NamedTuple (tableNameOf ty) (signatureOf ty) dir
+  fromTuple : NamedTuple (tableNameOf ty) (signatureOf ty) dir -> ty dir
 
-  fromToId : (v : ty) ->
+  fromToId : (v : ty dir) ->
              fromTuple (toTuple v) = v
-  toFromId : (v : Tuple (signatureOf ty)) ->
+  toFromId : (v : NamedTuple (tableNameOf ty) (signatureOf ty) dir) ->
              toTuple (fromTuple v) = v
 
 public export
-{name : _} -> {s : Signature n} -> IsTableType n (NamedTuple name s) where
-  toTuple = columns
-  fromTuple = MkNT
+{name : _} -> {s : Signature n} -> IsRecordType n (NamedTuple name s) where
+  toTuple = id
+  fromTuple = id
 
-  fromToId (MkNT columns) = Refl
+  fromToId v = Refl
   toFromId v = Refl
-  -}
