@@ -24,6 +24,7 @@ modules = Postgres.C
         , Postgres.Typed.Util
 
         , Postgres.Typed.Operations
+        , Postgres.Typed.Operations.Class
         , Postgres.Typed.Operations.Create
         , Postgres.Typed.Operations.Insert
         , Postgres.Typed.Operations.Select
