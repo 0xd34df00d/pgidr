@@ -1,6 +1,7 @@
 module Postgres.Typed.Tuple
 
 import Data.List
+import public Data.Vect.Quantifiers
 
 import Postgres.Typed.Modifiers
 import public Postgres.Typed.PgType
@@ -34,25 +35,8 @@ computeType dir ty mods = case computeNullability mods dir of
                                NonNullable => ty
 
 public export
-data Tuple : Signature n -> (dir : Dir) -> Type where
-  Nil   : Tuple [] dir
-  (::)  : {name, modifiers, sig : _} ->
-          PgType ty =>
-          (val : computeType dir ty modifiers) ->
-          (rest : Tuple sig dir) ->
-          Tuple (MkSE name ty modifiers :: sig) dir
-
-export
-{dir : _} -> Show (Tuple sig dir) where
-  show tup = "(" ++ go "" tup ++ ")"
-    where
-    go : {dir' : _} -> String -> Tuple sig' dir' -> String
-    go _ [] = ""
-    go pref ((::) {name} {modifiers} val rest) with (computeNullability modifiers dir')
-      _ | Nullable = case val of
-                          Nothing => pref ++ name ++ " is null" ++ go ", " rest
-                          Just val => pref ++ name ++ " = " ++ show val ++ go ", " rest
-      _ | NonNullable = pref ++ name ++ " = " ++ show val ++ go ", " rest
+Tuple : Signature n -> (dir : Dir) -> Type
+Tuple sig dir = All (\(MkSE _ ty modifiers) => computeType dir ty modifiers) sig
 
 public export
 record NamedTuple (name : String) (s : Signature n) (dir : Dir) where
