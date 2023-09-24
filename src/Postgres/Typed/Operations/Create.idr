@@ -1,4 +1,4 @@
-module Postgres.Typed.Create
+module Postgres.Typed.Operations.Create
 
 import Data.String
 import public Data.Vect.Quantifiers

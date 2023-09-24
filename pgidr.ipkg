@@ -23,6 +23,8 @@ modules = Postgres.C
         , Postgres.Typed.Tuple
         , Postgres.Typed.Util
 
-        , Postgres.Typed.Create
-        , Postgres.Typed.Select
+        , Postgres.Typed.Operations
+        , Postgres.Typed.Operations.Create
+        , Postgres.Typed.Operations.Select
+
 prebuild = "./prebuild.sh"

@@ -1,4 +1,4 @@
-module Postgres.Typed.Select
+module Postgres.Typed.Operations.Select
 
 import public Postgres.Typed.Tuple
 
