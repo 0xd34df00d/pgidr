@@ -35,8 +35,12 @@ computeType dir ty mods = case computeNullability mods dir of
                                NonNullable => ty
 
 public export
+computeType' : Dir -> (_ : SignatureElem) -> Type
+computeType' dir (MkSE _ ty modifiers) = computeType dir ty modifiers
+
+public export
 Tuple : Signature n -> (dir : Dir) -> Type
-Tuple sig dir = All (\(MkSE _ ty modifiers) => computeType dir ty modifiers) sig
+Tuple sig dir = All (computeType' dir) sig
 
 public export
 record NamedTuple (name : String) (s : Signature n) (dir : Dir) where
