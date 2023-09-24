@@ -25,6 +25,7 @@ modules = Postgres.C
 
         , Postgres.Typed.Operations
         , Postgres.Typed.Operations.Create
+        , Postgres.Typed.Operations.Insert
         , Postgres.Typed.Operations.Select
 
 prebuild = "./prebuild.sh"
