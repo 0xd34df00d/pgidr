@@ -6,10 +6,12 @@ import Data.Vect
 import Postgres.C
 
 import public Postgres.Typed.Tuple
-
 import Postgres.Typed.Util
 
+import Postgres.Typed.Operations.Class
+
 %default total
+%prefix_record_projections off
 
 mkValuesPlaceholders : (n : Nat) ->
                        String
@@ -50,11 +52,22 @@ mkInsertParams : {n : _} ->
                  Vect n (Maybe String)
 mkInsertParams = mkInsertParams' . columns . toTuple
 
+public export
+record Insert (ty : Dir -> Type) where
+  constructor MkInsert
+  {fieldsCount : Nat}
+  {auto tyIsRecord : IsRecordType fieldsCount ty}
+  valueToInsert : ty Write
+
 export
-insert : HasIO io =>
-         Conn s ->
-         {n : _} ->
+insert : {n : _} ->
          IsRecordType n ty =>
          (val : ty Write) ->
-         io (Either String ())
-insert conn val = execParams conn (insertQuery val) (mkInsertParams val) >>= checkStatus
+         Insert ty
+insert val = MkInsert val
+
+export
+Operation (Insert ty) where
+  returnType _ = ()
+  execute conn (MkInsert val) =
+    execParams conn (insertQuery val) (mkInsertParams val) >>= checkStatus
