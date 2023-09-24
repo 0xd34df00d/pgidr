@@ -8,6 +8,7 @@ import Postgres.C
 import Postgres.Typed.Modifiers
 import Postgres.Typed.PgType
 import Postgres.Typed.Tuple
+import Postgres.Typed.Util
 
 %default total
 
@@ -47,9 +48,4 @@ create : HasIO io =>
          HasSignature _ ty =>
          {alls : All (CreatablePgType . (.type)) (signatureOf ty)} ->
          io (Either String ())
-create conn ty = do
-  res <- exec conn $ createQuery ty alls
-  status <- resultStatus res
-  case status of
-       CommandOk => pure $ pure ()
-       _ => Left <$> resultErrorMessage res
+create conn ty = exec conn (createQuery ty alls) >>= checkStatus
