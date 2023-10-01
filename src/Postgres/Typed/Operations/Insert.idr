@@ -13,25 +13,39 @@ import Postgres.Typed.Operations.Class
 %default total
 %prefix_record_projections off
 
-mkValuesPlaceholders : (n : Nat) ->
-                       String
-mkValuesPlaceholders n = joinBy ", "
-                       $ toList
-                       $ tabulate {len = n} (\n => "$" ++ show (finToNat n + 1))
-
-export
-insertQuery : {n : _} ->
-              HasSignature n ty =>
-              (val : ty Write) ->
-              String
-insertQuery val = "INSERT INTO \{tableNameOf ty} VALUES (\{mkValuesPlaceholders n})"
-
 mapProperty' : {xs : Vect n a} ->
                (f : (x : a) -> p x -> q x) ->
                All p xs ->
                All q xs
 mapProperty' f [] = []
 mapProperty' f (x :: xs) = f _ x :: mapProperty' f xs
+
+computeName : (se : SignatureElem) -> computeType' Write se -> Maybe String
+computeName (MkSE _ ty mods) elt with (computeNullability mods Write)
+  _ | r = ?rhs
+
+mkQueryFields : {n : _} ->
+                IsRecordType n ty =>
+                (val : ty Write) ->
+                (k ** Vect k String)
+mkQueryFields = catMaybes
+              . forget
+              . mapProperty' (\se => onSigValUniform (const se.name) se)
+              . columns
+              . toTuple
+
+export
+insertQuery : {n : _} ->
+              IsRecordType n ty =>
+              (val : ty Write) ->
+              String
+insertQuery val =
+  let (k ** names) = mkQueryFields val
+      namesStr = joinBy ", " $ toList names
+      placeholders = joinBy ", "
+                   $ toList
+                   $ tabulate {len = k} (\i => "$" ++ show (finToNat i + 1))
+   in "INSERT INTO \{tableNameOf ty} (\{namesStr}) VALUES (\{placeholders})"
 
 mkInsertParams : {n : _} ->
                  IsRecordType n ty =>
@@ -68,4 +82,4 @@ export
 Operation (Insert ty) where
   returnType _ = ()
   execute conn (MkInsert val) =
-    execParams conn (insertQuery val) (mkInsertParams val) >>= checkStatus
+    execParams conn (insertQuery val) (snd $ mkInsertParams val) >>= checkStatus
