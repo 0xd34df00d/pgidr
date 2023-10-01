@@ -7,8 +7,7 @@ import Postgres.C
 import Postgres.Typed.Modifiers
 import Postgres.Typed.Tuple
 
-import Postgres.Typed.Create
-import Postgres.Typed.Select
+import Postgres.Typed.Operations
 
 dumpResult : HasIO io => Result s -> io ()
 dumpResult res = do
@@ -21,17 +20,15 @@ dropTable conn = do
   res <- exec conn "DROP TABLE IF EXISTS persons"
   dumpResult res
 
-createTable : HasIO io => Conn s -> io ()
-createTable conn = do
-  putStrLn "creating table..."
-  res <- exec conn "CREATE TABLE persons (pid SERIAL PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, age INTEGER NOT NULL, country TEXT)"
-  dumpResult res
-
 Person : (dir : Dir) -> Type
-Person dir = NamedTuple "persons" dir [MkSE "id" Integer [PKey PKeySerial], "first_name" @: String, "last_name" @: String, "age" @: Integer]
+Person = NamedTuple "persons" [MkSE "id" Integer [PKey PKeySerial], "first_name" @: String, "last_name" @: String, "age" @: Integer]
 
-sampleName : Person Write
-sampleName = MkNT [ Just 1, "John", "Doe", 42 ]
+samplePerson : Person Write
+samplePerson = MkTup [ Just 1, "John", "Doe", 42 ]
+
+handleResult : HasIO io => String -> Either String () -> io ()
+handleResult success = \case Left err => putStrLn err
+                             Right _ => putStrLn success
 
 {-
 Assuming you've run
@@ -51,8 +48,12 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
   putStr e
 
   dropTable conn
-  createTable conn
+  create conn Person >>= handleResult "created persons"
 
+  execute conn (insert into Person $ MkTup [ Nothing, "John", "Doe", 42 ]) >>= handleResult "inserted person"
+  --printLn $ toQuery $ select from Person { fields := FieldsAll }
+
+{-
   let insertQuery = "INSERT INTO persons (first_name, last_name, age, country) VALUES ($1, $2, $3, $4)"
 
   putStrLn "inserting..."
@@ -85,13 +86,4 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
 
   putStrLn "types:"
   forTo_ 0 fieldsCnt $ printLn . ftype res
-
-  putStrLn "values:"
-  forTo_ 0 rowsCnt $ \row => do
-    putStr "| "
-    forTo_ 0 fieldsCnt $ \col => do
-      putStr $ getvalueTextual res row col
-      putStr " | "
-    putStrLn ""
-
-  printLn $ resultSet defLookup res
+  -}
