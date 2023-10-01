@@ -49,6 +49,14 @@ onSigVal fNull fNonNull (MkSE _ ty mods) elt with (computeNullability mods dir)
   _ | Nullable = fNull elt
   _ | NonNullable = fNonNull elt
 
+public export
+onSigValUniform : {dir : Dir} ->
+                  (f : forall ty. PgType ty => ty -> a) ->
+                  (se : SignatureElem) ->
+                  (elt : computeType' dir se) ->
+                  Maybe a
+onSigValUniform f = onSigVal (map f) (Just . f)
+
 
 public export
 Tuple : Signature n -> (dir : Dir) -> Type

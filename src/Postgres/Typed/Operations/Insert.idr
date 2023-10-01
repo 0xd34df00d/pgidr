@@ -39,7 +39,7 @@ mkInsertParams : {n : _} ->
                  (k ** Vect k (Maybe String))
 mkInsertParams = filter isJust
                . forget
-               . mapProperty' (onSigVal (toTextual <$>) (Just . toTextual))
+               . mapProperty' (onSigValUniform toTextual)
                . columns
                . toTuple
 
