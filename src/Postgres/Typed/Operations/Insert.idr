@@ -59,12 +59,19 @@ record Insert (ty : Dir -> Type) where
   {auto tyIsRecord : IsRecordType fieldsCount ty}
   valueToInsert : ty Write
 
+data DInto : Type where
+public export
+into : Dummy DInto
+into = MkDF
+
 export
-insert : {n : _} ->
+insert : Dummy DInto ->
+         (ty : Dir -> Type) ->
+         {n : _} ->
          IsRecordType n ty =>
          (val : ty Write) ->
          Insert ty
-insert val = MkInsert val
+insert _ _ val = MkInsert val
 
 export
 Operation (Insert ty) where
