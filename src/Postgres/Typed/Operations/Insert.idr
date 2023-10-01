@@ -20,10 +20,6 @@ mapProperty' : {xs : Vect n a} ->
 mapProperty' f [] = []
 mapProperty' f (x :: xs) = f _ x :: mapProperty' f xs
 
-computeName : (se : SignatureElem) -> computeType' Write se -> Maybe String
-computeName (MkSE _ ty mods) elt with (computeNullability mods Write)
-  _ | r = ?rhs
-
 mkQueryFields : {n : _} ->
                 IsRecordType n ty =>
                 (val : ty Write) ->
