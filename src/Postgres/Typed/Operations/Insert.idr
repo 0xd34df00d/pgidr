@@ -40,17 +40,15 @@ mapProperty' : {xs : Vect n a} ->
 mapProperty' f [] = []
 mapProperty' f (x :: xs) = f _ x :: mapProperty' f xs
 
-mkInsertParams' : {n : _} ->
-                  {s : Signature n} ->
-                  Tuple s Write ->
-                  Vect n (Maybe String)
-mkInsertParams' = forget . mapProperty' serializeElem
-
 mkInsertParams : {n : _} ->
                  IsRecordType n ty =>
                  (val : ty Write) ->
-                 Vect n (Maybe String)
-mkInsertParams = mkInsertParams' . columns . toTuple
+                 (k ** Vect k (Maybe String))
+mkInsertParams = filter isJust
+               . forget
+               . mapProperty' serializeElem
+               . columns
+               . toTuple
 
 public export
 record Insert (ty : Dir -> Type) where
