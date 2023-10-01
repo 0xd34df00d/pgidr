@@ -39,6 +39,18 @@ computeType' : Dir -> (_ : SignatureElem) -> Type
 computeType' dir (MkSE _ ty modifiers) = computeType dir ty modifiers
 
 public export
+onSigVal : {dir : Dir} ->
+           (fNull : forall ty. PgType ty => Maybe ty -> a) ->
+           (fNonNull : forall ty. PgType ty => ty -> a) ->
+           (se : SignatureElem) ->
+           (elt : computeType' dir se) ->
+           a
+onSigVal fNull fNonNull (MkSE _ ty mods) elt with (computeNullability mods dir)
+  _ | Nullable = fNull elt
+  _ | NonNullable = fNonNull elt
+
+
+public export
 Tuple : Signature n -> (dir : Dir) -> Type
 Tuple sig dir = All (computeType' dir) sig
 
