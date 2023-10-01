@@ -26,13 +26,6 @@ insertQuery : {n : _} ->
               String
 insertQuery val = "INSERT INTO \{tableNameOf ty} VALUES (\{mkValuesPlaceholders n})"
 
-serializeElem : (se : SignatureElem) ->
-                (elt : computeType' Write se) ->
-                Maybe String
-serializeElem (MkSE _ ty mods) elt with (computeNullability mods Write)
-  _ | Nullable = toTextual <$> elt
-  _ | NonNullable = Just $ toTextual elt
-
 mapProperty' : {xs : Vect n a} ->
                (f : (x : a) -> p x -> q x) ->
                All p xs ->
@@ -46,7 +39,7 @@ mkInsertParams : {n : _} ->
                  (k ** Vect k (Maybe String))
 mkInsertParams = filter isJust
                . forget
-               . mapProperty' serializeElem
+               . mapProperty' (onSigVal (toTextual <$>) (Just . toTextual))
                . columns
                . toTuple
 
