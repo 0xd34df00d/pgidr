@@ -46,6 +46,6 @@ create : HasIO io =>
          Conn s ->
          (ty : _) ->
          HasSignature _ ty =>
-         {alls : All (CreatablePgType . (.type)) (signatureOf ty)} ->
+         {auto alls : All (CreatablePgType . (.type)) (signatureOf ty)} ->
          io (Either String ())
 create conn ty = exec conn (createQuery ty alls) >>= checkStatus
