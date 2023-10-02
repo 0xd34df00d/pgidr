@@ -4,6 +4,7 @@ import public Postgres.Typed.Tuple
 import Postgres.Typed.Util
 
 %default total
+%prefix_record_projections off
 
 public export
 data Fields : (ty : a) -> Type where
