@@ -64,7 +64,7 @@ Tuple sig dir = All (computeType' dir) sig
 
 public export
 record NamedTuple (name : String) (s : Signature n) (dir : Dir) where
-  constructor MkNT
+  constructor MkTup
   columns : Tuple s dir
 
 
