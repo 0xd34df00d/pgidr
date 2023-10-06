@@ -46,18 +46,18 @@ mkInsertColumns = catMaybes
                 . columns
                 . toTuple
 
-namespace Fields
+namespace Returning
   public export
-  data Fields : (ty : a) -> Type where
-    FieldsNone : Fields ty
-    FieldsAll  : HasSignature n ty => Fields ty
-    FieldsSome : HasSignature n ty =>
-                 (ixes : Vect k (Fin n)) ->
-                 Fields ty
+  data Columns : (ty : a) -> Type where
+    CNone : Columns ty
+    CAll  : HasSignature n ty => Columns ty
+    CSome : HasSignature n ty =>
+            (ixes : Vect k (Fin n)) ->
+            Columns ty
 
   export
-  all : HasSignature n ty => Fields ty
-  all = FieldsAll
+  all : HasSignature n ty => Columns ty
+  all = CAll
 
   public export
   data HasName : SignatureElem -> String -> Type where
@@ -72,11 +72,11 @@ namespace Fields
   anyToFin (There later) = FS (anyToFin later)
 
   export
-  fields : HasSignature n ty =>
-          (names : Vect k String) ->
-          {auto alls : All (`InSignature` signatureOf ty) names} ->
-          Fields ty
-  fields names {alls} = FieldsSome $ go alls
+  columns : HasSignature n ty =>
+            (names : Vect k String) ->
+            {auto alls : All (`InSignature` signatureOf ty) names} ->
+            Columns ty
+  columns names {alls} = CSome $ go alls
     where
     go : {0 names' : Vect k' String} ->
          (All (`InSignature` signatureOf ty) names') ->
