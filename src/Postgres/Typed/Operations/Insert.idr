@@ -20,38 +20,32 @@ mapProperty' : {xs : Vect n a} ->
 mapProperty' f [] = []
 mapProperty' f (x :: xs) = f _ x :: mapProperty' f xs
 
-mkQueryFields : {n : _} ->
-                IsRecordType n ty =>
-                (val : ty Write) ->
-                (k ** Vect k String)
-mkQueryFields = catMaybes
-              . forget
-              . mapProperty' (\se => onSigValUniform (const se.name) se)
-              . columns
-              . toTuple
+record InsertColumn where
+  constructor MkIC
+  colName : String
+  value : String
 
-export
-insertQuery : {n : _} ->
-              IsRecordType n ty =>
-              (val : ty Write) ->
-              String
-insertQuery val =
-  let (k ** names) = mkQueryFields val
-      namesStr = joinBy ", " $ toList names
+mkInsertQuery : {k : _} ->
+                {0 ty : _} ->
+                HasSignature n ty =>
+                (cols : Vect k InsertColumn) ->
+                String
+mkInsertQuery cols =
+  let namesStr = joinBy ", " $ toList $ .colName <$> cols
       placeholders = joinBy ", "
                    $ toList
                    $ tabulate {len = k} (\i => "$" ++ show (finToNat i + 1))
    in "INSERT INTO \{tableNameOf ty} (\{namesStr}) VALUES (\{placeholders})"
 
-mkInsertParams : {n : _} ->
-                 IsRecordType n ty =>
-                 (val : ty Write) ->
-                 (k ** Vect k (Maybe String))
-mkInsertParams = filter isJust
-               . forget
-               . mapProperty' (onSigValUniform toTextual)
-               . columns
-               . toTuple
+mkInsertColumns : {n : _} ->
+                  IsRecordType n ty =>
+                  (val : ty Write) ->
+                  (k ** Vect k InsertColumn)
+mkInsertColumns = catMaybes
+                . forget
+                . mapProperty' (\se => onSigValUniform (MkIC se.name . toTextual) se)
+                . columns
+                . toTuple
 
 public export
 record Insert (ty : Dir -> Type) where
@@ -77,5 +71,7 @@ insert _ _ val = MkInsert val
 export
 Operation (Insert ty) where
   returnType _ = ()
-  execute conn (MkInsert val) =
-    execParams conn (insertQuery val) (snd $ mkInsertParams val) >>= checkStatus
+  execute conn (MkInsert val) = let (_ ** cols) = mkInsertColumns val
+                                    query = mkInsertQuery {ty} cols
+                                    params = map (Just . .value) cols
+                                 in execParams conn query params >>= checkStatus
