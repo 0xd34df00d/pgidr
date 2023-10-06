@@ -37,8 +37,7 @@ mkInsertQuery cols =
                    $ tabulate {len = k} (\i => "$" ++ show (finToNat i + 1))
    in "INSERT INTO \{tableNameOf ty} (\{namesStr}) VALUES (\{placeholders})"
 
-mkInsertColumns : {n : _} ->
-                  IsRecordType n ty =>
+mkInsertColumns : IsRecordType n ty =>
                   (val : ty Write) ->
                   (k ** Vect k InsertColumn)
 mkInsertColumns = catMaybes
