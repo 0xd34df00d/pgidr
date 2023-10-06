@@ -59,14 +59,25 @@ public export
 into : Dummy DInto
 into = MkDF
 
-export
-insert : Dummy DInto ->
-         (ty : Dir -> Type) ->
-         {n : _} ->
-         IsRecordType n ty =>
-         (val : ty Write) ->
-         Insert ty
-insert _ _ val = MkInsert val
+namespace InsertRecord
+  export
+  insert : Dummy DInto ->
+           (ty : Dir -> Type) ->
+           {n : _} ->
+           IsRecordType n ty =>
+           (val : ty Write) ->
+           Insert ty
+  insert _ _ val = MkInsert val
+
+namespace InsertTuple
+  export
+  insert : Dummy DInto ->
+           (ty : Dir -> Type) ->
+           {n : _} ->
+           IsRecordType n ty =>
+           (val : Tuple (signatureOf ty) Write) ->
+           Insert ty
+  insert d ty = insert d ty . fromRawTuple
 
 export
 Operation (Insert ty) where
