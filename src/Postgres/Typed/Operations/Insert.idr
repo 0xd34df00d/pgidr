@@ -72,11 +72,11 @@ namespace Fields
   anyToFin (There later) = FS (anyToFin later)
 
   export
-  some : HasSignature n ty =>
-         (names : Vect k String) ->
-         {auto alls : All (`InSignature` signatureOf ty) names} ->
-         Fields ty
-  some names {alls} = FieldsSome $ go alls
+  fields : HasSignature n ty =>
+          (names : Vect k String) ->
+          {auto alls : All (`InSignature` signatureOf ty) names} ->
+          Fields ty
+  fields names {alls} = FieldsSome $ go alls
     where
     go : {0 names' : Vect k' String} ->
          (All (`InSignature` signatureOf ty) names') ->
