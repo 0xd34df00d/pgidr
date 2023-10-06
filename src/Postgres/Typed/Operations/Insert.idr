@@ -49,9 +49,8 @@ mkInsertColumns = catMaybes
 public export
 record Insert (ty : Dir -> Type) where
   constructor MkInsert
-  {fieldsCount : Nat}
-  {auto tyIsRecord : IsRecordType fieldsCount ty}
-  valueToInsert : ty Write
+  tyIsRecord : IsRecordType fieldsCount ty    -- TODO make auto implicit when Idris2#3083 is fixed
+  value : ty Write
 
 data DInto : Type where
 public export
@@ -66,7 +65,7 @@ namespace InsertRecord
            IsRecordType n ty =>
            (val : ty Write) ->
            Insert ty
-  insert _ _ val = MkInsert val
+  insert _ _ val = MkInsert %search val
 
 namespace InsertTuple
   export
@@ -81,7 +80,8 @@ namespace InsertTuple
 export
 Operation (Insert ty) where
   returnType _ = ()
-  execute conn (MkInsert val) = let (_ ** cols) = mkInsertColumns val
-                                    query = mkInsertQuery {ty} cols
-                                    params = map (Just . .value) cols
-                                 in execParams conn query params >>= checkStatus
+  execute conn (MkInsert _ val) =
+    let (_ ** cols) = mkInsertColumns val
+        query = mkInsertQuery {ty} cols
+        params = map (Just . .value) cols
+     in execParams conn query params >>= checkStatus
