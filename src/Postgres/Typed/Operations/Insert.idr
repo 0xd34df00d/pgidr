@@ -67,6 +67,16 @@ namespace InsertRecord
            Insert ty
   insert _ _ val = MkInsert %search val
 
+  export
+  insert' : Dummy DInto ->
+            (ty : Dir -> Type) ->
+            {n : _} ->
+            IsRecordType n ty =>
+            (val : ty Write) ->
+            (Insert ty -> Insert ty) ->
+            Insert ty
+  insert' d ty val f = f (insert d ty val)
+
 namespace InsertTuple
   export
   insert : Dummy DInto ->
@@ -76,6 +86,16 @@ namespace InsertTuple
            (val : Tuple (signatureOf ty) Write) ->
            Insert ty
   insert d ty = insert d ty . fromRawTuple
+
+  export
+  insert' : Dummy DInto ->
+            (ty : Dir -> Type) ->
+            {n : _} ->
+            IsRecordType n ty =>
+            (val : Tuple (signatureOf ty) Write) ->
+            (Insert ty -> Insert ty) ->
+            Insert ty
+  insert' d ty val f = insert' d ty (fromRawTuple val) f
 
 export
 Operation (Insert ty) where
