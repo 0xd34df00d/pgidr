@@ -46,6 +46,45 @@ mkInsertColumns = catMaybes
                 . columns
                 . toTuple
 
+namespace Fields
+  public export
+  data Fields : (ty : a) -> Type where
+    FieldsNone : Fields ty
+    FieldsAll  : HasSignature n ty => Fields ty
+    FieldsSome : HasSignature n ty =>
+                 (ixes : Vect k (Fin n)) ->
+                 Fields ty
+
+  export
+  all : HasSignature n ty => Fields ty
+  all = FieldsAll
+
+  public export
+  data HasName : SignatureElem -> String -> Type where
+    MkHN : PgType type => (name : String) -> HasName (MkSE name type modifiers) name
+
+  public export
+  InSignature : String -> Signature n -> Type
+  InSignature name sig = Any (`HasName` name) sig
+
+  anyToFin : {0 xs : Vect n _} -> Any p xs -> Fin n
+  anyToFin (Here _) = FZ
+  anyToFin (There later) = FS (anyToFin later)
+
+  export
+  some : HasSignature n ty =>
+         (names : Vect k String) ->
+         {auto alls : All (`InSignature` signatureOf ty) names} ->
+         Fields ty
+  some names {alls} = FieldsSome $ go alls
+    where
+    go : {0 names' : Vect k' String} ->
+         (All (`InSignature` signatureOf ty) names') ->
+         Vect k' (Fin n)
+    go [] = []
+    go (inSig :: inSigs) = anyToFin inSig :: go inSigs
+
+
 public export
 record Insert (ty : Dir -> Type) where
   constructor MkInsert
