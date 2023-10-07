@@ -4,6 +4,8 @@ import Data.Vect.Quantifiers
 
 import Postgres.C
 
+import Postgres.Typed.Signature
+
 %default total
 
 export
@@ -18,6 +20,17 @@ checkStatus res = resultStatus res >>=
 public export
 record Dummy (tag : Type) where
   constructor MkDF
+
+export
+columnNames : Signature n ->
+              Vect k (Fin n) ->
+              Vect k String
+columnNames sig = map (.name . (`index` sig))
+
+export
+allColumnNames : Signature n ->
+                 Vect n String
+allColumnNames = map (.name)
 
 export
 mapProperty' : {xs : Vect n a} ->

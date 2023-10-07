@@ -75,3 +75,9 @@ public export
               SignatureElem
 name @: ty = MkSE name ty [NotNull]
 name @:? ty = MkSE name ty []
+
+public export
+subColumns : Signature n ->
+             Vect k (Fin n) ->
+             Signature k
+subColumns sig cols = map (`index` sig) cols
