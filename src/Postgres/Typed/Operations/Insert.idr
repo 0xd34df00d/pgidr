@@ -48,7 +48,7 @@ namespace Returning
             (ixes : Vect k (Fin n)) ->
             Columns ty
 
-  export
+  public export
   all : HasSignature n ty => Columns ty
   all = CAll
 
@@ -64,7 +64,7 @@ namespace Returning
   anyToFin (Here _) = FZ
   anyToFin (There later) = FS (anyToFin later)
 
-  export
+  public export
   columns : HasSignature n ty =>
             (names : Vect k String) ->
             {auto alls : All (`InSignature` signatureOf ty) names} ->
@@ -90,7 +90,7 @@ into : Dummy DInto
 into = MkDF
 
 namespace InsertRecord
-  export
+  public export
   insert : Dummy DInto ->
            (ty : Dir -> Type) ->
            {n : _} ->
@@ -99,7 +99,7 @@ namespace InsertRecord
            Insert ty
   insert _ _ val = MkInsert %search val
 
-  export
+  public export
   insert' : Dummy DInto ->
             (ty : Dir -> Type) ->
             {n : _} ->
@@ -110,7 +110,7 @@ namespace InsertRecord
   insert' d ty val f = f (insert d ty val)
 
 namespace InsertTuple
-  export
+  public export
   insert : Dummy DInto ->
            (ty : Dir -> Type) ->
            {n : _} ->
@@ -119,7 +119,7 @@ namespace InsertTuple
            Insert ty
   insert d ty = insert d ty . fromRawTuple
 
-  export
+  public export
   insert' : Dummy DInto ->
             (ty : Dir -> Type) ->
             {n : _} ->
