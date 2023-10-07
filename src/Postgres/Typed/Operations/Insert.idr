@@ -13,13 +13,6 @@ import Postgres.Typed.Operations.Class
 %default total
 %prefix_record_projections off
 
-mapProperty' : {xs : Vect n a} ->
-               (f : (x : a) -> p x -> q x) ->
-               All p xs ->
-               All q xs
-mapProperty' f [] = []
-mapProperty' f (x :: xs) = f _ x :: mapProperty' f xs
-
 record InsertColumn where
   constructor MkIC
   colName : String
