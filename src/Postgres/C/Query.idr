@@ -78,7 +78,7 @@ namespace ResultStatus
 
 export
 isSuccessfulQuery : ResultStatus -> Bool
-isSuccessfulQuery s = s == TuplesOk || s == SingleTuple
+isSuccessfulQuery s = s == CommandOk || s == TuplesOk || s == SingleTuple
 
 -- TODO eventually we'll need to query the actual values of these constants from C,
 -- but this requires non-trivial changes to the build system to introduce our own
