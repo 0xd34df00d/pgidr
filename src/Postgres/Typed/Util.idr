@@ -11,8 +11,9 @@ checkStatus : HasIO io =>
               Result s ->
               io (Either String ())
 checkStatus res = resultStatus res >>=
-  \case CommandOk => pure $ pure ()
-        _ => Left <$> resultErrorMessage res
+  \status => if isSuccessfulQuery status
+                then pure $ pure ()
+                else Left <$> resultErrorMessage res
 
 public export
 record Dummy (tag : Type) where
