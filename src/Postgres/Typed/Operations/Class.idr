@@ -5,6 +5,7 @@ import public Control.Monad.Error.Interface
 import Derive.Prelude
 
 import Postgres.C
+import Postgres.Typed.PgType
 
 %default total
 %language ElabReflection
@@ -13,6 +14,7 @@ public export
 data ExecError
   = ExpectationsMismatch String
   | QueryFailure ResultStatus String
+  | ValueParseError PgTyParseError
 %runElab derive "ExecError" [Eq, Ord, Show]
 
 public export
