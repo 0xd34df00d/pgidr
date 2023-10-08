@@ -140,6 +140,22 @@ namespace InsertTuple
             Insert ty
   insert' d ty val f = insert' d ty (fromRawTuple val) f
 
+parseTextual' : MonadError ExecError m =>
+                PgType ty =>
+                (textual : String) ->
+                m ty
+parseTextual' textual = case fromTextual textual of
+                             Left err => throwError $ ValueParseError err
+                             Right res => pure res
+
+parseTextual : MonadError ExecError m =>
+               (sigElem : SignatureElem) ->
+               (textual : Maybe String) ->
+               m (computeType' Read sigElem)
+parseTextual (MkSE name ty mods) textual with (computeNullability mods Read)
+  _ | NonNullable = maybe (unexpected "NULL value for \{name}") parseTextual' textual
+  _ | Nullable = traverse parseTextual' textual
+
 export
 {ty : _} -> Operation (Insert ty) where
   returnType insert = case insert.returning of
