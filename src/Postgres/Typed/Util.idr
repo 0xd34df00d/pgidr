@@ -8,15 +8,6 @@ import Postgres.Typed.Signature
 
 %default total
 
-export
-checkStatus : HasIO io =>
-              Result s ->
-              io (Either String ())
-checkStatus res = resultStatus res >>=
-  \status => if isSuccessfulQuery status
-                then pure $ pure ()
-                else Left <$> resultErrorMessage res
-
 public export
 record Dummy (tag : Type) where
   constructor MkDF

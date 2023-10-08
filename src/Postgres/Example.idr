@@ -26,8 +26,8 @@ Person = NamedTuple "persons" [MkSE "id" Integer [PKey PKeySerial], "first_name"
 samplePerson : Person Write
 samplePerson = MkTup [ Just 1, "John", "Doe", 42 ]
 
-handleResult : (Show res, HasIO io) => String -> Either String res -> io ()
-handleResult success = \case Left err => putStrLn err
+handleResult : (Show res, Show err, HasIO io) => String -> Either err res -> io ()
+handleResult success = \case Left err => putStrLn $ "error: " ++ show err
                              Right r => putStrLn $ success ++ ": " ++ show r
 
 {-

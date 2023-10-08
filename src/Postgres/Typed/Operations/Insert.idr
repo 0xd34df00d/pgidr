@@ -151,11 +151,9 @@ export
     let (_ ** cols) = mkInsertColumns val
         query = mkInsertQuery {ty} cols returning
         params = map (Just . .value) cols
-    -- in execParams conn query params >>= checkStatus
     result <- execParams conn query params
-    Right _ <- checkStatus result
-      | Left err => pure $ Left err
+    checkQueryStatus result
     case returning of
-         CNone => pure $ pure ()
-         CAll => pure $ Left "TODO"
-         CSome ixes => pure $ Left "TODO"
+         CNone => pure ()
+         CAll => throwError $ LogicMismatch "TODO"
+         CSome ixes => throwError $ LogicMismatch "TODO"

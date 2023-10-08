@@ -10,6 +10,8 @@ import Postgres.Typed.PgType
 import Postgres.Typed.Tuple
 import Postgres.Typed.Util
 
+import Postgres.Typed.Operations.Class
+
 %default total
 
 modsStr : Show (Modifier ty) => List (Modifier ty) -> String
@@ -42,10 +44,10 @@ createQuery : (ty : _) ->
 createQuery ty creatables = "CREATE TABLE \{tableNameOf ty} (\{fieldsStr _ creatables})"
 
 export
-create : HasIO io =>
+create : MonadExec m =>
          Conn s ->
          (ty : _) ->
          HasSignature _ ty =>
          {auto alls : All (CreatablePgType . (.type)) (signatureOf ty)} ->
-         io (Either String ())
-create conn ty = exec conn (createQuery ty alls) >>= checkStatus
+         m ()
+create conn ty = exec conn (createQuery ty alls) >>= checkQueryStatus
