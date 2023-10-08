@@ -67,7 +67,6 @@ mkReturningClause : (returning : Columns ty) -> String
 mkReturningClause = maybe "" (\cols => "RETURNING " ++ joinBy "," cols) . toColumnNames
 
 mkInsertQuery : {k : _} ->
-                {0 ty : _} ->
                 HasSignature n ty =>
                 (cols : Vect k InsertColumn) ->
                 (returning : Columns ty) ->
