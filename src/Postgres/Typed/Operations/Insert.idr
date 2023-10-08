@@ -19,6 +19,7 @@ namespace Returning
     CNone : Columns ty
     CAll  : HasSignature n ty => Columns ty
     CSome : HasSignature n ty =>
+            {k : _} ->
             (ixes : Vect k (Fin n)) ->
             Columns ty
 
@@ -41,6 +42,7 @@ namespace Returning
 
   public export
   columns : HasSignature n ty =>
+            {k : _} ->
             (names : Vect k String) ->
             {auto alls : All (`InSignature` signatureOf ty) names} ->
             Columns ty
@@ -91,6 +93,7 @@ mkInsertColumns = catMaybes
 public export
 record Insert (ty : Dir -> Type) where
   constructor MkInsert
+  fieldsCount : Nat
   tyIsRecord : IsRecordType fieldsCount ty    -- TODO make auto implicit when Idris2#3083 is fixed
   value : ty Write
   returning : Columns ty
@@ -108,7 +111,7 @@ namespace InsertRecord
            IsRecordType n ty =>
            (val : ty Write) ->
            Insert ty
-  insert _ _ val = MkInsert %search val CNone
+  insert _ _ val = MkInsert _ %search val CNone
 
   public export
   insert' : Dummy DInto ->
@@ -162,7 +165,7 @@ export
                            CNone => ()
                            CAll => ty Read
                            CSome ixes => Tuple (signatureOf ty `subColumns` ixes) Read
-  execute conn (MkInsert _ val returning) = do
+  execute conn (MkInsert _ _ val returning) = do
     let (_ ** cols) = mkInsertColumns val
         query = mkInsertQuery {ty} cols returning
         params = map (Just . .value) cols
