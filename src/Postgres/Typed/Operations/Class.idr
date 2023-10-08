@@ -11,7 +11,7 @@ import Postgres.C
 
 public export
 data ExecError
-  = LogicMismatch String
+  = ExpectationsMismatch String
   | QueryFailure ResultStatus String
 %runElab derive "ExecError" [Eq, Ord, Show]
 
