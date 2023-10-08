@@ -155,5 +155,5 @@ export
     checkQueryStatus result
     case returning of
          CNone => pure ()
-         CAll => throwError $ LogicMismatch "TODO"
-         CSome ixes => throwError $ LogicMismatch "TODO"
+         CAll => throwError TODO
+         CSome ixes => throwError TODO

@@ -15,6 +15,7 @@ data ExecError
   = ExpectationsMismatch String
   | QueryFailure ResultStatus String
   | ValueParseError PgTyParseError
+  | TODO
 %runElab derive "ExecError" [Eq, Ord, Show]
 
 public export
