@@ -20,6 +20,10 @@ MonadExec : (Type -> Type) -> Type
 MonadExec m = (HasIO m, MonadError ExecError m)
 
 export
+unexpected : MonadError ExecError m => String -> m a
+unexpected = throwError . ExpectationsMismatch
+
+export
 runMonadExec : HasIO io => (forall m. MonadExec m => m res) -> io (Either ExecError res)
 runMonadExec action = runEitherT {m = io} action
 
