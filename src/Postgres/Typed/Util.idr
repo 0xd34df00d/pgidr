@@ -30,3 +30,12 @@ mapProperty' : {xs : Vect n a} ->
                All q xs
 mapProperty' f [] = []
 mapProperty' f (x :: xs) = f _ x :: mapProperty' f xs
+
+export
+traverseProperty : Applicative f =>
+                   {xs : Vect n a} ->
+                   (forall x. p x -> f (q x)) ->
+                   All p xs ->
+                   f (All q xs)
+traverseProperty f [] = pure []
+traverseProperty f (x :: xs) = [| f x :: traverseProperty f xs |]
