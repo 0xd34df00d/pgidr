@@ -159,6 +159,32 @@ parseTextual (MkSE name ty mods) textual with (computeNullability mods Read)
   _ | NonNullable = maybe (unexpected "NULL value for \{name}") parseTextual' textual
   _ | Nullable = traverse parseTextual' textual
 
+ensureMatches : MonadError ExecError m =>
+                {n : _} ->
+                (res : Result s) ->
+                (sig : Signature n) ->
+                m ()
+ensureMatches res sig = do
+  let natInterpolateLocal = MkInterpolation {a = Nat} show
+  when (ntuples res /= 1) $ unexpected "\{ntuples res} tuples instead of one"
+  when (nfields res /= n) $ unexpected "\{nfields res} columns instead of \{n}"
+  -- TODO this could be the place to do extra checks
+  -- for result column names/types/count
+  -- if they are enabled
+
+extractFields : MonadError ExecError m =>
+                {n : _} ->
+                (res : Result s) ->
+                (sig : Signature n) ->
+                m (Tuple sig Read)
+extractFields res sig = do
+  res `ensureMatches` sig
+  let indices = tabulate $ \row => let row' = finToNat row in
+                                    if getisnull res row' 0
+                                       then Nothing
+                                       else Just $ getvalueTextual res row' 0
+  traverseProperty' parseTextual indices
+
 export
 {ty : _} -> Operation (Insert ty) where
   returnType insert = case insert.returning of
@@ -173,5 +199,5 @@ export
     checkQueryStatus result
     case returning of
          CNone => pure ()
-         CAll => throwError TODO
-         CSome ixes => throwError TODO
+         CAll => fromRawTuple <$> extractFields result _
+         CSome ixes => extractFields result _
