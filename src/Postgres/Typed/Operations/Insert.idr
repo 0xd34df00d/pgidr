@@ -41,18 +41,21 @@ namespace Returning
   anyToFin (There later) = FS (anyToFin later)
 
   public export
+  namesToIxes : HasSignature n ty =>
+                {k : _} ->
+                {names : Vect k String} ->
+                (alls : All (`InSignature` signatureOf ty) names) ->
+                Vect k (Fin n)
+  namesToIxes [] = []
+  namesToIxes (inSig :: inSigs) = anyToFin inSig :: namesToIxes inSigs
+
+  public export
   columns : HasSignature n ty =>
             {k : _} ->
             (names : Vect k String) ->
             {auto alls : All (`InSignature` signatureOf ty) names} ->
             Columns ty
-  columns names {alls} = CSome $ go alls
-    where
-    go : {0 names' : Vect k' String} ->
-         (All (`InSignature` signatureOf ty) names') ->
-         Vect k' (Fin n)
-    go [] = []
-    go (inSig :: inSigs) = anyToFin inSig :: go inSigs
+  columns _ = CSome $ namesToIxes alls
 
   export
   toColumnNames : Columns ty -> Maybe (List String)
