@@ -75,6 +75,9 @@ record NamedTuple (name : String) (s : Signature n) (dir : Dir) where
   constructor MkTup
   columns : Tuple s dir
 
+export
+{dir : _} -> {name : _} -> {s : Signature n} -> Show (NamedTuple name s dir) where
+  show tup = name ++ " " ++ prettyTuple tup.columns
 
 public export
 {name : _} -> {s : Signature n} -> HasSignature n (NamedTuple name s) where
