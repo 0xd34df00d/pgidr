@@ -203,15 +203,6 @@ getisnull : (res : Result s) ->
             Bool
 getisnull res row col = (== 1) $ wrapFFIpure (\h => ffi_getisnull h (cast row) (cast col)) res
 
-||| This is a 'synthesized' API function, for the unfortunate lack of the PostgreSQL alternative
-export
-fnullable : (res : Result s) ->
-            (col : Nat) ->
-            Bool
-fnullable res col = case ntuples res of
-                         0 => False
-                         S lastCol => (\row => getisnull res row col) `any` [0 .. lastCol]
-
 %foreign (libpq "getlength")
 ffi_getlength : ResultHandle -> Int -> Int -> Int
 
@@ -372,10 +363,6 @@ namespace Bounded
   export
   getisnull : BoundedRC Bool
   getisnull = wrapRC getisnull
-
-  export
-  fnullable : BoundedC Bool
-  fnullable = wrapC fnullable
 
   export
   getlength : BoundedRC Int
