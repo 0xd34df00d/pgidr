@@ -179,10 +179,10 @@ extractFields : MonadError ExecError m =>
                 m (Tuple sig Read)
 extractFields res sig = do
   res `ensureMatches` sig
-  let indices = tabulate $ \row => let row' = finToNat row in
-                                    if getisnull res row' 0
+  let indices = tabulate $ \col => let col' = finToNat col in
+                                    if getisnull res 0 col'
                                        then Nothing
-                                       else Just $ getvalueTextual res row' 0
+                                       else Just $ getvalueTextual res 0 col'
   traverseProperty' parseTextual indices
 
 export
