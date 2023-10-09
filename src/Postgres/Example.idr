@@ -45,10 +45,14 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
   putStr e
 
   dropTable conn
-  create conn Person >>= handleResult "created persons"
+  runMonadExec (create conn Person) >>= handleResult "created persons"
 
-  execute conn (insert into Person $ MkTup [ Nothing, "John", "Doe", 42 ]) >>= handleResult "inserted person"
-  --printLn $ toQuery $ select from Person { fields := FieldsAll }
+  execute' conn (insert into Person [ Nothing, "John", "Doe", 42 ])
+    >>= handleResult "inserted person 1"
+  execute' conn (insert' into Person [ Nothing, "Jane", "Doe", 32 ] { returning := all })
+    >>= handleResult "inserted person 2"
+  execute' conn (insert' into Person [ Nothing, "Johnny", "Donny", 41 ] { returning := columns ["id"] })
+    >>= handleResult "inserted person 3"
 
 {-
   let insertQuery = "INSERT INTO persons (first_name, last_name, age, country) VALUES ($1, $2, $3, $4)"
