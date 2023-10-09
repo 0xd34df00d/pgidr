@@ -1,11 +1,13 @@
 module Postgres.Typed.Tuple
 
 import Data.List
+import Data.String
 import public Data.Vect.Quantifiers
 
 import Postgres.Typed.Modifiers
 import public Postgres.Typed.PgType
 import public Postgres.Typed.Signature
+import Postgres.Typed.Util
 
 %default total
 
@@ -60,6 +62,13 @@ onSigValUniform f = onSigVal (map f) (Just . f)
 public export
 Tuple : Signature n -> (dir : Dir) -> Type
 Tuple sig dir = All (computeType' dir) sig
+
+prettyTuple : {dir : _} -> {s : Signature _} -> Tuple s dir -> String
+prettyTuple tup = "{ " ++ joinBy ", " (toList $ forget $ mapProperty' showElem tup) ++ " }"
+  where
+  showElem : (se : SignatureElem) -> computeType' dir se -> String
+  showElem se elt = let value = maybe "IS NULL" (" = " ++) $ onSigValUniform show se elt
+                     in "\{se.name} \{value}"
 
 public export
 record NamedTuple (name : String) (s : Signature n) (dir : Dir) where
