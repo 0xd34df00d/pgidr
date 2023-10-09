@@ -15,16 +15,16 @@ import Postgres.Typed.Operations.Class
 
 namespace Returning
   public export
-  data Columns : (ty : a) -> Type where
-    CNone : Columns ty
-    CAll  : HasSignature n ty => Columns ty
+  data Columns : (0 ty : a) -> (0 ret : Type) -> Type where
+    CNone : Columns ty ()
+    CAll  : HasSignature n ty => Columns ty (ty Read)
     CSome : HasSignature n ty =>
             {k : _} ->
             (ixes : Vect k (Fin n)) ->
-            Columns ty
+            Columns ty (Tuple (signatureOf ty `subColumns` ixes) Read)
 
   public export
-  all : HasSignature n ty => Columns ty
+  all : HasSignature n ty => Columns ty (ty Read)
   all = CAll
 
   public export
@@ -50,15 +50,24 @@ namespace Returning
   namesToIxes (inSig :: inSigs) = anyToFin inSig :: namesToIxes inSigs
 
   public export
+  ColsType : (ty : a) ->
+             HasSignature n ty =>
+             {k : _} ->
+             {names : Vect k String} ->
+             (alls : All (`InSignature` signatureOf ty) names) ->
+             Type
+  ColsType ty alls = Tuple (signatureOf ty `subColumns` namesToIxes alls) Read
+
+  public export
   columns : HasSignature n ty =>
             {k : _} ->
             (names : Vect k String) ->
             {auto alls : All (`InSignature` signatureOf ty) names} ->
-            Columns ty
+            Columns ty (ColsType ty alls)
   columns _ = CSome $ namesToIxes alls
 
   export
-  toColumnNames : Columns ty -> Maybe (List String)
+  toColumnNames : Columns ty ret -> Maybe (List String)
   toColumnNames CNone = Nothing
   toColumnNames CAll = Just $ toList $ allColumnNames (signatureOf ty)
   toColumnNames (CSome ixes) = Just $ toList $ columnNames (signatureOf ty) ixes
@@ -68,13 +77,13 @@ record InsertColumn where
   colName : String
   value : String
 
-mkReturningClause : (returning : Columns ty) -> String
+mkReturningClause : (returning : Columns ty ret) -> String
 mkReturningClause = maybe "" (\cols => "RETURNING " ++ joinBy "," cols) . toColumnNames
 
 mkInsertQuery : {k : _} ->
                 HasSignature n ty =>
                 (cols : Vect k InsertColumn) ->
-                (returning : Columns ty) ->
+                (returning : Columns ty ret) ->
                 String
 mkInsertQuery cols returning =
   let namesStr = joinBy ", " $ toList $ .colName <$> cols
@@ -94,12 +103,12 @@ mkInsertColumns = catMaybes
                 . toTuple
 
 public export
-record Insert (ty : Dir -> Type) where
+record Insert (ty : Dir -> Type) (ret : Type) where
   constructor MkInsert
   fieldsCount : Nat
   tyIsRecord : IsRecordType fieldsCount ty    -- TODO make auto implicit when Idris2#3083 is fixed
   value : ty Write
-  returning : Columns ty
+  returning : Columns ty ret
 
 data DInto : Type where
 public export
@@ -113,7 +122,7 @@ namespace InsertRecord
            {n : _} ->
            IsRecordType n ty =>
            (val : ty Write) ->
-           Insert ty
+           Insert ty ()
   insert _ _ val = MkInsert _ %search val CNone
 
   public export
@@ -122,8 +131,8 @@ namespace InsertRecord
             {n : _} ->
             IsRecordType n ty =>
             (val : ty Write) ->
-            (Insert ty -> Insert ty) ->
-            Insert ty
+            (Insert ty () -> Insert ty ret) ->
+            Insert ty ret
   insert' d ty val f = f (insert d ty val)
 
 namespace InsertTuple
@@ -133,7 +142,7 @@ namespace InsertTuple
            {n : _} ->
            IsRecordType n ty =>
            (val : Tuple (signatureOf ty) Write) ->
-           Insert ty
+           Insert ty ()
   insert d ty = insert d ty . fromRawTuple
 
   public export
@@ -142,8 +151,8 @@ namespace InsertTuple
             {n : _} ->
             IsRecordType n ty =>
             (val : Tuple (signatureOf ty) Write) ->
-            (Insert ty -> Insert ty) ->
-            Insert ty
+            (Insert ty () -> Insert ty ret) ->
+            Insert ty ret
   insert' d ty val f = insert' d ty (fromRawTuple val) f
 
 parseTextual' : MonadError ExecError m =>
@@ -189,11 +198,8 @@ extractFields res sig = do
   traverseProperty' parseTextual indices
 
 export
-{ty : _} -> Operation (Insert ty) where
-  returnType insert = case insert.returning of
-                           CNone => ()
-                           CAll => ty Read
-                           CSome ixes => Tuple (signatureOf ty `subColumns` ixes) Read
+{ty, ret : _} -> Operation (Insert ty ret) where
+  returnType _ = ret
   execute conn (MkInsert _ _ val returning) = do
     let (_ ** cols) = mkInsertColumns val
         query = mkInsertQuery {ty} cols returning
