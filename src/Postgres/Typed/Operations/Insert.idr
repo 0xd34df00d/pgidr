@@ -16,7 +16,7 @@ import public Postgres.Typed.Operations.Helpers
 
 namespace Returning
   public export
-  data Columns : (0 ty : a) -> (0 ret : Type) -> Type where
+  data Columns : (0 ty : Dir -> Type) -> (0 ret : Type) -> Type where
     CNone : Columns ty ()
     CAll  : HasSignature n ty => Columns ty (ty Read)
     COne  : HasSignature n ty =>
@@ -32,7 +32,7 @@ namespace Returning
   all = CAll
 
   public export
-  ColsType : (ty : a) ->
+  ColsType : (ty : Dir -> Type) ->
              HasSignature n ty =>
              {k : _} ->
              {names : Vect k String} ->
