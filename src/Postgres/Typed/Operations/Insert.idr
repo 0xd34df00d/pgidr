@@ -19,6 +19,9 @@ namespace Returning
   data Columns : (0 ty : a) -> (0 ret : Type) -> Type where
     CNone : Columns ty ()
     CAll  : HasSignature n ty => Columns ty (ty Read)
+    COne  : HasSignature n ty =>
+            (ix : Fin n) ->
+            Columns ty (computeType' Read (ix `index` signatureOf ty))
     CSome : HasSignature n ty =>
             {k : _} ->
             (ixes : Vect (S k) (Fin n)) ->
@@ -45,10 +48,18 @@ namespace Returning
             Columns ty (ColsType ty alls)
   columns _ = CSome $ namesToIxes alls
 
+  public export
+  column : HasSignature n ty =>
+           (name : String) ->
+           {auto inSig : name `InSignature` signatureOf ty} ->
+           Columns ty (computeType' Read (anyToFin inSig `index` signatureOf ty))
+  column _ = COne $ anyToFin inSig
+
   export
   toColumnNames : Columns ty ret -> Maybe (List String)
   toColumnNames CNone = Nothing
   toColumnNames CAll = Just $ toList $ allColumnNames (signatureOf ty)
+  toColumnNames (COne ix) = Just [(ix `index` signatureOf ty).name]
   toColumnNames (CSome ixes) = Just $ toList $ columnNames (signatureOf ty) ixes
 
 record InsertColumn where
@@ -163,6 +174,13 @@ ensureMatches res sig = do
   -- for result column names/types/count
   -- if they are enabled
 
+extractTextual : (res : Result s) ->
+                 (col : Nat) ->
+                 Maybe String
+extractTextual res col = if getisnull res 0 col
+                            then Nothing
+                            else Just $ getvalueTextual res 0 col
+
 extractFields : MonadError ExecError m =>
                 {n : _} ->
                 (res : Result s) ->
@@ -170,10 +188,7 @@ extractFields : MonadError ExecError m =>
                 m (Tuple sig Read)
 extractFields res sig = do
   res `ensureMatches` sig
-  let indices = tabulate $ \col => let col' = finToNat col in
-                                    if getisnull res 0 col'
-                                       then Nothing
-                                       else Just $ getvalueTextual res 0 col'
+  let indices = tabulate (extractTextual res . finToNat)
   traverseProperty' parseTextual indices
 
 export
@@ -188,4 +203,5 @@ export
     case returning of
          CNone => pure ()
          CAll => fromRawTuple <$> extractFields result _
+         COne ix => parseTextual _ (extractTextual result 0)
          CSome ixes => extractFields result _

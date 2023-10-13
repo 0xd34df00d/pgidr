@@ -51,8 +51,10 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
     >>= handleResult "inserted person 1"
   execute' conn (insert' into Person [ Nothing, "Jane", "Doe", 32 ] { returning := all })
     >>= handleResult "inserted person 2"
-  execute' conn (insert' into Person [ Nothing, "Johnny", "Donny", 41 ] { returning := columns ["id"] })
+  execute' conn (insert' into Person [ Nothing, "Johnny", "Donny", 41 ] { returning := column "id" })
     >>= handleResult "inserted person 3"
+  execute' conn (insert' into Person [ Nothing, "Foo", "Bar", 666 ] { returning := columns ["id", "first_name"] })
+    >>= handleResult "inserted person 4"
 
 {-
   let insertQuery = "INSERT INTO persons (first_name, last_name, age, country) VALUES ($1, $2, $3, $4)"
