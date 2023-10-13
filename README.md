@@ -28,6 +28,31 @@ and it is responsible for error reporting, among other things.
 The `result`{.idris} of `runMonadExec action`{.idris} is a `Either ExecError res`{.idris},
 where `res`{.idris} is the original result of the action (a `()`{.idris} in this particular case).
 
+### Inserting records
+
+Then, we can insert a few records into our DB:
+```idris
+  result <- execute' conn (insert into Person [ Nothing, "John", "Doe", 42 ])
+```
+Here, `execute'`{.idris} is another shortcut for executing `MonadExec`{.idris} actions.
+The `result`{.idris} here is also `Either ExecError ()`{.idris},
+since a plain `INSERT`{.sql} query doesn't return anything.
+
+We can ask it to return the primary key of the record we just inserted, though:
+```idris
+  result <- execute' conn (insert' into Person [ Nothing, "John", "Doe", 42 ] { returning := column "id" })
+```
+and `result`{.idris} here is an `Either ExecError Integer`{.idris}.
+We can ask for more than one column:
+```idris
+  result <- execute' conn (insert' into Person [ Nothing, "John", "Doe", 42 ] { returning := columns ["id", "first_name"] })
+```
+or even the whole row:
+```idris
+  result <- execute' conn (insert' into Person [ Nothing, "John", "Doe", 22 ] { returning := all })
+```
+The types of the corresponding `result`{.idris}s will be just as you'd expect!
+
 ## Building
 
 Assuming you have [pack](https://github.com/stefan-hoeck/idris2-pack) and PostgreSQL libraries installed,
