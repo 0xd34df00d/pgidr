@@ -21,7 +21,7 @@ namespace Returning
     CAll  : HasSignature n ty => Columns ty (ty Read)
     CSome : HasSignature n ty =>
             {k : _} ->
-            (ixes : Vect k (Fin n)) ->
+            (ixes : Vect (S k) (Fin n)) ->
             Columns ty (Tuple (signatureOf ty `subColumns` ixes) Read)
 
   public export
@@ -40,7 +40,7 @@ namespace Returning
   public export
   columns : HasSignature n ty =>
             {k : _} ->
-            (names : Vect k String) ->
+            (names : Vect (S k) String) ->
             {auto alls : All (`InSignature` signatureOf ty) names} ->
             Columns ty (ColsType ty alls)
   columns _ = CSome $ namesToIxes alls
