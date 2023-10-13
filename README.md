@@ -1,5 +1,33 @@
 **pgidr** — PostgreSQL bindings for Idris
 
+This library provides both low-level wrappers around `libpq`,
+as well as higher-level type-safe wrappers around basic SQL commands.
+
+## A quick intro
+
+For an example of the latter, let's define a type representing a person:
+```idris
+import Postgres.Typed.Tuple
+
+Person : Dir -> Type
+Person = NamedTuple "persons" [MkSE "id" Integer [PKey PKeySerial], "first_name" @: String, "last_name" @: String, "age" @: Integer]
+```
+The `Dir`{.idris} is a technicality to account for different types on reads/writes/updates to the same table:
+for instance, a primary key or a `DEFAULT`{.sql}ed value that is `NOT NULL`{.sql}
+is optional when adding a record but it's always present when reading,
+so it is modeled by a `Maybe a`{.idris} on writes and `a`{.idris} on reads.
+
+Now we can create a table with `Person`{.idris}s.
+`Postgres.Typed.Operations.create`{.idris} does the trick, so in any `HasIO`{.idris} context, we can:
+```idris
+withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
+  result <- runMonadExec (create conn Person)
+```
+Here, `runMonadExec`{.idris} executes an operation (that is, a `MonadExec`{.idris} action),
+and it is responsible for error reporting, among other things.
+The `result`{.idris} of `runMonadExec action`{.idris} is a `Either ExecError res`{.idris},
+where `res`{.idris} is the original result of the action (a `()`{.idris} in this particular case).
+
 ## Building
 
 Assuming you have [pack](https://github.com/stefan-hoeck/idris2-pack) and PostgreSQL libraries installed,
