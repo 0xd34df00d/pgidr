@@ -53,6 +53,27 @@ or even the whole row:
 ```
 The types of the corresponding `result`{.idris}s will be just as you'd expect!
 
+## Features
+
+`INSERT`{.sql}:
+
+[x] Basic inserts
+[x] `RETURNING`{.sql}
+[ ] `ON CONFLICT`{.sql}
+
+`SELECT`{.sql}:
+
+[ ] Basic selects
+[ ] `WHERE`{.sql}
+[ ] `ORDER BY`{.sql}
+[ ] `GROUP BY`{.sql}
+[ ] Joins
+[ ] Aggregate functions
+
+`UPDATE`{.sql}:
+
+[ ] Basic updates with `WHERE`
+
 ## Building
 
 Assuming you have [pack](https://github.com/stefan-hoeck/idris2-pack) and PostgreSQL libraries installed,
