@@ -28,13 +28,7 @@ fieldStr (MkSE name type mods) =
 fieldsStr : (sig : Signature _) ->
             All (CreatablePgType . (.type)) sig ->
             String
-fieldsStr sig alls = concat $ intersperse ", " $ go sig alls
-  where
-  go : (sig : Signature n) ->
-       All (CreatablePgType . (.type)) sig ->
-       Vect n String
-  go [] [] = []
-  go (elem :: eRest) (creatable :: cRest) = fieldStr elem :: go eRest cRest
+fieldsStr sig alls = joinBy ", " $ toList $ forget $ mapProperty' fieldStr alls
 
 export
 createQuery : (ty : _) ->
