@@ -5,6 +5,7 @@ import public Control.Monad.Error.Interface
 import Derive.Prelude
 
 import Postgres.C
+import public Postgres.C.Connection
 import Postgres.Typed.PgType
 
 %default total
