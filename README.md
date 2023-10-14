@@ -12,21 +12,21 @@ import Postgres.Typed.Tuple
 Person : Dir -> Type
 Person = NamedTuple "persons" [MkSE "id" Integer [PKey PKeySerial], "first_name" @: String, "last_name" @: String, "age" @: Integer]
 ```
-The `Dir`{.idris} is a technicality to account for different types on reads/writes/updates to the same table:
-for instance, a primary key or a `DEFAULT`{.sql}ed value that is `NOT NULL`{.sql}
+The `Dir` is a technicality to account for different types on reads/writes/updates to the same table:
+for instance, a primary key or a `DEFAULT`ed value that is `NOT NULL`
 is optional when adding a record but it's always present when reading,
-so it is modeled by a `Maybe a`{.idris} on writes and `a`{.idris} on reads.
+so it is modeled by a `Maybe a` on writes and `a` on reads.
 
-Now we can create a table with `Person`{.idris}s.
-`Postgres.Typed.Operations.create`{.idris} does the trick, so in any `HasIO`{.idris} context, we can:
+Now we can create a table with `Person`s.
+`Postgres.Typed.Operations.create` does the trick, so in any `HasIO` context, we can:
 ```idris
 withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
   result <- runMonadExec (create conn Person)
 ```
-Here, `runMonadExec`{.idris} executes an operation (that is, a `MonadExec`{.idris} action),
+Here, `runMonadExec` executes an operation (that is, a `MonadExec` action),
 and it is responsible for error reporting, among other things.
-The `result`{.idris} of `runMonadExec action`{.idris} is a `Either ExecError res`{.idris},
-where `res`{.idris} is the original result of the action (a `()`{.idris} in this particular case).
+The `result` of `runMonadExec action` is a `Either ExecError res`,
+where `res` is the original result of the action (a `()` in this particular case).
 
 ### Inserting records
 
@@ -34,15 +34,15 @@ Then, we can insert a few records into our DB:
 ```idris
   result <- execute' conn (insert into Person [ Nothing, "John", "Doe", 42 ])
 ```
-Here, `execute'`{.idris} is another shortcut for executing `MonadExec`{.idris} actions.
-The `result`{.idris} here is also `Either ExecError ()`{.idris},
-since a plain `INSERT`{.sql} query doesn't return anything.
+Here, `execute'` is another shortcut for executing `MonadExec` actions.
+The `result` here is also `Either ExecError ()`,
+since a plain `INSERT` query doesn't return anything.
 
 We can ask it to return the primary key of the record we just inserted, though:
 ```idris
   result <- execute' conn (insert' into Person [ Nothing, "John", "Doe", 42 ] { returning := column "id" })
 ```
-and `result`{.idris} here is an `Either ExecError Integer`{.idris}.
+and `result` here is an `Either ExecError Integer`.
 We can ask for more than one column:
 ```idris
   result <- execute' conn (insert' into Person [ Nothing, "John", "Doe", 42 ] { returning := columns ["id", "first_name"] })
@@ -51,26 +51,26 @@ or even the whole row:
 ```idris
   result <- execute' conn (insert' into Person [ Nothing, "John", "Doe", 22 ] { returning := all })
 ```
-The types of the corresponding `result`{.idris}s will be just as you'd expect!
+The types of the corresponding `result`s will be just as you'd expect!
 
 ## Features
 
-`INSERT`{.sql}:
+`INSERT`:
 
 [x] Basic inserts
-[x] `RETURNING`{.sql}
-[ ] `ON CONFLICT`{.sql}
+[x] `RETURNING`
+[ ] `ON CONFLICT`
 
-`SELECT`{.sql}:
+`SELECT`:
 
 [ ] Basic selects
-[ ] `WHERE`{.sql}
-[ ] `ORDER BY`{.sql}
-[ ] `GROUP BY`{.sql}
+[ ] `WHERE`
+[ ] `ORDER BY`
+[ ] `GROUP BY`
 [ ] Joins
 [ ] Aggregate functions
 
-`UPDATE`{.sql}:
+`UPDATE`:
 
 [ ] Basic updates with `WHERE`
 
