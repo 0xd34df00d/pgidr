@@ -20,12 +20,12 @@ namespace Returning
     CNone : Columns ty ()
     CAll  : HasSignature n ty => Columns ty (ty Read)
     COne  : HasSignature n ty =>
-            (ix : Fin n) ->
-            Columns ty (computeType' Read (ix `index` signatureOf ty))
+            (idx : Fin n) ->
+            Columns ty (computeType' Read (idx `index` signatureOf ty))
     CSome : HasSignature n ty =>
             {k : _} ->
-            (ixes : Vect (S k) (Fin n)) ->
-            Columns ty (Tuple (signatureOf ty `subColumns` ixes) Read)
+            (idxes : Vect (S k) (Fin n)) ->
+            Columns ty (Tuple (signatureOf ty `subColumns` idxes) Read)
 
   public export
   all : HasSignature n ty => Columns ty (ty Read)
@@ -59,8 +59,8 @@ namespace Returning
   toColumnNames : Columns ty ret -> Maybe (List String)
   toColumnNames CNone = Nothing
   toColumnNames CAll = Just $ toList $ allColumnNames (signatureOf ty)
-  toColumnNames (COne ix) = Just [(ix `index` signatureOf ty).name]
-  toColumnNames (CSome ixes) = Just $ toList $ columnNames (signatureOf ty) ixes
+  toColumnNames (COne idx) = Just [(idx `index` signatureOf ty).name]
+  toColumnNames (CSome idxes) = Just $ toList $ columnNames (signatureOf ty) idxes
 
 record InsertColumn where
   constructor MkIC
@@ -203,5 +203,5 @@ export
     case returning of
          CNone => pure ()
          CAll => fromRawTuple <$> extractFields result _
-         COne ix => parseTextual _ (extractTextual result 0)
-         CSome ixes => extractFields result _
+         COne idx => parseTextual _ (extractTextual result 0)
+         CSome idxes => extractFields result _
