@@ -57,22 +57,22 @@ The types of the corresponding `result`s will be just as you'd expect!
 
 `INSERT`:
 
-[x] Basic inserts
-[x] `RETURNING`
-[ ] `ON CONFLICT`
+* [x] Basic inserts
+* [x] `RETURNING`
+* [ ] `ON CONFLICT`
 
 `SELECT`:
 
-[ ] Basic selects
-[ ] `WHERE`
-[ ] `ORDER BY`
-[ ] `GROUP BY`
-[ ] Joins
-[ ] Aggregate functions
+* [ ] Basic selects
+* [ ] `WHERE`
+* [ ] `ORDER BY`
+* [ ] `GROUP BY`
+* [ ] Joins
+* [ ] Aggregate functions
 
 `UPDATE`:
 
-[ ] Basic updates with `WHERE`
+* [ ] Basic updates with `WHERE`
 
 ## Building
 
