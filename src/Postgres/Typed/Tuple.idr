@@ -58,7 +58,6 @@ onSigValUniform : {dir : Dir} ->
                   Maybe a
 onSigValUniform f = onSigVal (map f) (Just . f)
 
-
 public export
 Tuple : Signature n -> (dir : Dir) -> Type
 Tuple sig dir = All (computeType' dir) sig
@@ -69,6 +68,14 @@ prettyTuple tup = "{ " ++ joinBy ", " (toList $ forget $ mapProperty' showElem t
   showElem : (se : SignatureElem) -> computeType' dir se -> String
   showElem se elt = let value = maybe "IS NULL" (" = " ++) $ onSigValUniform show se elt
                      in "\{se.name} \{value}"
+
+public export
+subTuple : (0 ty : _) ->
+           HasSignature n ty =>
+           (idxes : Vect k (Fin n)) ->
+           Dir ->
+           Type
+subTuple ty idxes = Tuple (signatureOf ty `subColumns` idxes)
 
 public export
 record NamedTuple (name : String) (s : Signature n) (dir : Dir) where

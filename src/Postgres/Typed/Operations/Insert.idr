@@ -25,7 +25,7 @@ namespace Returning
     CSome : HasSignature n ty =>
             {k : _} ->
             (idxes : Vect (S k) (Fin n)) ->
-            Columns ty (Tuple (signatureOf ty `subColumns` idxes) Read)
+            Columns ty (subTuple ty idxes Read)
 
   public export
   all : HasSignature n ty => Columns ty (ty Read)
