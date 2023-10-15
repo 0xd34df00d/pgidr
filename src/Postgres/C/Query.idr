@@ -274,6 +274,15 @@ execParams conn command params =
   withStringArray params $ \paramsArray =>
     wrapFFIResult (\conn' => ffi_execParams' conn' command (cast n) paramsArray (cast Textual)) conn
 
+export
+execParams' : HasIO io =>
+              (conn : Conn s) ->
+              (command : String) ->
+              {n : _} ->
+              (params : Vect n String) ->
+              io (Result s)
+execParams' conn command = execParams conn command . map Just
+
 
 %foreign (libpq "prepare")
 ffi_prepare : (conn : ConnHandle) ->
