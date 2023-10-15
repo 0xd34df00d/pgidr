@@ -197,8 +197,8 @@ export
   execute conn (MkInsert _ _ val returning) = do
     let (_ ** cols) = mkInsertColumns val
         query = mkInsertQuery {ty} cols returning
-        params = map (Just . .value) cols
-    result <- execParams conn query params
+        params = map (.value) cols
+    result <- execParams' conn query params
     checkQueryStatus result
     case returning of
          CNone => pure ()
