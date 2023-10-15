@@ -81,3 +81,14 @@ subColumns : Signature n ->
              Vect k (Fin n) ->
              Signature k
 subColumns sig cols = map (`index` sig) cols
+
+export
+columnNames : Signature n ->
+              Vect k (Fin n) ->
+              Vect k String
+columnNames sig = map (.name . (`index` sig))
+
+export
+allColumnNames : Signature n ->
+                 Vect n String
+allColumnNames = map (.name)

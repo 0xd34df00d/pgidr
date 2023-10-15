@@ -13,17 +13,6 @@ record Dummy (tag : Type) where
   constructor MkDF
 
 export
-columnNames : Signature n ->
-              Vect k (Fin n) ->
-              Vect k String
-columnNames sig = map (.name . (`index` sig))
-
-export
-allColumnNames : Signature n ->
-                 Vect n String
-allColumnNames = map (.name)
-
-export
 mapProperty' : {xs : Vect n a} ->
                (f : (x : a) -> p x -> q x) ->
                All p xs ->
