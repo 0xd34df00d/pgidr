@@ -58,9 +58,9 @@ namespace Returning
   export
   toColumnNames : Columns ty ret -> Maybe (List String)
   toColumnNames CNone = Nothing
-  toColumnNames CAll = Just $ toList $ allColumnNames (signatureOf ty)
+  toColumnNames CAll = Just $ toList $ allColumnNames ty
   toColumnNames (COne idx) = Just [(idx `index` signatureOf ty).name]
-  toColumnNames (CSome idxes) = Just $ toList $ columnNames (signatureOf ty) idxes
+  toColumnNames (CSome idxes) = Just $ toList $ columnNames ty idxes
 
 record InsertColumn where
   constructor MkIC

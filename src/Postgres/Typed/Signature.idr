@@ -83,12 +83,14 @@ subColumns : Signature n ->
 subColumns sig cols = map (`index` sig) cols
 
 export
-columnNames : Signature n ->
+columnNames : (0 ty : _) ->
+              HasSignature n ty =>
               Vect k (Fin n) ->
               Vect k String
-columnNames sig = map (.name . (`index` sig))
+columnNames ty = map (.name . (`index` signatureOf ty))
 
 export
-allColumnNames : Signature n ->
+allColumnNames : (0 ty : _) ->
+                 HasSignature n ty =>
                  Vect n String
-allColumnNames = map (.name)
+allColumnNames ty = map (.name) $ signatureOf ty
