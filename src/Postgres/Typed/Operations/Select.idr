@@ -1,36 +1,41 @@
 module Postgres.Typed.Operations.Select
 
+import Data.String
+
+import Postgres.C
+
 import public Postgres.Typed.Tuple
 import Postgres.Typed.Util
+
+import Postgres.Typed.Operations.Class
 
 %default total
 %prefix_record_projections off
 
-public export
-data Fields : (ty : a) -> Type where
-  FieldsAll  : HasSignature n ty => Fields ty
-  FieldsSome : HasSignature n ty =>
-               (ixes : Vect k (Fin n)) ->
-               Fields ty
+namespace Output
+  public export
+  data Columns : (0 ty : Dir -> Type) -> (0 ret : Type) -> Type where
+    CAll    : HasSignature n ty => Columns ty (ty Read)
+    CSome   : HasSignature n ty =>
+              (ixes : Vect k (Fin n)) ->
+              Columns ty (subTuple ty idxes Read)
+
+  export
+  toColumnNames : Columns ty ret ->
+                  List String
+  toColumnNames CAll = toList $ allColumnNames ty
+  toColumnNames (CSome ixes) = toList $ columnNames ty ixes
 
 public export
-data Order : (ty : a) -> Type where
-  OrderNone : Order ty
+data Order : (ty : Dir -> Type) -> Type where
+  ONone : Order ty
 
 public export
-record Select (ty : Dir -> Type) where
+record Select (ty : Dir -> Type) (ret : Type) where
   constructor MkSelect
   isTableType : HasSignature colCount ty
-  fields : Fields ty
+  columns : Columns ty ret
   orderby : Order ty
-
-fieldsToString : Fields ty -> String
-fieldsToString fields = case fields of
-                             FieldsAll => toString $ signatureOf ty
-                             FieldsSome ixes => toString $ (`index` signatureOf ty) <$> ixes
-  where
-  toString : Vect n SignatureElem -> String
-  toString = concat . intersperse ", " . map (.name)
 
 data DFrom : Type where
 public export
@@ -39,16 +44,17 @@ from = MkDF
 
 public export
 select : Dummy DFrom ->
-         (ty : Dir -> Type) ->       -- TODO make `ty : a`
+         (ty : Dir -> Type) ->
          HasSignature n ty =>
-         (Select ty -> Select ty) ->
-         Select ty
-select _ ty f = f (MkSelect %search FieldsAll OrderNone)
-
+         (Select ty (ty Read) -> Select ty ret) ->
+         Select ty ret
+select _ ty f = f (MkSelect %search CAll ONone)
 
 export
-toQuery : Select ty ->
-          String
-toQuery (MkSelect _ fields order) =
-  "SELECT " ++ fieldsToString fields ++
-  " FROM " ++ tableNameOf ty
+{ty, ret : _} -> Operation (Select ty ret) where
+  returnType _ = ret
+  execute conn (MkSelect _ columns orderby) = do
+    let query = "SELECT \{joinBy "," $ toColumnNames columns} FROM \{tableNameOf ty}"
+    result <- execParams' conn query []
+    checkQueryStatus result
+    pure ?executeRhs
