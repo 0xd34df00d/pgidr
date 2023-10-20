@@ -180,10 +180,10 @@ firstRow (MkRM tups _) = rewrite tups in 0
 
 ensureMatches : MonadError ExecError m =>
                 {n : _} ->
-                (res : Result s) ->
-                (sig : Signature n) ->
+                {res : Result s} ->
+                {sig : Signature n} ->
                 m (ResultMatches res sig)
-ensureMatches res sig = do
+ensureMatches = do
   let natInterpolateLocal = MkInterpolation {a = Nat} show
   Yes tuplesMatch <- pure $ ntuples res `decEq` 1
     | No _ => unexpected "\{ntuples res} tuples instead of one"
@@ -224,10 +224,10 @@ export
     checkQueryStatus result
     case returning of
          CNone => pure ()
-         CAll => do matches <- _ `ensureMatches` _
+         CAll => do matches <- ensureMatches
                     fromRawTuple <$> extractFields result (firstRow matches) _
-         COne idx => do matches <- _ `ensureMatches` _
+         COne idx => do matches <- ensureMatches
                         [val] <- extractFields result (firstRow matches) (subColumns _ [idx])
                         pure val
-         CSome idxes => do matches <- _ `ensureMatches` _
+         CSome idxes => do matches <- ensureMatches
                            extractFields result (firstRow matches) _
