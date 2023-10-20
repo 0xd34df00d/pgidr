@@ -189,7 +189,7 @@ extractFields : MonadError ExecError m =>
 extractFields res sig = do
   res `ensureMatches` sig
   let indices = tabulate (extractTextual res . finToNat)
-  traverseProperty' parseTextual indices
+  traversePropertyRelevant parseTextual indices
 
 export
 {ty, ret : _} -> Operation (Insert ty ret) where
