@@ -52,7 +52,7 @@ select _ ty f = f (MkSelect %search CAll ONone)
 
 export
 {ty, ret : _} -> Operation (Select ty ret) where
-  returnType _ = ret
+  returnType _ = List ret
   execute conn (MkSelect _ columns orderby) = do
     let query = "SELECT \{joinBy "," $ toColumnNames columns} FROM \{tableNameOf ty}"
     result <- execParams' conn query []
