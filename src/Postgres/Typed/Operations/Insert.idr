@@ -2,6 +2,7 @@ module Postgres.Typed.Operations.Insert
 
 import Data.String
 import Data.Vect
+import Decidable.Equality
 
 import Postgres.C
 
@@ -168,15 +169,23 @@ parseTextual (MkSE name ty mods) textual with (computeNullability mods Read)
   _ | NonNullable = maybe (unexpected "NULL value for \{name}") parseTextual' textual
   _ | Nullable = traverse parseTextual' textual
 
+record ResultMatches (res : Result s) (sig : Signature n) where
+  constructor MkRM
+  tuplesMatch : ntuples res = 1
+  columnsMatch : nfields res = n
+
 ensureMatches : MonadError ExecError m =>
                 {n : _} ->
                 (res : Result s) ->
                 (sig : Signature n) ->
-                m ()
+                m (ResultMatches res sig)
 ensureMatches res sig = do
   let natInterpolateLocal = MkInterpolation {a = Nat} show
-  when (ntuples res /= 1) $ unexpected "\{ntuples res} tuples instead of one"
-  when (nfields res /= n) $ unexpected "\{nfields res} columns instead of \{n}"
+  Yes tuplesMatch <- pure $ ntuples res `decEq` 1
+    | No _ => unexpected "\{ntuples res} tuples instead of one"
+  Yes fieldsMatch <- pure $ decEq (nfields res) n
+    | No _ => unexpected "\{nfields res} columns instead of \{n}"
+  pure $ MkRM tuplesMatch fieldsMatch
   -- TODO this could be the place to do extra checks
   -- for result column names/types/count
   -- if they are enabled
