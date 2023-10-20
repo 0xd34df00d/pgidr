@@ -14,11 +14,6 @@ InSignature : String -> Signature n -> Type
 InSignature name sig = Any (`HasName` name) sig
 
 public export
-anyToFin : {0 xs : Vect n _} -> Any p xs -> Fin n
-anyToFin (Here _) = FZ
-anyToFin (There later) = FS (anyToFin later)
-
-public export
 namesToIxes : HasSignature n ty =>
               {k : _} ->
               {names : Vect k String} ->
