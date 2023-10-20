@@ -174,6 +174,10 @@ record ResultMatches (res : Result s) (sig : Signature n) where
   tuplesMatch : ntuples res = 1
   columnsMatch : nfields res = n
 
+firstRow : ResultMatches res sig ->
+           RowI res
+firstRow (MkRM tups _) = rewrite tups in 0
+
 ensureMatches : MonadError ExecError m =>
                 {n : _} ->
                 (res : Result s) ->
@@ -191,20 +195,22 @@ ensureMatches res sig = do
   -- if they are enabled
 
 extractTextual : (res : Result s) ->
-                 (col : Nat) ->
+                 (row : RowI res) ->
+                 (col : ColI res) ->
                  Maybe String
-extractTextual res col = if getisnull res 0 col
-                            then Nothing
-                            else Just $ getvalueTextual res 0 col
+extractTextual res row col = if getisnull res row col
+                                then Nothing
+                                else Just $ getvalueTextual res row col
 
 extractFields : MonadError ExecError m =>
                 {n : _} ->
                 (res : Result s) ->
+                (row : RowI res) ->
                 (sig : Signature n) ->
+                {auto matches : ResultMatches res sig} ->
                 m (Tuple sig Read)
-extractFields res sig = do
-  res `ensureMatches` sig
-  let indices = tabulate (extractTextual res . finToNat)
+extractFields res row sig {matches = MkRM _ Refl} = do
+  let indices = tabulate (extractTextual res row)
   traversePropertyRelevant parseTextual indices
 
 export
@@ -218,6 +224,10 @@ export
     checkQueryStatus result
     case returning of
          CNone => pure ()
-         CAll => fromRawTuple <$> extractFields result _
-         COne idx => parseTextual _ (extractTextual result 0)
-         CSome idxes => extractFields result _
+         CAll => do matches <- _ `ensureMatches` _
+                    fromRawTuple <$> extractFields result (firstRow matches) _
+         COne idx => do matches <- _ `ensureMatches` _
+                        [val] <- extractFields result (firstRow matches) (subColumns _ [idx])
+                        pure val
+         CSome idxes => do matches <- _ `ensureMatches` _
+                           extractFields result (firstRow matches) _
