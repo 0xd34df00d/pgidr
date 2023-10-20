@@ -16,12 +16,19 @@ import public Postgres.Typed.Operations.Helpers
 
 namespace Returning
   public export
+  typeAt : (0 ty : Dir -> Type) ->
+           HasSignature n ty =>
+           (idx : Fin n) ->
+           Type
+  typeAt ty idx = computeType' Read (idx `index` signatureOf ty)
+
+  public export
   data Columns : (0 ty : Dir -> Type) -> (0 ret : Type) -> Type where
     CNone : Columns ty ()
     CAll  : HasSignature n ty => Columns ty (ty Read)
     COne  : HasSignature n ty =>
             (idx : Fin n) ->
-            Columns ty (computeType' Read (idx `index` signatureOf ty))
+            Columns ty (typeAt ty idx)
     CSome : HasSignature n ty =>
             {k : _} ->
             (idxes : Vect (S k) (Fin n)) ->
