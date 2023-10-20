@@ -174,14 +174,14 @@ record ResultMatches (res : Result s) (sig : Signature n) where
   tuplesMatch : ntuples res = 1
   columnsMatch : nfields res = n
 
-firstRow : ResultMatches res sig ->
+firstRow : (0 _ : ResultMatches res sig) ->
            RowI res
 firstRow (MkRM tups _) = rewrite tups in 0
 
 ensureMatches : MonadError ExecError m =>
                 {n : _} ->
                 {res : Result s} ->
-                {sig : Signature n} ->
+                {0 sig : Signature n} ->
                 m (ResultMatches res sig)
 ensureMatches = do
   let natInterpolateLocal = MkInterpolation {a = Nat} show
@@ -207,7 +207,7 @@ extractFields : MonadError ExecError m =>
                 (res : Result s) ->
                 (row : RowI res) ->
                 (sig : Signature n) ->
-                {auto matches : ResultMatches res sig} ->
+                {auto 0 matches : ResultMatches res sig} ->
                 m (Tuple sig Read)
 extractFields res row sig {matches = MkRM _ Refl} = do
   let indices = tabulate (extractTextual res row)
