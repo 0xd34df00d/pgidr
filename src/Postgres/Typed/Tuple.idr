@@ -75,7 +75,7 @@ subTuple : (0 ty : _) ->
            (idxes : Vect k (Fin n)) ->
            Dir ->
            Type
-subTuple ty idxes = Tuple (signatureOf ty `subColumns` idxes)
+subTuple ty idxes = Tuple (signatureOf ty `subSignature` idxes)
 
 public export
 record NamedTuple (name : String) (s : Signature n) (dir : Dir) where

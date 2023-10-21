@@ -77,10 +77,10 @@ name @: ty = MkSE name ty [NotNull]
 name @:? ty = MkSE name ty []
 
 public export
-subColumns : Signature n ->
-             Vect k (Fin n) ->
-             Signature k
-subColumns sig cols = map (`index` sig) cols
+subSignature : Signature n ->
+               Vect k (Fin n) ->
+               Signature k
+subSignature sig cols = map (`index` sig) cols
 
 export
 columnNames : (0 ty : _) ->

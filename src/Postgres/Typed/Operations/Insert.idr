@@ -45,7 +45,7 @@ namespace Returning
              {names : Vect k String} ->
              (alls : All (`InSignature` signatureOf ty) names) ->
              Type
-  ColsType ty alls = Tuple (signatureOf ty `subColumns` namesToIxes alls) Read
+  ColsType ty alls = Tuple (signatureOf ty `subSignature` namesToIxes alls) Read
 
   public export
   columns : HasSignature n ty =>
@@ -176,5 +176,5 @@ export
     case returning of
          CNone => pure ()
          CAll => fromRawTuple <$> (extractFirstRow result _ =<<| ensureMatches)
-         COne idx => head <$> (extractFirstRow result (subColumns _ [idx]) =<<| ensureMatches)
+         COne idx => head <$> (extractFirstRow result (subSignature _ [idx]) =<<| ensureMatches)
          CSome idxes => extractFirstRow result _ =<<| ensureMatches
