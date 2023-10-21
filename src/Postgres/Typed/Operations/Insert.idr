@@ -169,27 +169,27 @@ parseTextual (MkSE name ty mods) textual with (computeNullability mods Read)
   _ | NonNullable = maybe (unexpected "NULL value for \{name}") parseTextual' textual
   _ | Nullable = traverse parseTextual' textual
 
-record ResultMatches (res : Result s) (sig : Signature n) where
+record ResultMatches (res : Result s) (sig : Signature n) (rows : Nat) where
   constructor MkRM
-  tuplesMatch : ntuples res = 1
-  columnsMatch : nfields res = n
+  rowsMatch : ntuples res = rows
+  colsMatch : nfields res = n
 
 firstRow : (0 _ : ResultMatches res sig) ->
            RowI res
 firstRow (MkRM tups _) = rewrite tups in 0
 
 ensureMatches : MonadError ExecError m =>
-                {n : _} ->
+                {n, rows : _} ->
                 {res : Result s} ->
                 {0 sig : Signature n} ->
-                m (ResultMatches res sig)
+                m (ResultMatches res sig rows)
 ensureMatches = do
   let natInterpolateLocal = MkInterpolation {a = Nat} show
-  Yes tuplesMatch <- pure $ ntuples res `decEq` 1
+  Yes rowsMatch <- pure $ ntuples res `decEq` rows
     | No _ => unexpected "\{ntuples res} tuples instead of one"
-  Yes fieldsMatch <- pure $ decEq (nfields res) n
+  Yes colsMatch <- pure $ decEq (nfields res) n
     | No _ => unexpected "\{nfields res} columns instead of \{n}"
-  pure $ MkRM tuplesMatch fieldsMatch
+  pure $ MkRM rowsMatch colsMatch
   -- TODO this could be the place to do extra checks
   -- for result column names/types/count
   -- if they are enabled
@@ -207,9 +207,9 @@ extractFields : MonadError ExecError m =>
                 (res : Result s) ->
                 (row : RowI res) ->
                 (sig : Signature n) ->
-                {auto 0 matches : ResultMatches res sig} ->
+                (0 matches : ResultMatches res sig rows) ->
                 m (Tuple sig Read)
-extractFields res row sig {matches = MkRM _ Refl} = do
+extractFields res row sig (MkRM _ Refl) = do
   let indices = tabulate (extractTextual res row)
   traversePropertyRelevant parseTextual indices
 
@@ -225,9 +225,9 @@ export
     case returning of
          CNone => pure ()
          CAll => do matches <- ensureMatches
-                    fromRawTuple <$> extractFields result (firstRow matches) _
+                    fromRawTuple <$> extractFields result (firstRow matches) _ matches
          COne idx => do matches <- ensureMatches
-                        [val] <- extractFields result (firstRow matches) (subColumns _ [idx])
+                        [val] <- extractFields result (firstRow matches) (subColumns _ [idx]) matches
                         pure val
          CSome idxes => do matches <- ensureMatches
-                           extractFields result (firstRow matches) _
+                           extractFields result (firstRow matches) _ matches
