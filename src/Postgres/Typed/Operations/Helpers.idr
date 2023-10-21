@@ -47,20 +47,20 @@ parseTextual (MkSE name ty mods) textual with (computeNullability mods Read)
   _ | Nullable = traverse parseTextual' textual
 
 public export
-record ResultMatches (res : Result s) (sig : Signature n) (rows : Nat) where
+record ResultMatches (res : Result s) (sig : Signature n) (numRows : Nat) where
   constructor MkRM
-  rowsMatch : ntuples res = rows
+  rowsMatch : ntuples res = numRows
   colsMatch : nfields res = n
 
 public export
 ensureMatches : MonadError ExecError m =>
-                {n, rows : _} ->
+                {n, numRows : _} ->
                 {res : Result s} ->
                 {0 sig : Signature n} ->
-                m (ResultMatches res sig rows)
+                m (ResultMatches res sig numRows)
 ensureMatches = do
   let natInterpolateLocal = MkInterpolation {a = Nat} show
-  Yes rowsMatch <- pure $ ntuples res `decEq` rows
+  Yes rowsMatch <- pure $ ntuples res `decEq` numRows
     | No _ => unexpected "\{ntuples res} tuples instead of one"
   Yes colsMatch <- pure $ nfields res `decEq` n
     | No _ => unexpected "\{nfields res} columns instead of \{n}"
@@ -84,7 +84,7 @@ extractFields : MonadError ExecError m =>
                 (res : Result s) ->
                 (row : RowI res) ->
                 (sig : Signature n) ->
-                (0 matches : ResultMatches res sig rows) ->
+                (0 matches : ResultMatches res sig numRows) ->
                 m (Tuple sig Read)
 extractFields res row sig (MkRM _ Refl) = do
   let indices = tabulate (extractTextual res row)
