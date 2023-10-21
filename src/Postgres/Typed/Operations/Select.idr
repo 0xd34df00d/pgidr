@@ -1,6 +1,7 @@
 module Postgres.Typed.Operations.Select
 
 import Data.String
+import Data.Vect
 
 import Postgres.C
 
@@ -8,6 +9,7 @@ import public Postgres.Typed.Tuple
 import Postgres.Typed.Util
 
 import Postgres.Typed.Operations.Class
+import public Postgres.Typed.Operations.Helpers
 
 %default total
 %prefix_record_projections off
@@ -17,6 +19,7 @@ namespace Output
   data Columns : (0 ty : Dir -> Type) -> (0 ret : Type) -> Type where
     CAll    : HasSignature n ty => Columns ty (ty Read)
     CSome   : HasSignature n ty =>
+              {k : _} ->
               (ixes : Vect k (Fin n)) ->
               Columns ty (subTuple ty ixes Read)
 
@@ -33,7 +36,8 @@ data Order : (ty : Dir -> Type) -> Type where
 public export
 record Select (ty : Dir -> Type) (ret : Type) where
   constructor MkSelect
-  isTableType : HasSignature colCount ty
+  colCount : Nat
+  isTableType : IsRecordType colCount ty -- TODO auto implicit when Idris2#3083 is fixed
   columns : Columns ty ret
   orderby : Order ty
 
@@ -45,16 +49,22 @@ from = MkDF
 public export
 select : Dummy DFrom ->
          (ty : Dir -> Type) ->
-         HasSignature n ty =>
+         {n : _} ->
+         IsRecordType n ty =>
          (Select ty (ty Read) -> Select ty ret) ->
          Select ty ret
-select _ ty f = f (MkSelect %search CAll ONone)
+select _ ty f = f (MkSelect _ %search CAll ONone)
 
 export
 {ty, ret : _} -> Operation (Select ty ret) where
   returnType _ = List ret
-  execute conn (MkSelect _ columns orderby) = do
+  execute conn (MkSelect _ _ columns orderby) = do
     let query = "SELECT \{joinBy "," $ toColumnNames columns} FROM \{tableNameOf ty}"
     result <- execParams' conn query []
     checkQueryStatus result
-    pure ?executeRhs
+    let rows = Data.Vect.Fin.tabulate {len = ntuples result} id
+    case columns of
+         CAll => do matches <- ensureMatches {numRows = ntuples result}
+                    map toList $ for rows $ \row => fromRawTuple <$> extractFields result row _ matches
+         CSome ixes => do matches <- ensureMatches {numRows = ntuples result}
+                          map toList $ for rows $ \row => extractFields result row _ matches
