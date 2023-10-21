@@ -66,7 +66,7 @@ prettyTuple : {dir : _} -> {s : Signature _} -> Tuple s dir -> String
 prettyTuple tup = "{ " ++ joinBy ", " (toList $ forget $ mapProperty' showElem tup) ++ " }"
   where
   showElem : (se : SignatureElem) -> computeType' dir se -> String
-  showElem se elt = let value = maybe "IS NULL" (" = " ++) $ onSigValUniform show se elt
+  showElem se elt = let value = maybe "IS NULL" ("= " ++) $ onSigValUniform show se elt
                      in "\{se.name} \{value}"
 
 public export
