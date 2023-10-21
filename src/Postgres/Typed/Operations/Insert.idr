@@ -174,10 +174,6 @@ record ResultMatches (res : Result s) (sig : Signature n) (rows : Nat) where
   rowsMatch : ntuples res = rows
   colsMatch : nfields res = n
 
-firstRow : (0 _ : ResultMatches res sig) ->
-           RowI res
-firstRow (MkRM tups _) = rewrite tups in 0
-
 ensureMatches : MonadError ExecError m =>
                 {n, rows : _} ->
                 {res : Result s} ->
@@ -213,6 +209,14 @@ extractFields res row sig (MkRM _ Refl) = do
   let indices = tabulate (extractTextual res row)
   traversePropertyRelevant parseTextual indices
 
+extractFirstRow : MonadError ExecError m =>
+                  {n : _} ->
+                  (res : Result s) ->
+                  (sig : Signature n) ->
+                  (0 matches : ResultMatches res sig 1) ->
+                  m (Tuple sig Read)
+extractFirstRow res sig matches = extractFields res (rewrite matches.rowsMatch in 0) sig matches
+
 export
 {ty, ret : _} -> Operation (Insert ty ret) where
   returnType _ = ret
@@ -225,9 +229,9 @@ export
     case returning of
          CNone => pure ()
          CAll => do matches <- ensureMatches
-                    fromRawTuple <$> extractFields result (firstRow matches) _ matches
+                    fromRawTuple <$> extractFirstRow result _ matches
          COne idx => do matches <- ensureMatches
-                        [val] <- extractFields result (firstRow matches) (subColumns _ [idx]) matches
+                        [val] <- extractFirstRow result (subColumns _ [idx]) matches
                         pure val
          CSome idxes => do matches <- ensureMatches
-                           extractFields result (firstRow matches) _ matches
+                           extractFirstRow result _ matches
