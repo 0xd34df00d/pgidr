@@ -62,7 +62,7 @@ ensureMatches = do
   let natInterpolateLocal = MkInterpolation {a = Nat} show
   Yes rowsMatch <- pure $ ntuples res `decEq` rows
     | No _ => unexpected "\{ntuples res} tuples instead of one"
-  Yes colsMatch <- pure $ decEq (nfields res) n
+  Yes colsMatch <- pure $ nfields res `decEq` n
     | No _ => unexpected "\{nfields res} columns instead of \{n}"
   pure $ MkRM rowsMatch colsMatch
   -- TODO this could be the place to do extra checks
