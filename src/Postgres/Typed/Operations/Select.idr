@@ -18,7 +18,7 @@ namespace Output
     CAll    : HasSignature n ty => Columns ty (ty Read)
     CSome   : HasSignature n ty =>
               (ixes : Vect k (Fin n)) ->
-              Columns ty (subTuple ty idxes Read)
+              Columns ty (subTuple ty ixes Read)
 
   export
   toColumnNames : Columns ty ret ->
