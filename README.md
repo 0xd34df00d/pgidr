@@ -69,6 +69,7 @@ The types of the corresponding `result`s will be just as you'd expect!
 * [ ] `GROUP BY`
 * [ ] Joins
 * [ ] Aggregate functions
+* [ ] Smart return type (`List ty` vs `ty` vs `Maybe ty`) calculation.
 
 `UPDATE`:
 
