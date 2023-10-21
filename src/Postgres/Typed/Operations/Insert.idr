@@ -217,6 +217,10 @@ extractFirstRow : MonadError ExecError m =>
                   m (Tuple sig Read)
 extractFirstRow res sig matches = extractFields res (rewrite matches.rowsMatch in 0) sig matches
 
+infixl 1 =<<|
+(=<<|) : Monad m => ((0 _ : a) -> m b) -> m a -> m b
+f =<<| act = act >>= \r => f r
+
 export
 {ty, ret : _} -> Operation (Insert ty ret) where
   returnType _ = ret
@@ -228,10 +232,6 @@ export
     checkQueryStatus result
     case returning of
          CNone => pure ()
-         CAll => do matches <- ensureMatches
-                    fromRawTuple <$> extractFirstRow result _ matches
-         COne idx => do matches <- ensureMatches
-                        [val] <- extractFirstRow result (subColumns _ [idx]) matches
-                        pure val
-         CSome idxes => do matches <- ensureMatches
-                           extractFirstRow result _ matches
+         CAll => fromRawTuple <$> (extractFirstRow result _ =<<| ensureMatches)
+         COne idx => head <$> (extractFirstRow result (subColumns _ [idx]) =<<| ensureMatches)
+         CSome idxes => extractFirstRow result _ =<<| ensureMatches
