@@ -56,6 +56,8 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
   execute' conn (insert' into Person [ Nothing, "Foo", "Bar", 666 ] { returning := columns ["id", "first_name"] })
     >>= handleResult "inserted person 4"
 
+  execute' conn (select from Person id) >>= handleResult "selected all persons"
+
 {-
   let insertQuery = "INSERT INTO persons (first_name, last_name, age, country) VALUES ($1, $2, $3, $4)"
 
