@@ -34,8 +34,14 @@ namespace Expression
   data BinRelOp = Eq | Gt | Geq | Lt | Leq
 
   public export
+  data PgConst : Type -> Type where
+    PCString : String -> PgConst String
+    PCNum    : (Show a, Num a) => a -> PgConst a
+    -- TODO there's more! https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
+
+  public export
   data Expr : (0 ty : Dir -> Type) -> (ety : Type) -> Type where
-    EConst  : (val : ety) ->
+    EConst  : (val : PgConst ety) ->
               Expr ty ety
     EColumn : HasSignature n ty =>
               (ix : Fin n) ->
