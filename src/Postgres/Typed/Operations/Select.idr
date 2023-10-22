@@ -33,6 +33,13 @@ namespace Expression
   public export
   data BinRelOp = Eq | Gt | Geq | Lt | Leq
 
+  opToSql : BinRelOp -> String
+  opToSql = \case Eq => "="
+                  Gt => ">"
+                  Geq => ">="
+                  Lt => "<"
+                  Leq => "<="
+
   public export
   data PgConst : Type -> Type where
     PCString : String -> PgConst String
@@ -57,6 +64,19 @@ namespace Expression
     ENot : (e : Expr ty Bool) -> Expr ty Bool
     -- TODO there's more! https://www.postgresql.org/docs/current/sql-expressions.html
 
+  Interpolation (Expr ty ret) where
+    interpolate (EConst val) = case val of
+                                    PCString str => "'\{str}'"
+                                    PCNum n => show n
+    interpolate (EColumn ix) = (ix `index` signatureOf ty).name
+    interpolate (EBinRel l r op) = "\{l} \{opToSql op} \{r}"
+    interpolate (EAnd l r) = "\{l} AND \{r}"
+    interpolate (EOr l r) = "\{l} OR \{r}"
+    interpolate (ENot e) = "NOT \{e}"
+
+  export
+  toQueryPart : Expr ty ret -> String
+  toQueryPart = interpolate
 
 public export
 data Order : (ty : Dir -> Type) -> Type where
