@@ -63,7 +63,7 @@ The types of the corresponding `result`s will be just as you'd expect!
 
 `SELECT`:
 
-* [ ] Basic selects
+* [x] Basic selects
 * [ ] `WHERE`
 * [ ] `ORDER BY`
 * [ ] `GROUP BY`
