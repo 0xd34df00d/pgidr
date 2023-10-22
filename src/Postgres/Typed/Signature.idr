@@ -61,7 +61,7 @@ data Modifier : (ty : Type) -> Type where
   References : (0 other : Type) ->
                HasSignature n other =>
                (idx : Fin n) ->
-               {auto typesMatch : ty = (idx `index` signatureOf other).type} ->
+               {auto teq : ty = (idx `index` signatureOf other).type} ->
                Modifier ty
   Default : (defVal : ty) ->
             Modifier ty
