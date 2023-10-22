@@ -29,6 +29,30 @@ namespace Output
   toColumnNames CAll = toList $ allColumnNames ty
   toColumnNames (CSome ixes) = toList $ columnNames ty ixes
 
+namespace Expression
+  public export
+  data BinRelOp = Eq | Gt | Geq | Lt | Leq
+
+  public export
+  data Expr : (0 ty : Dir -> Type) -> (ety : Type) -> Type where
+    EConst  : (val : ety) ->
+              Expr ty ety
+    EColumn : HasSignature n ty =>
+              (ix : Fin n) ->
+              Expr ty (ix `index` signatureOf ty).type
+    EBinRel : (l, r : Expr ty ety) ->
+              (op : BinRelOp) ->
+              Expr ty Bool
+    -- TODO there's more! https://www.postgresql.org/docs/current/sql-expressions.html
+
+namespace Filtering
+  public export
+  data Condition : (0 ty : Dir -> Type) -> Type where
+    CAnd : (l, r : Condition ty) -> Condition ty
+    COr : (l, r : Condition ty) -> Condition ty
+    CNot : Condition ty -> Condition ty
+    CAtom : Expr ty Bool -> Condition ty
+
 public export
 data Order : (ty : Dir -> Type) -> Type where
   ONone : Order ty
