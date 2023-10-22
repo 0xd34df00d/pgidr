@@ -88,6 +88,7 @@ record Select (ty : Dir -> Type) (ret : Type) where
   colCount : Nat
   isTableType : IsRecordType colCount ty -- TODO auto implicit when Idris2#3083 is fixed
   columns : Columns ty ret
+  whereClause : Maybe (Expr ty Bool)
   orderby : Order ty
 
 data DFrom : Type where
@@ -102,13 +103,16 @@ select : Dummy DFrom ->
          IsRecordType n ty =>
          (Select ty (ty Read) -> Select ty ret) ->
          Select ty ret
-select _ ty f = f (MkSelect _ %search CAll ONone)
+select _ ty f = f (MkSelect _ %search CAll Nothing ONone)
 
 export
 {ty, ret : _} -> Operation (Select ty ret) where
   returnType _ = List ret
-  execute conn (MkSelect _ _ columns orderby) = do
-    let query = "SELECT \{joinBy "," $ toColumnNames columns} FROM \{tableNameOf ty}"
+  execute conn (MkSelect _ _ columns whereClause orderby) = do
+    let wherePart = maybe "" (("WHERE " ++) . toQueryPart) whereClause
+        query = "SELECT \{joinBy "," $ toColumnNames columns} " ++
+                "FROM \{tableNameOf ty} " ++
+                "\{wherePart}"
     result <- execParams' conn query []
     checkQueryStatus result
     let rows = Data.Vect.Fin.tabulate {len = ntuples result} id
