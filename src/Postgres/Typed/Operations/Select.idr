@@ -64,19 +64,28 @@ namespace Expression
     ENot : (e : Expr ty Bool) -> Expr ty Bool
     -- TODO there's more! https://www.postgresql.org/docs/current/sql-expressions.html
 
-  Interpolation (Expr ty ret) where
-    interpolate (EConst val) = case val of
+  isLeaf : Expr ty ety -> Bool
+  isLeaf (EConst{}) = True
+  isLeaf (EColumn{}) = True
+  isLeaf (EBinRel{}) = False
+  isLeaf (EAnd{}) = False
+  isLeaf (EOr{}) = False
+  isLeaf (ENot{}) = False
+
+  mutual
+    export
+    toQueryPart : Expr ty ret -> String
+    toQueryPart (EConst val) = case val of
                                     PCString str => "'\{str}'"
                                     PCNum n => show n
-    interpolate (EColumn ix) = (ix `index` signatureOf ty).name
-    interpolate (EBinRel l r op) = "\{l} \{opToSql op} \{r}"
-    interpolate (EAnd l r) = "\{l} AND \{r}"
-    interpolate (EOr l r) = "\{l} OR \{r}"
-    interpolate (ENot e) = "NOT \{e}"
+    toQueryPart (EColumn ix) = (ix `index` signatureOf ty).name
+    toQueryPart (EBinRel l r op) = "\{parens l} \{opToSql op} \{parens r}"
+    toQueryPart (EAnd l r) = "\{parens l} AND \{parens r}"
+    toQueryPart (EOr l r) = "\{parens l} OR \{parens r}"
+    toQueryPart (ENot e) = "NOT \{parens e}"
 
-  export
-  toQueryPart : Expr ty ret -> String
-  toQueryPart = interpolate
+    parens : Expr ty' ret' -> String
+    parens e = if isLeaf e then toQueryPart e else "(" ++ toQueryPart e ++ ")"
 
 public export
 data Order : (ty : Dir -> Type) -> Type where
