@@ -43,15 +43,14 @@ namespace Expression
     EBinRel : (l, r : Expr ty ety) ->
               (op : BinRelOp) ->
               Expr ty Bool
+
+    EAnd : (l, r : Expr ty Bool) ->
+           Expr ty Bool
+    EOr  : (l, r : Expr ty Bool) ->
+           Expr ty Bool
+    ENot : (e : Expr ty Bool) -> Expr ty Bool
     -- TODO there's more! https://www.postgresql.org/docs/current/sql-expressions.html
 
-namespace Filtering
-  public export
-  data Condition : (0 ty : Dir -> Type) -> Type where
-    CAnd : (l, r : Condition ty) -> Condition ty
-    COr : (l, r : Condition ty) -> Condition ty
-    CNot : Condition ty -> Condition ty
-    CAtom : Expr ty Bool -> Condition ty
 
 public export
 data Order : (ty : Dir -> Type) -> Type where
