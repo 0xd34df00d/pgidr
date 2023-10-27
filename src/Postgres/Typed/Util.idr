@@ -1,16 +1,9 @@
 module Postgres.Typed.Util
 
+import Data.Vect
 import Data.Vect.Quantifiers
 
-import Postgres.C
-
-import Postgres.Typed.Signature
-
 %default total
-
-public export
-record Dummy (tag : Type) where
-  constructor MkDF
 
 export
 mapProperty' : {xs : Vect n a} ->

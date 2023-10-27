@@ -9,6 +9,11 @@ import Postgres.Typed.Tuple
 import Postgres.Typed.Util
 
 public export
+record Dummy (tag : Type) where
+  constructor MkDF
+
+
+public export
 parseTextual' : MonadError ExecError m =>
                 PgType ty =>
                 (textual : String) ->
