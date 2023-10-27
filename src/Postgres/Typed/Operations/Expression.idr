@@ -1,7 +1,9 @@
 module Postgres.Typed.Operations.Expression
 
 import Data.Vect
+import Data.Vect.Quantifiers
 
+import public Postgres.Typed.InSignature
 import Postgres.Typed.Tuple
 
 %default total
@@ -59,6 +61,12 @@ namespace EDSL
   FromString (Expr ty String) where
     fromString = EConst . PCString
 
+  public export
+  col : HasSignature n ty =>
+        (name : String) ->
+        {auto inSig : name `InSignature` signatureOf ty} ->
+        Expr ty (anyToFin inSig `index` signatureOf ty).type
+  col _ = EColumn (anyToFin inSig)
 
 isLeaf : Expr ty ety -> Bool
 isLeaf (EConst{}) = True
