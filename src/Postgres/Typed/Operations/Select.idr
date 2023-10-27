@@ -64,6 +64,14 @@ namespace Expression
     ENot : (e : Expr ty Bool) -> Expr ty Bool
     -- TODO there's more! https://www.postgresql.org/docs/current/sql-expressions.html
 
+  public export
+  fromInteger : Integer -> Expr ty Integer
+  fromInteger = EConst . PCNum
+
+  public export
+  FromString (Expr ty String) where
+    fromString = EConst . PCString
+
   isLeaf : Expr ty ety -> Bool
   isLeaf (EConst{}) = True
   isLeaf (EColumn{}) = True
