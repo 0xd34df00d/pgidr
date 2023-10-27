@@ -6,7 +6,6 @@ import Data.Vect
 import Postgres.C
 
 import public Postgres.Typed.Tuple
-import Postgres.Typed.Util
 
 import Postgres.Typed.Operations.Class
 import public Postgres.Typed.Operations.Helpers

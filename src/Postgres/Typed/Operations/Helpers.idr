@@ -2,11 +2,12 @@ module Postgres.Typed.Operations.Helpers
 
 import Decidable.Equality
 
+import Data.Vect.Quantifiers.Extra
+
 import Postgres.C
 
 import Postgres.Typed.Operations.Class
 import Postgres.Typed.Tuple
-import Postgres.Typed.Util
 
 public export
 record Dummy (tag : Type) where

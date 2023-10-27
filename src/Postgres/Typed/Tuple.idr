@@ -4,10 +4,11 @@ import Data.List
 import Data.String
 import public Data.Vect.Quantifiers
 
+import Data.Vect.Quantifiers.Extra
+
 import Postgres.Typed.Modifiers
 import public Postgres.Typed.PgType
 import public Postgres.Typed.Signature
-import Postgres.Typed.Util
 
 %default total
 

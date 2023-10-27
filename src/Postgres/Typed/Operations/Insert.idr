@@ -3,11 +3,12 @@ module Postgres.Typed.Operations.Insert
 import Data.String
 import Data.Vect
 
+import Data.Vect.Quantifiers.Extra
+
 import Postgres.C
 
 import public Postgres.Typed.InSignature
 import public Postgres.Typed.Tuple
-import Postgres.Typed.Util
 
 import Postgres.Typed.Operations.Class
 import Postgres.Typed.Operations.Helpers

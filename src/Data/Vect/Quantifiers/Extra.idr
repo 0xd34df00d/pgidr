@@ -1,4 +1,4 @@
-module Postgres.Typed.Util
+module Data.Vect.Quantifiers.Extra
 
 import Data.Vect
 import Data.Vect.Quantifiers

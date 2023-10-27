@@ -22,7 +22,6 @@ modules = Postgres.C
         , Postgres.Typed.Schema
         , Postgres.Typed.Signature
         , Postgres.Typed.Tuple
-        , Postgres.Typed.Util
 
         , Postgres.Typed.Operations
         , Postgres.Typed.Operations.Class
@@ -30,5 +29,7 @@ modules = Postgres.C
         , Postgres.Typed.Operations.Helpers
         , Postgres.Typed.Operations.Insert
         , Postgres.Typed.Operations.Select
+
+        , Data.Vect.Quantifiers.Extra
 
 prebuild = "./prebuild.sh"

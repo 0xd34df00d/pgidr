@@ -3,12 +3,13 @@ module Postgres.Typed.Operations.Create
 import Data.String
 import public Data.Vect.Quantifiers
 
+import Data.Vect.Quantifiers.Extra
+
 import Postgres.C
 
 import Postgres.Typed.Modifiers
 import Postgres.Typed.PgType
 import Postgres.Typed.Tuple
-import Postgres.Typed.Util
 
 import Postgres.Typed.Operations.Class
 
