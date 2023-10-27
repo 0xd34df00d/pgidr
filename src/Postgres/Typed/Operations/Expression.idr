@@ -30,8 +30,8 @@ data Expr : (0 ty : Dir -> Type) -> (ety : Type) -> Type where
   EColumn : HasSignature n ty =>
             (ix : Fin n) ->
             Expr ty (ix `index` signatureOf ty).type
-  EBinRel : (l, r : Expr ty ety) ->
-            (op : BinRelOp) ->
+  EBinRel : (op : BinRelOp) ->
+            (l, r : Expr ty ety) ->
             Expr ty Bool
 
   EAnd : (l, r : Expr ty Bool) ->
@@ -41,13 +41,24 @@ data Expr : (0 ty : Dir -> Type) -> (ety : Type) -> Type where
   ENot : (e : Expr ty Bool) -> Expr ty Bool
   -- TODO there's more! https://www.postgresql.org/docs/current/sql-expressions.html
 
-public export
-fromInteger : Integer -> Expr ty Integer
-fromInteger = EConst . PCNum
+namespace EDSL
+  infix 6 ==, <=, >=, <, >
+  public export
+  (==), (<=), (>=), (<), (>) : (l, r : Expr ty ety) -> Expr ty Bool
+  (==) = EBinRel Eq
+  (<=) = EBinRel Leq
+  (>=) = EBinRel Geq
+  (<) = EBinRel Lt
+  (>) = EBinRel Gt
 
-public export
-FromString (Expr ty String) where
-  fromString = EConst . PCString
+  public export
+  fromInteger : Integer -> Expr ty Integer
+  fromInteger = EConst . PCNum
+
+  public export
+  FromString (Expr ty String) where
+    fromString = EConst . PCString
+
 
 isLeaf : Expr ty ety -> Bool
 isLeaf (EConst{}) = True
@@ -64,7 +75,7 @@ mutual
                                   PCString str => "'\{str}'"
                                   PCNum n => show n
   toQueryPart (EColumn ix) = (ix `index` signatureOf ty).name
-  toQueryPart (EBinRel l r op) = "\{parens l} \{opToSql op} \{parens r}"
+  toQueryPart (EBinRel op l r) = "\{parens l} \{opToSql op} \{parens r}"
   toQueryPart (EAnd l r) = "\{parens l} AND \{parens r}"
   toQueryPart (EOr l r) = "\{parens l} OR \{parens r}"
   toQueryPart (ENot e) = "NOT \{parens e}"
