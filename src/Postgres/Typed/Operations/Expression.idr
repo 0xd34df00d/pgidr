@@ -53,6 +53,12 @@ namespace EDSL
   (<) = EBinRel Lt
   (>) = EBinRel Gt
 
+  infix 5 &&, ||
+  public export
+  (&&), (||) : (l, r : Expr ty Bool) -> Expr ty Bool
+  (&&) = EAnd
+  (||) = EOr
+
   public export
   fromInteger : Integer -> Expr ty Integer
   fromInteger = EConst . PCNum
