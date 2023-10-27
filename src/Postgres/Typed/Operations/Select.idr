@@ -29,7 +29,6 @@ namespace Output
   toColumnNames CAll = toList $ allColumnNames ty
   toColumnNames (CSome ixes) = toList $ columnNames ty ixes
 
-namespace Expression
 public export
 data Order : (ty : Dir -> Type) -> Type where
   ONone : Order ty
