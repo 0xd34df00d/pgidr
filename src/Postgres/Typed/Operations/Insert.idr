@@ -5,11 +5,12 @@ import Data.Vect
 
 import Postgres.C
 
+import public Postgres.Typed.InSignature
 import public Postgres.Typed.Tuple
 import Postgres.Typed.Util
 
 import Postgres.Typed.Operations.Class
-import public Postgres.Typed.Operations.Helpers
+import Postgres.Typed.Operations.Helpers
 
 %default total
 %prefix_record_projections off
