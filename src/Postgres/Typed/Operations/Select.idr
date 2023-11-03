@@ -67,6 +67,19 @@ namespace Ordering
         nullsStr = maybe "" nullsPosToString nulls
      in "\{toQueryPart expr} \{dirStr} \{nullsStr}"
 
+namespace Grouping
+  public export
+  record SomeExpr (0 ty : Dir -> Type) where
+    constructor MkSE
+    expr : Expr ty a
+
+  public export
+  fromString : HasSignature n ty =>
+               (name : String) ->
+               {auto inSig : name `InSignature` signatureOf ty} ->
+               List (SomeExpr ty)
+  fromString name = [MkSE $ col name]
+
 public export
 record Select (ty : Dir -> Type) (ret : Type) where
   constructor MkSelect
@@ -74,6 +87,7 @@ record Select (ty : Dir -> Type) (ret : Type) where
   isTableType : IsRecordType colCount ty -- TODO auto implicit when Idris2#3083 is fixed
   columns : Columns ty ret
   whereClause : Expr ty Bool
+  groupBy : List (SomeExpr ty)
   orderBy : Maybe (Order ty)
 
 data DFrom : Type where
@@ -88,7 +102,7 @@ select : Dummy DFrom ->
          IsRecordType n ty =>
          (Select ty (ty Read) -> Select ty ret) ->
          Select ty ret
-select _ ty f = f (MkSelect _ %search CAll (1 == 1) Nothing)
+select _ ty f = f (MkSelect _ %search CAll (1 == 1) [] Nothing)
 
 opt : String -> (a -> String) -> Maybe a -> String
 opt _ _ Nothing = ""
@@ -97,7 +111,7 @@ opt pref f (Just val) = pref ++ f val
 export
 {ty, ret : _} -> Operation (Select ty ret) where
   returnType _ = List ret
-  execute conn (MkSelect _ _ columns whereClause orderBy) = do
+  execute conn (MkSelect _ _ columns whereClause groupBy orderBy) = do
     let query = "SELECT \{joinBy "," $ toColumnNames columns} " ++
                 "FROM \{tableNameOf ty} " ++
                 "WHERE \{toQueryPart whereClause}" ++
