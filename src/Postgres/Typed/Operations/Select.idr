@@ -29,9 +29,43 @@ namespace Output
   toColumnNames CAll = toList $ allColumnNames ty
   toColumnNames (CSome ixes) = toList $ columnNames ty ixes
 
-public export
-data Order : (ty : Dir -> Type) -> Type where
-  ONone : Order ty
+namespace Ordering
+  public export
+  data OrderDir = Asc | Desc
+
+  orderDirToString : OrderDir -> String
+  orderDirToString = \case Asc => "ASC"
+                           Desc => "DESC"
+
+  public export
+  data NullsPos = First | Last
+
+  nullsPosToString : NullsPos -> String
+  nullsPosToString np = "NULLS " ++ case np of
+                                         First => "FIRST"
+                                         Last => "LAST"
+
+  public export
+  record Order (ty : Dir -> Type) where
+    constructor MkOrder
+    orderExpr : Expr ty a
+    direction : Maybe OrderDir
+    nulls : Maybe NullsPos
+
+  public export
+  fromString : HasSignature n ty =>
+               (name : String) ->
+               {auto inSig : name `InSignature` signatureOf ty} ->
+               Maybe (Order ty)
+  fromString name = Just $ MkOrder (col name) Nothing Nothing
+
+  export
+  toQueryPart : Order ty ->
+                String
+  toQueryPart (MkOrder expr dir nulls) =
+    let dirStr = maybe "" orderDirToString dir
+        nullsStr = maybe "" nullsPosToString nulls
+     in "\{toQueryPart expr} \{dirStr} \{nullsStr}"
 
 public export
 record Select (ty : Dir -> Type) (ret : Type) where
@@ -40,7 +74,7 @@ record Select (ty : Dir -> Type) (ret : Type) where
   isTableType : IsRecordType colCount ty -- TODO auto implicit when Idris2#3083 is fixed
   columns : Columns ty ret
   whereClause : Expr ty Bool
-  orderby : Order ty
+  orderBy : Maybe (Order ty)
 
 data DFrom : Type where
 public export
@@ -54,15 +88,20 @@ select : Dummy DFrom ->
          IsRecordType n ty =>
          (Select ty (ty Read) -> Select ty ret) ->
          Select ty ret
-select _ ty f = f (MkSelect _ %search CAll (1 == 1) ONone)
+select _ ty f = f (MkSelect _ %search CAll (1 == 1) Nothing)
+
+opt : String -> (a -> String) -> Maybe a -> String
+opt _ _ Nothing = ""
+opt pref f (Just val) = pref ++ f val
 
 export
 {ty, ret : _} -> Operation (Select ty ret) where
   returnType _ = List ret
-  execute conn (MkSelect _ _ columns whereClause orderby) = do
+  execute conn (MkSelect _ _ columns whereClause orderBy) = do
     let query = "SELECT \{joinBy "," $ toColumnNames columns} " ++
                 "FROM \{tableNameOf ty} " ++
-                "WHERE \{toQueryPart whereClause}"
+                "WHERE \{toQueryPart whereClause}" ++
+            opt "ORDER BY " toQueryPart orderBy
     result <- execParams' conn query []
     checkQueryStatus result
     let rows = Data.Vect.Fin.tabulate {len = ntuples result} id
