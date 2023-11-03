@@ -66,9 +66,10 @@ The types of the corresponding `result`s will be just as you'd expect!
 * [x] Basic selects
 * [x] `WHERE`
 * [x] `ORDER BY`
-* [ ] `GROUP BY`
+* [x] `GROUP BY`
 * [ ] Joins
 * [ ] Aggregate functions
+* [ ] Typecheck `GROUP BY` vs the `WHERE` clause.
 * [ ] Smart return type (`List ty` vs `ty` vs `Maybe ty`) calculation.
 
 `UPDATE`:
