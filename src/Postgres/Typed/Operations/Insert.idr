@@ -77,7 +77,7 @@ record InsertColumn where
   value : String
 
 mkReturningClause : (returning : Columns ty ret) -> String
-mkReturningClause = maybe "" (\cols => "RETURNING " ++ joinBy "," cols) . toColumnNames
+mkReturningClause = maybe "" (\cols => "RETURNING " ++ joinBy ", " cols) . toColumnNames
 
 mkInsertQuery : {k : _} ->
                 HasSignature n ty =>

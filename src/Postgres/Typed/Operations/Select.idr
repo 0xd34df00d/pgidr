@@ -120,7 +120,7 @@ export
 {ty, ret : _} -> Operation (Select ty ret) where
   returnType _ = List ret
   execute conn (MkSelect _ _ columns whereClause groupBy orderBy) = do
-    let query = "SELECT \{joinBy "," $ toColumnNames columns} " ++
+    let query = "SELECT \{joinBy ", " $ toColumnNames columns} " ++
                 "FROM \{tableNameOf ty} " ++
                 "WHERE \{toQueryPart whereClause} " ++
             opt "GROUP BY " toQueryPart (nonNullify groupBy) ++
