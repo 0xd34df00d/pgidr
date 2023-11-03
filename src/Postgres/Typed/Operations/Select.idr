@@ -108,13 +108,17 @@ select : Dummy DFrom ->
          Select ty ret
 select _ ty f = f (MkSelect _ %search CAll (1 == 1) [] Nothing)
 
-opt : String -> (a -> String) -> Maybe a -> String
-opt _ _ Nothing = ""
-opt pref f (Just val) = pref ++ f val ++ " "
+namespace OptMaybe
+  export
+  opt : String -> (a -> String) -> Maybe a -> String
+  opt _ _ Nothing = ""
+  opt pref f (Just val) = pref ++ f val ++ " "
 
-nonNullify : List a -> Maybe (List a)
-nonNullify [] = Nothing
-nonNullify ls = Just ls
+namespace OptList
+  export
+  opt : String -> (List a -> String) -> List a -> String
+  opt _ _ [] = ""
+  opt pref f ls = opt pref f (Just ls)
 
 export
 {ty, ret : _} -> Operation (Select ty ret) where
@@ -123,7 +127,7 @@ export
     let query = "SELECT \{joinBy ", " $ toColumnNames columns} " ++
                 "FROM \{tableNameOf ty} " ++
                 "WHERE \{toQueryPart whereClause} " ++
-            opt "GROUP BY " toQueryPart (nonNullify groupBy) ++
+            opt "GROUP BY " toQueryPart groupBy ++
             opt "ORDER BY " toQueryPart orderBy
     result <- execParams' conn query []
     checkQueryStatus result
