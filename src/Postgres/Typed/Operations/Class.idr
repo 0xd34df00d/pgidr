@@ -17,7 +17,14 @@ data ExecError
   | QueryFailure ResultStatus String
   | ValueParseError PgTyParseError
   | TODO
-%runElab derive "ExecError" [Eq, Ord, Show]
+%runElab derive "ExecError" [Eq, Ord]
+
+export
+Show ExecError where
+  show (ExpectationsMismatch str) = "expectations mismatch: \{str}"
+  show (QueryFailure st str) = "query failed, status code: \{show st}, error: \{str}"
+  show (ValueParseError str) = "failed to parse value: " ++ str
+  show TODO = "unimplemented (TODO)"
 
 public export
 MonadExec : (Type -> Type) -> Type
