@@ -106,7 +106,7 @@ select _ ty f = f (MkSelect _ %search CAll (1 == 1) [] Nothing)
 
 opt : String -> (a -> String) -> Maybe a -> String
 opt _ _ Nothing = ""
-opt pref f (Just val) = pref ++ f val
+opt pref f (Just val) = pref ++ f val ++ " "
 
 export
 {ty, ret : _} -> Operation (Select ty ret) where
@@ -114,7 +114,7 @@ export
   execute conn (MkSelect _ _ columns whereClause groupBy orderBy) = do
     let query = "SELECT \{joinBy "," $ toColumnNames columns} " ++
                 "FROM \{tableNameOf ty} " ++
-                "WHERE \{toQueryPart whereClause}" ++
+                "WHERE \{toQueryPart whereClause} " ++
             opt "ORDER BY " toQueryPart orderBy
     result <- execParams' conn query []
     checkQueryStatus result
