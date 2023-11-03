@@ -64,8 +64,8 @@ The types of the corresponding `result`s will be just as you'd expect!
 `SELECT`:
 
 * [x] Basic selects
-* [ ] `WHERE`
-* [ ] `ORDER BY`
+* [x] `WHERE`
+* [x] `ORDER BY`
 * [ ] `GROUP BY`
 * [ ] Joins
 * [ ] Aggregate functions
