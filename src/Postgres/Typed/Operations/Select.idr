@@ -80,6 +80,10 @@ namespace Grouping
                List (SomeExpr ty)
   fromString name = [MkSE $ col name]
 
+  export
+  toQueryPart : List (SomeExpr ty) -> String
+  toQueryPart = joinBy ", " . map (\se => toQueryPart se.expr)
+
 public export
 record Select (ty : Dir -> Type) (ret : Type) where
   constructor MkSelect
@@ -108,6 +112,10 @@ opt : String -> (a -> String) -> Maybe a -> String
 opt _ _ Nothing = ""
 opt pref f (Just val) = pref ++ f val ++ " "
 
+nonNullify : List a -> Maybe (List a)
+nonNullify [] = Nothing
+nonNullify ls = Just ls
+
 export
 {ty, ret : _} -> Operation (Select ty ret) where
   returnType _ = List ret
@@ -115,6 +123,7 @@ export
     let query = "SELECT \{joinBy "," $ toColumnNames columns} " ++
                 "FROM \{tableNameOf ty} " ++
                 "WHERE \{toQueryPart whereClause} " ++
+            opt "GROUP BY " toQueryPart (nonNullify groupBy) ++
             opt "ORDER BY " toQueryPart orderBy
     result <- execParams' conn query []
     checkQueryStatus result
