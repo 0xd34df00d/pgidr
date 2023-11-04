@@ -97,7 +97,8 @@ public export
 record Select (ty : Dir -> Type) (ret : Type) where
   constructor MkSelect
   colCount : Nat
-  isTableType : IsRecordType colCount ty -- TODO auto implicit when Idris2#3083 is fixed
+  isTableType : IsTupleLike colCount ty -- TODO auto implicit when Idris2#3083 is fixed
+  hasTableName : HasTableName ty
   columns : Columns ty ret
   whereClause : Expr ty Bool
   groupBy : List (SomeExpr ty)
@@ -112,10 +113,10 @@ public export
 select : Dummy DFrom ->
          (ty : Dir -> Type) ->
          {n : _} ->
-         IsRecordType n ty =>
+         (IsTupleLike n ty, HasTableName ty) =>
          (Select ty (ty Read) -> Select ty ret) ->
          Select ty ret
-select _ ty f = f (MkSelect _ %search CAll (1 == 1) [] Nothing)
+select _ ty f = f (MkSelect _ %search %search CAll (1 == 1) [] Nothing)
 
 namespace OptMaybe
   export
@@ -132,7 +133,7 @@ namespace OptList
 export
 {ty, ret : _} -> Operation (Select ty ret) where
   returnType _ = List ret
-  execute conn (MkSelect _ _ columns whereClause groupBy orderBy) = do
+  execute conn (MkSelect _ _ _ columns whereClause groupBy orderBy) = do
     let query = "SELECT \{joinBy ", " $ toColumnNames columns} " ++
                 "FROM \{tableNameOf ty} " ++
                 "WHERE \{toQueryPart whereClause} " ++

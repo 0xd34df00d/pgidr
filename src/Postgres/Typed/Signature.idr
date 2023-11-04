@@ -39,9 +39,18 @@ Signature : Nat -> Type
 Signature n = Vect n SignatureElem
 
 public export
+interface HasTableName (0 ty : a) where
+  tableName : String
+
+public export
+tableNameOf : (0 ty : _) ->
+              HasTableName ty =>
+              String
+tableNameOf ty = tableName {ty}
+
+public export
 interface HasSignature n (0 ty : a) | ty where
   signature : Signature n
-  tableName : String
 
 public export
 signatureOf : (0 ty : _) ->
@@ -50,16 +59,10 @@ signatureOf : (0 ty : _) ->
 signatureOf ty = signature {ty}
 
 public export
-tableNameOf : (0 ty : _) ->
-              HasSignature _ ty =>
-              String
-tableNameOf ty = tableName {ty}
-
-public export
 data Modifier : (ty : Type) -> Type where
   PKey : PKeySort ty -> Modifier ty
   References : (0 other : Type) ->
-               HasSignature n other =>
+               (HasTableName other, HasSignature _ other) =>
                (idx : Fin n) ->
                {auto teq : ty = (idx `index` signatureOf other).type} ->
                Modifier ty

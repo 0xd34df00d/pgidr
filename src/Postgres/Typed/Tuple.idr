@@ -88,17 +88,23 @@ export
   show tup = name ++ " " ++ prettyTuple tup.columns
 
 public export
-{name : _} -> {s : Signature n} -> HasSignature n (NamedTuple name s) where
-  tableName = name
+{s : Signature n} -> HasSignature n (NamedTuple name s) where
   signature = s
 
 public export
-{name : _} -> {s : Signature n} -> HasSignature n (NamedTuple name s dir) where
+{name : _} -> HasTableName (NamedTuple name s) where
   tableName = name
+
+public export
+{s : Signature n} -> HasSignature n (NamedTuple name s dir) where
   signature = s
 
 public export
-interface HasSignature n ty => IsRecordType n (0 ty : Dir -> Type) | ty where
+{name : _} -> HasTableName (NamedTuple name s dir) where
+  tableName = name
+
+public export
+interface HasSignature n ty => IsTupleLike n (0 ty : Dir -> Type) | ty where
   toTuple : ty dir -> Tuple (signatureOf ty) dir
   fromTuple : Tuple (signatureOf ty) dir -> ty dir
 
@@ -108,7 +114,7 @@ interface HasSignature n ty => IsRecordType n (0 ty : Dir -> Type) | ty where
              toTuple (fromTuple {dir} v) = v
 
 public export
-{name : _} -> {s : Signature n} -> IsRecordType n (NamedTuple name s) where
+{name : _} -> {s : Signature n} -> IsTupleLike n (NamedTuple name s) where
   toTuple = .columns
   fromTuple = MkTup
 

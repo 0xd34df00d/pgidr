@@ -80,7 +80,7 @@ mkReturningClause : (returning : Columns ty ret) -> String
 mkReturningClause = maybe "" (\cols => "RETURNING " ++ joinBy ", " cols) . toColumnNames
 
 mkInsertQuery : {k : _} ->
-                HasSignature n ty =>
+                (HasSignature n ty, HasTableName ty) =>
                 (cols : Vect k InsertColumn) ->
                 (returning : Columns ty ret) ->
                 String
@@ -92,7 +92,7 @@ mkInsertQuery cols returning =
       returningClause = mkReturningClause returning
    in "INSERT INTO \{tableNameOf ty} (\{namesStr}) VALUES (\{placeholders}) \{returningClause}"
 
-mkInsertColumns : IsRecordType n ty =>
+mkInsertColumns : IsTupleLike n ty =>
                   (val : ty Write) ->
                   (k ** Vect k InsertColumn)
 mkInsertColumns = catMaybes
@@ -104,7 +104,8 @@ public export
 record Insert (ty : Dir -> Type) (ret : Type) where
   constructor MkInsert
   fieldsCount : Nat
-  tyIsRecord : IsRecordType fieldsCount ty    -- TODO make auto implicit when Idris2#3083 is fixed
+  tyIsTuple : IsTupleLike fieldsCount ty    -- TODO make auto implicit when Idris2#3083 is fixed
+  tyHasTable : HasTableName ty
   value : ty Write
   returning : Columns ty ret
 
@@ -118,16 +119,16 @@ namespace InsertRecord
   insert : Dummy DInto ->
            (ty : Dir -> Type) ->
            {n : _} ->
-           IsRecordType n ty =>
+           (IsTupleLike n ty, HasTableName ty) =>
            (val : ty Write) ->
            Insert ty ()
-  insert _ _ val = MkInsert _ %search val CNone
+  insert _ _ val = MkInsert _ %search %search val CNone
 
   public export
   insert' : Dummy DInto ->
             (ty : Dir -> Type) ->
             {n : _} ->
-            IsRecordType n ty =>
+            (IsTupleLike n ty, HasTableName ty) =>
             (val : ty Write) ->
             (Insert ty () -> Insert ty ret) ->
             Insert ty ret
@@ -138,7 +139,7 @@ namespace InsertTuple
   insert : Dummy DInto ->
            (ty : Dir -> Type) ->
            {n : _} ->
-           IsRecordType n ty =>
+           (IsTupleLike n ty, HasTableName ty) =>
            (val : Tuple (signatureOf ty) Write) ->
            Insert ty ()
   insert d ty = insert d ty . fromTuple
@@ -147,7 +148,7 @@ namespace InsertTuple
   insert' : Dummy DInto ->
             (ty : Dir -> Type) ->
             {n : _} ->
-            IsRecordType n ty =>
+            (IsTupleLike n ty, HasTableName ty) =>
             (val : Tuple (signatureOf ty) Write) ->
             (Insert ty () -> Insert ty ret) ->
             Insert ty ret
@@ -168,7 +169,7 @@ f =<<| act = act >>= \r => f r
 export
 {ty, ret : _} -> Operation (Insert ty ret) where
   returnType _ = ret
-  execute conn (MkInsert _ _ val returning) = do
+  execute conn (MkInsert _ _ _ val returning) = do
     let (_ ** cols) = mkInsertColumns val
         query = mkInsertQuery {ty} cols returning
         params = map (.value) cols
