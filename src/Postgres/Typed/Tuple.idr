@@ -105,6 +105,7 @@ public export
 
 public export
 interface HasSignature n ty => IsTupleLike n (0 ty : Dir -> Type) | ty where
+  constructor MkIsTupleLike
   toTuple : ty dir -> Tuple (signatureOf ty) dir
   fromTuple : Tuple (signatureOf ty) dir -> ty dir
 

@@ -50,6 +50,7 @@ tableNameOf ty = tableName {ty}
 
 public export
 interface HasSignature n (0 ty : a) | ty where
+  constructor MkHasSignature
   signature : Signature n
 
 public export
