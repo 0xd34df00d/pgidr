@@ -73,12 +73,21 @@ namespace Grouping
     constructor MkSE
     expr : Expr ty a
 
-  public export
-  fromString : HasSignature n ty =>
-               (name : String) ->
-               {auto inSig : name `InSignature` signatureOf ty} ->
-               List (SomeExpr ty)
-  fromString name = [MkSE $ col name]
+  namespace FSSingle
+    public export
+    fromString : HasSignature n ty =>
+                 (name : String) ->
+                 {auto inSig : name `InSignature` signatureOf ty} ->
+                 List (SomeExpr ty)
+    fromString name = [MkSE $ col name]
+
+  namespace FSMulti
+    public export
+    fromString : HasSignature n ty =>
+                 (name : String) ->
+                 {auto inSig : name `InSignature` signatureOf ty} ->
+                 SomeExpr ty
+    fromString name = MkSE $ col name
 
   export
   toQueryPart : List (SomeExpr ty) -> String
