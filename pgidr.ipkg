@@ -19,7 +19,6 @@ modules = Postgres.C
         , Postgres.Typed.InSignature
         , Postgres.Typed.Modifiers
         , Postgres.Typed.PgType
-        , Postgres.Typed.Schema
         , Postgres.Typed.Signature
         , Postgres.Typed.Tuple
 
