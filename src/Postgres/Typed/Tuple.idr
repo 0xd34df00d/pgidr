@@ -96,14 +96,6 @@ public export
   tableName = name
 
 public export
-{s : Signature n} -> HasSignature n (NamedTuple name s dir) where
-  signature = s
-
-public export
-{name : _} -> HasTableName (NamedTuple name s dir) where
-  tableName = name
-
-public export
 interface HasSignature n ty => IsTupleLike n (0 ty : Dir -> Type) | ty where
   constructor MkIsTupleLike
   toTuple : ty dir -> Tuple (signatureOf ty) dir
