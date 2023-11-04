@@ -77,6 +77,11 @@ name @: ty = MkSE name ty [NotNull]
 name @:? ty = MkSE name ty []
 
 public export
+Serial : (name : String) ->
+         SignatureElem
+Serial name = MkSE name Integer [PKey PKeySerial]
+
+public export
 subSignature : Signature n ->
                Vect k (Fin n) ->
                Signature k
