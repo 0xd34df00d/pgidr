@@ -61,7 +61,7 @@ signatureOf ty = signature {ty}
 public export
 data Modifier : (ty : Type) -> Type where
   PKey : PKeySort ty -> Modifier ty
-  References : (0 other : Type) ->
+  References : (0 other : a) ->
                (HasTableName other, HasSignature _ other) =>
                (idx : Fin n) ->
                {auto teq : ty = (idx `index` signatureOf other).type} ->
