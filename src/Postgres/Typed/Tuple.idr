@@ -99,22 +99,18 @@ public export
 
 public export
 interface HasSignature n ty => IsRecordType n (0 ty : Dir -> Type) | ty where
-  fromRawTuple : Tuple (signatureOf ty) dir -> ty dir
-
-  toTuple : ty dir -> NamedTuple (tableNameOf ty) (signatureOf ty) dir
-  fromTuple : NamedTuple (tableNameOf ty) (signatureOf ty) dir -> ty dir
+  toTuple : ty dir -> Tuple (signatureOf ty) dir
+  fromTuple : Tuple (signatureOf ty) dir -> ty dir
 
   fromToId : (v : ty dir) ->
              fromTuple (toTuple v) = v
-  toFromId : (v : NamedTuple (tableNameOf ty) (signatureOf ty) dir) ->
-             toTuple (fromTuple v) = v
+  toFromId : (v : Tuple (signatureOf ty) dir) ->
+             toTuple (fromTuple {dir} v) = v
 
 public export
 {name : _} -> {s : Signature n} -> IsRecordType n (NamedTuple name s) where
-  fromRawTuple = MkTup
+  toTuple = .columns
+  fromTuple = MkTup
 
-  toTuple = id
-  fromTuple = id
-
-  fromToId v = Refl
+  fromToId (MkTup columns) = Refl
   toFromId v = Refl

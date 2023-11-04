@@ -98,7 +98,6 @@ mkInsertColumns : IsRecordType n ty =>
 mkInsertColumns = catMaybes
                 . forget
                 . mapProperty' (\se => onSigValUniform (MkIC se.name . toTextual) se)
-                . columns
                 . toTuple
 
 public export
@@ -142,7 +141,7 @@ namespace InsertTuple
            IsRecordType n ty =>
            (val : Tuple (signatureOf ty) Write) ->
            Insert ty ()
-  insert d ty = insert d ty . fromRawTuple
+  insert d ty = insert d ty . fromTuple
 
   public export
   insert' : Dummy DInto ->
@@ -152,7 +151,7 @@ namespace InsertTuple
             (val : Tuple (signatureOf ty) Write) ->
             (Insert ty () -> Insert ty ret) ->
             Insert ty ret
-  insert' d ty val f = insert' d ty (fromRawTuple val) f
+  insert' d ty val f = insert' d ty (fromTuple val) f
 
 extractFirstRow : MonadError ExecError m =>
                   {n : _} ->
@@ -177,6 +176,6 @@ export
     checkQueryStatus result
     case returning of
          CNone => pure ()
-         CAll => fromRawTuple <$> (extractFirstRow result _ =<<| ensureMatches)
+         CAll => fromTuple <$> (extractFirstRow result _ =<<| ensureMatches)
          COne idx => head <$> (extractFirstRow result (subSignature _ [idx]) =<<| ensureMatches)
          CSome idxes => extractFirstRow result _ =<<| ensureMatches

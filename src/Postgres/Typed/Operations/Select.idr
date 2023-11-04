@@ -143,6 +143,6 @@ export
     let rows = Data.Vect.Fin.tabulate {len = ntuples result} id
     case columns of
          CAll => do matches <- ensureMatches {numRows = ntuples result}
-                    map toList $ for rows $ \row => fromRawTuple <$> extractFields result row _ matches
+                    map toList $ for rows $ \row => fromTuple <$> extractFields result row _ matches
          CSome ixes => do matches <- ensureMatches {numRows = ntuples result}
                           map toList $ for rows $ \row => extractFields result row _ matches
