@@ -10,7 +10,11 @@ For an example of the latter, let's define a type representing a person:
 import Postgres.Typed.Tuple
 
 Person : Dir -> Type
-Person = NamedTuple "persons" [MkSE "id" Integer [PKey PKeySerial], "first_name" @: String, "last_name" @: String, "age" @: Integer]
+Person = NamedTuple "persons" [ MkSE "id" Integer [PKey PKeySerial]
+                              , "first_name" @: String
+                              , "last_name" @: String
+                              , "age" @: Integer
+                              ]
 ```
 The `Dir` is a technicality to account for different types on reads/writes/updates to the same table:
 for instance, a primary key or a `DEFAULT`ed value that is `NOT NULL`
@@ -32,7 +36,8 @@ where `res` is the original result of the action (a `()` in this particular case
 
 Then, we can insert a few records into our DB:
 ```idris
-  result <- execute' conn (insert into Person [ Nothing, "John", "Doe", 42 ])
+  let query = insert into Person [ Nothing, "John", "Doe", 42 ]
+  result <- execute' conn query
 ```
 Here, `execute'` is another shortcut for executing `MonadExec` actions.
 The `result` here is also `Either ExecError ()`,
@@ -40,16 +45,19 @@ since a plain `INSERT` query doesn't return anything.
 
 We can ask it to return the primary key of the record we just inserted, though:
 ```idris
-  result <- execute' conn (insert' into Person [ Nothing, "John", "Doe", 42 ] { returning := column "id" })
+  let query = insert' into Person [ Nothing, "John", "Doe", 42 ] { returning := column "id" }
+  result <- execute' conn query
 ```
 and `result` here is an `Either ExecError Integer`.
 We can ask for more than one column:
 ```idris
-  result <- execute' conn (insert' into Person [ Nothing, "John", "Doe", 42 ] { returning := columns ["id", "first_name"] })
+  let query = insert' into Person [ Nothing, "John", "Doe", 42 ] { returning := columns ["id", "first_name"] }
+  result <- execute' conn query
 ```
 or even the whole row:
 ```idris
-  result <- execute' conn (insert' into Person [ Nothing, "John", "Doe", 22 ] { returning := all })
+  let query = insert' into Person [ Nothing, "John", "Doe", 22 ] { returning := all }
+  result <- execute' conn query
 ```
 The types of the corresponding `result`s will be just as you'd expect!
 
