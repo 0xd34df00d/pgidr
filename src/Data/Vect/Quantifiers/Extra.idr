@@ -14,6 +14,9 @@ mapProperty' f [] = []
 mapProperty' f (x :: xs) = f _ x :: mapProperty' f xs
 
 export
-tabulate : {n : _} -> {0 xs : Vect n _} -> (Fin n -> ty) -> All (const ty) {n} xs
+tabulate : {n : _} ->
+           {0 xs : Vect n _} ->
+           (f : (ix : Fin n) -> p (ix `index` xs)) ->
+           All p {n} xs
 tabulate {xs = []} f = []
-tabulate {xs = _ :: _} f = f FZ :: tabulate (f . FS)
+tabulate {xs = _ :: _} f = f FZ :: tabulate (\ix => f (FS ix))
