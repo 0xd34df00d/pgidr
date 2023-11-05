@@ -20,3 +20,8 @@ tabulate : {n : _} ->
            All p {n} xs
 tabulate {xs = []} f = []
 tabulate {xs = _ :: _} f = f FZ :: tabulate (\ix => f (FS ix))
+
+public export
+(++) : (axs : All p xs) -> (ays : All p ys) -> All p (xs ++ ys)
+[] ++ ays = ays
+(ax :: axs) ++ ays = ax :: (axs ++ ays)
