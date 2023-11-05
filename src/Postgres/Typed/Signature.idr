@@ -55,7 +55,7 @@ interface HasSignature n (0 ty : a) | ty where
 
 public export
 signatureOf : (0 ty : _) ->
-              HasSignature n ty =>
+              {auto hasSig : HasSignature n ty} ->
               Signature n
 signatureOf ty = signature {ty}
 
