@@ -33,6 +33,7 @@ hsConsistent : IsTupleLike n1 ty1 =>
                IsTupleLike n2 ty2 =>
                (hasSig : HasSignature (n1 + n2) (CrossJoin ty1 ty2)) ->
                signatureOf _ {hasSig} = signatureOf (CrossJoin ty1 ty2) {hasSig = ITLimpliesHS}
+hsConsistent = believe_me ()
 
 toTupleCJ : IsTupleLike n1 ty1 =>
             IsTupleLike n2 ty2 =>
