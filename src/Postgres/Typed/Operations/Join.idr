@@ -37,10 +37,9 @@ hsConsistent = believe_me ()
 
 toTupleCJ : IsTupleLike n1 ty1 =>
             IsTupleLike n2 ty2 =>
-            {auto hasSig : HasSignature (n1 + n2) (CrossJoin ty1 ty2)} ->
             (cj : CrossJoin ty1 ty2 dir) ->
-            Tuple (signatureOf (CrossJoin ty1 ty2)) dir
-toTupleCJ (MkCJR left right) = rewrite hsConsistent hasSig in toTuple left ++ toTuple right
+            Tuple (signatureOf (CrossJoin ty1 ty2) {hasSig = ITLimpliesHS}) dir
+toTupleCJ (MkCJR left right) = toTuple left ++ toTuple right
 
 %hint
 CJITL : IsTupleLike n1 ty1 =>
@@ -48,7 +47,7 @@ CJITL : IsTupleLike n1 ty1 =>
         IsTupleLike (n1 + n2) (CrossJoin ty1 ty2)
 CJITL = let sig = the (HasSignature (n1 + n2) (CrossJoin ty1 ty2)) ITLimpliesHS
          in MkIsTupleLike
-              toTupleCJ
+              (\cj => rewrite hsConsistent sig in toTupleCJ cj)
               ?w2
               ?w3
               ?w4
