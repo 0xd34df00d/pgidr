@@ -26,6 +26,15 @@ public export
 [] ++ ays = ays
 (ax :: axs) ++ ays = ax :: (axs ++ ays)
 
+export
+concatSplitInverse : {n : Nat} ->
+                     (xs : Vect n a) ->
+                     (ys : Vect m a) ->
+                     splitAt n (xs ++ ys) = (xs, ys)
+concatSplitInverse [] ys = Refl
+concatSplitInverse {n = S n} (x :: xs) ys with (splitAt n (xs ++ ys)) proof p
+ _ | (xs', ys') = case biinjective (sym p `trans` concatSplitInverse xs ys) of (Refl, Refl) => Refl
+
 public export
 splitAt : (n : Nat) ->
           {xs : Vect (n + m) a} ->
