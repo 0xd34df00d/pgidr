@@ -11,7 +11,7 @@ import Postgres.Typed.Operations.Select
 %default total
 %prefix_record_projections off
 
-record CrossJoin {n1, n2 : Nat} (lty, rty : Dir -> Type) (dir : Dir) where
+record CrossJoin {0 n1, n2 : Nat} (lty, rty : Dir -> Type) (dir : Dir) where
   constructor MkCJR
   left : lty dir
   right : rty dir
