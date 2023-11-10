@@ -11,10 +11,10 @@ import Postgres.Typed.Operations.Select
 %default total
 %prefix_record_projections off
 
-record CrossJoin {0 n1, n2 : Nat} (lty, rty : Dir -> Type) (dir : Dir) where
+record CrossJoin {0 n1, n2 : Nat} (ty1, ty2 : Dir -> Type) (dir : Dir) where
   constructor MkCJR
-  left : lty dir
-  right : rty dir
+  left : ty1 dir
+  right : ty2 dir
 
 HasSignature n1 ty1 => HasSignature n2 ty2 => HasSignature (n1 + n2) (CrossJoin {n1} {n2} ty1 ty2) where
   signature = signatureOf ty1 ++ signatureOf ty2
@@ -31,8 +31,8 @@ HasSignature n1 ty1 => HasSignature n2 ty2 => HasSignature (n1 + n2) (CrossJoin 
   toFromId = ?w4
 
 
-IsSelectSource lty => IsSelectSource rty => IsSelectSource (CrossJoin lty rty) where
-  selectSource = selectSourceOf lty ++ ", " ++ selectSourceOf rty
+IsSelectSource ty1 => IsSelectSource ty2 => IsSelectSource (CrossJoin ty1 ty2) where
+  selectSource = selectSourceOf ty1 ++ ", " ++ selectSourceOf ty2
 
 {-
 
