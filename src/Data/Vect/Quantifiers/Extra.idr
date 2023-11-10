@@ -25,3 +25,12 @@ public export
 (++) : (axs : All p xs) -> (ays : All p ys) -> All p (xs ++ ys)
 [] ++ ays = ays
 (ax :: axs) ++ ays = ax :: (axs ++ ays)
+
+public export
+splitAt : (n : Nat) ->
+          {xs : Vect (n + m) a} ->
+          (as : All p xs) ->
+          (All p (fst $ splitAt {m} n xs), All p (snd $ splitAt {m} n xs))
+splitAt 0 as = ([], as)
+splitAt (S n) {xs = _ :: xs} (a :: as) with (splitAt n as) | (splitAt n xs)
+  _ | (asn, asm) | (xsn, xsm) = (a :: asn, asm)
