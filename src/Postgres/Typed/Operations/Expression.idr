@@ -23,6 +23,7 @@ public export
 data PgConst : Type -> Type where
   PCString : String -> PgConst String
   PCNum    : (Show a, Num a) => a -> PgConst a
+  PCBool   : Bool -> PgConst Bool
   -- TODO there's more! https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
 
 public export
@@ -88,6 +89,9 @@ mutual
   toQueryPart (EConst val) = case val of
                                   PCString str => "'\{str}'"
                                   PCNum n => show n
+                                  PCBool b => case b of
+                                                   True => "TRUE"
+                                                   False => "FALSE"
   toQueryPart (EColumn ix sig) = (ix `index` sig).name
   toQueryPart (EBinRel op l r) = "\{parens l} \{opToSql op} \{parens r}"
   toQueryPart (EAnd l r) = "\{parens l} AND \{parens r}"
