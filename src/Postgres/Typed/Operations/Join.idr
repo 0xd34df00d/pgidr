@@ -73,6 +73,18 @@ data JoinTree : (st : SigTree n) -> (dir : Dir) -> Type where
          JoinTree (SigConcat sigl jtype sigr jcond) dir
 
 public export
+interface HasSigTree n (0 ty : Dir -> Type) | ty where
+  sigTree : SigTree n
+
+public export
+{st : SigTree n} -> HasSigTree n (JoinTree st) where
+  sigTree = st
+
+public export
+sigTreeOf : (0 ty : _) -> HasSigTree n ty => SigTree n
+sigTreeOf ty = sigTree {ty}
+
+public export
 {st : SigTree n} -> HasSignature n (JoinTree st) where
   signature = toSignature st
 
