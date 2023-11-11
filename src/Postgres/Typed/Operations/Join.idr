@@ -44,7 +44,8 @@ data SigTree : (n : Nat) -> Type where
               (IsTupleLike n ty, IsSelectSource ty) =>
               (alias : String) ->
               SigTree n
-  SigConcat : (sigl : SigTree nl) ->
+  SigConcat : {nl, nr : Nat} ->
+              (sigl : SigTree nl) ->
               (jtype : JoinType) ->
               (sigr : SigTree nr) ->
               (jcond : JoinCondition sigl sigr) ->
@@ -111,9 +112,10 @@ table : (ty : Dir -> Type) ->
 table ty = JoinTree (SigLeaf ty)
 
 public export
-crossJoin : (jt1, jt2 : Dir -> Type) ->
-            HasSigTree _ jt1 =>
-            HasSigTree _ jt2 =>
+crossJoin : {n1, n2 : _} ->
+            (jt1, jt2 : Dir -> Type) ->
+            HasSigTree n1 jt1 =>
+            HasSigTree n2 jt2 =>
             Dir -> Type
 crossJoin jt1 jt2 = JoinTree $ SigConcat
                                   (sigTreeOf jt1)
