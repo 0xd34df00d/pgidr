@@ -102,3 +102,21 @@ export
 public export
 IsSelectSource (JoinTree st) where
   selectSource = ?selectSource_rhs
+
+public export
+table : (ty : Dir -> Type) ->
+        IsTupleLike n ty =>
+        IsSelectSource ty =>
+        Dir -> Type
+table ty = JoinTree (SigLeaf ty)
+
+public export
+crossJoin : (jt1, jt2 : Dir -> Type) ->
+            HasSigTree _ jt1 =>
+            HasSigTree _ jt2 =>
+            Dir -> Type
+crossJoin jt1 jt2 = JoinTree $ SigConcat
+                                  (sigTreeOf jt1)
+                                  Inner
+                                  (sigTreeOf jt2)
+                                  (JoinOn $ EConst $ PCBool True)
