@@ -26,7 +26,7 @@ data PgConst : Type -> Type where
   -- TODO there's more! https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
 
 public export
-data Expr : (0 ty : Dir -> Type) -> (ety : Type) -> Type where
+data Expr : (0 ty : a) -> (ety : Type) -> Type where
   EConst  : (val : PgConst ety) ->
             Expr ty ety
   EColumn : (ix : Fin n) ->
