@@ -28,38 +28,49 @@ rewrapAliasify {sig = (MkSE _ _ _ {pgType}) :: _} (x :: xs) = x :: rewrapAliasif
 public export
 data JoinType = Inner | Left | Right | Full
 
-export
-data SigTree : (n : Nat) -> Type where
-  SigLeaf : Signature n ->
-            SigTree n
-  SigConcat : (l : SigTree n1) ->
-              (r : SigTree n2) ->
-              SigTree (n1 + n2)
+public export
+data SigTree : (n : Nat) -> Type
 
-export
+public export
 data JoinCondition : (sigl : SigTree nl) -> (sigr : SigTree nr) -> Type where
   JoinOn : Expr () Bool -> JoinCondition sigl sigr
 
-export
-toSignature : SigTree n -> Signature n
-toSignature (SigLeaf sig) = sig
-toSignature (SigConcat l r) = toSignature l ++ toSignature r
+public export
+data SigTree : (n : Nat) -> Type where
+  SigLeaf : (0 ty : _) ->
+            (IsTupleLike n ty, IsSelectSource ty) =>
+            SigTree n
+  SigLeafAs : (ty : _) ->
+              (IsTupleLike n ty, IsSelectSource ty) =>
+              (alias : String) ->
+              SigTree n
+  SigConcat : (sigl : SigTree nl) ->
+              (jtype : JoinType) ->
+              (sigr : SigTree nr) ->
+              (jcond : JoinCondition sigl sigr) ->
+              SigTree (nl + nr)
 
-export
-data JoinTree : (sig : SigTree n) -> (dir : Dir) -> Type where
+public export
+toSignature : SigTree n -> Signature n
+toSignature (SigLeaf ty) = signatureOf ty
+toSignature (SigLeafAs ty alias) = aliasify alias $ signatureOf ty
+toSignature (SigConcat l _ r _) = toSignature l ++ toSignature r
+
+public export
+data JoinTree : (st : SigTree n) -> (dir : Dir) -> Type where
   Leaf : (IsTupleLike n ty, IsSelectSource ty) =>
          (leaf : ty dir) ->
-         JoinTree (SigLeaf $ signatureOf ty) dir
+         JoinTree (SigLeaf ty) dir
   LeafAs : (IsTupleLike n ty, IsSelectSource ty) =>
            (leaf : ty dir) ->
            (alias : String) ->
-           JoinTree (SigLeaf $ aliasify alias $ signatureOf ty) dir
-  Join : {sigl, sigr : _} ->
+           JoinTree (SigLeafAs ty alias) dir
+  Join : {sigl : SigTree nl} ->
+         {sigr : SigTree nr} ->
+         {jcond : JoinCondition sigl sigr} ->
          (jtl : JoinTree sigl dir) ->
-         (jtype : JoinType) ->
-         (jcond : JoinCondition sigl sigr) ->
          (jtr : JoinTree sigr dir) ->
-         JoinTree (SigConcat sigl sigr) dir
+         JoinTree (SigConcat sigl jtype sigr jcond) dir
 
 public export
 {st : SigTree n} -> HasSignature n (JoinTree st) where
@@ -69,7 +80,7 @@ export
 {st : SigTree n} -> IsTupleLike n (JoinTree st) where
   toTuple (Leaf leaf) = toTuple leaf
   toTuple (LeafAs leaf alias) = rewrapAliasify $ toTuple leaf
-  toTuple (Join jtl jty jcond jtr) = toTuple jtl ++ toTuple jtr
+  toTuple (Join jtl jtr) = toTuple jtl ++ toTuple jtr
 
   fromTuple tup = ?w2
 
@@ -77,5 +88,5 @@ export
   toFromId = ?w4
 
 public export
-IsSelectSource (JoinTree n st) where
+IsSelectSource (JoinTree st) where
   selectSource = ?selectSource_rhs
