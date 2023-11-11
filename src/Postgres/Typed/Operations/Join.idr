@@ -48,26 +48,3 @@ Show (ty1 dir) => Show (ty2 dir) => Show (CrossJoin ty1 ty2 dir) where
 public export
 IsSelectSource ty1 => IsSelectSource ty2 => IsSelectSource (CrossJoin ty1 ty2) where
   selectSource = selectSourceOf ty1 ++ ", " ++ selectSourceOf ty2
-
-{-
-
-public export
-data JoinType = Inner | Left | Right | Full
-
-public export
-data JoinCond : (lty, rty : Dir -> Type) where
-
-public export
-record JoinRec (lty, rty : Dir -> Type) (type : JoinType) (cond : JoinCond lty rty) where
-  constructor MkJoinRec
-  type : JoinType
-
-public export
-Join : (lty, rty : a) -> JoinType -> JoinCond -> Dir -> Type
-Join _ _ _ _ Write = YouCannotWriteIntoJoinsSilly
-Join lty rty type cond Read = JoinRec lty rty type cond
-
-HasSignature n (Join lty rty type cond) where
-  tableName = ?rhs
-  signature = sig
-  -}
