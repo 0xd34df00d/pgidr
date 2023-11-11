@@ -12,39 +12,43 @@ import Postgres.Typed.Operations.Select
 %prefix_record_projections off
 
 public export
-record CrossJoin {0 n1, n2 : Nat} (ty1, ty2 : Dir -> Type) (dir : Dir) where
-  constructor MkCJR
-  left : ty1 dir
-  right : ty2 dir
+data JoinType = Inner | Left | Right | Full
 
 public export
-crossJoin : (ty1, ty2 : Dir -> Type) ->
-            HasSignature n1 ty1 =>
-            HasSignature n2 ty2 =>
-            Dir ->
-            Type
-crossJoin ty1 ty2 = CrossJoin {n1} {n2} ty1 ty2
+data JoinCondition : (sigl : Signature nl) -> (sigr : Signature nr) -> Type where
+  JoinOn : Expr () Bool -> JoinCondition sigl sigr
+  {- TODO
+  JoinUsing : (name : String) ->
+              All (\name => Either (name `InSignature` sigl) (name `InSignature` sigr)) names ->
+              JoinCondition sigl sigr
+              -}
+
+export
+data JoinTree : (n : Nat) -> (sig : Signature n) -> (dir : Dir) -> Type where
+  Leaf : (IsTupleLike n ty, IsSelectSource ty) =>
+         (leaf : ty dir) ->
+         JoinTree n (signatureOf ty) dir
+  Join : {sigl, sigr : _} ->
+         (jtl : JoinTree nl sigl dir) ->
+         (jtype : JoinType) ->
+         (jcond : JoinCondition sigl sigr) ->
+         (jtr : JoinTree nr sigr dir) ->
+         JoinTree (nl + nr) (sigl ++ sigr) dir
 
 public export
-HasSignature n1 ty1 => HasSignature n2 ty2 => HasSignature (n1 + n2) (CrossJoin {n1} {n2} ty1 ty2) where
-  signature = signatureOf ty1 ++ signatureOf ty2
+{sig : Signature n} -> HasSignature n (JoinTree n sig) where
+  signature = sig
 
-public export
-{n1 : _} -> IsTupleLike n1 ty1 => IsTupleLike n2 ty2 => IsTupleLike (n1 + n2) (CrossJoin {n1} {n2} ty1 ty2) where
-  toTuple (MkCJR left right) = toTuple left ++ toTuple right
-  fromTuple tup with (splitAt n1 tup)
-    _ | (xs, ys) = let prf = sym $ concatSplitInverse (signatureOf ty1) (signatureOf ty2)
-                    in MkCJR
-                        (fromTuple $ rewrite cong fst prf in xs)
-                        (fromTuple $ rewrite cong snd prf in ys)
+export
+{sig : Signature n} -> IsTupleLike n (JoinTree n sig) where
+  toTuple (Leaf leaf) = toTuple leaf
+  toTuple (Join jtl jty jcond jtr) = toTuple jtl ++ toTuple jtr
+
+  fromTuple tup = ?w2
 
   fromToId = ?w3
   toFromId = ?w4
 
 public export
-Show (ty1 dir) => Show (ty2 dir) => Show (CrossJoin ty1 ty2 dir) where
-  show (MkCJR left right) = "(\{show left}) × (\{show right})"
-
-public export
-IsSelectSource ty1 => IsSelectSource ty2 => IsSelectSource (CrossJoin ty1 ty2) where
-  selectSource = selectSourceOf ty1 ++ ", " ++ selectSourceOf ty2
+IsSelectSource (JoinTree n sig) where
+  selectSource = ?selectSource_rhs
