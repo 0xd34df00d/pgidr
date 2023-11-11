@@ -95,7 +95,14 @@ export
   toTuple (LeafAs leaf alias) = rewrapAliasify $ toTuple leaf
   toTuple (Join jtl jtr) = toTuple jtl ++ toTuple jtr
 
-  fromTuple tup = ?w2
+  fromTuple tup with (st)
+   _ | SigLeaf ty = Leaf $ fromTuple tup
+   _ | SigLeafAs ty alias = LeafAs ?rhs1_1 alias
+   _ | SigConcat {nl} sigl jtype sigr jcond with (splitAt nl tup)
+     _ | (tupl, tupr) = let prf = sym $ concatSplitInverse (toSig sigl) (toSig sigr)
+                         in Join
+                             (fromTuple $ rewrite cong fst prf in tupl)
+                             (fromTuple $ rewrite cong snd prf in tupr)
 
   fromToId = ?w3
   toFromId = ?w4
