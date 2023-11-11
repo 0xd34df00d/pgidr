@@ -51,10 +51,10 @@ data SigTree : (n : Nat) -> Type where
               SigTree (nl + nr)
 
 public export
-toSignature : SigTree n -> Signature n
-toSignature (SigLeaf ty) = signatureOf ty
-toSignature (SigLeafAs ty alias) = aliasify alias $ signatureOf ty
-toSignature (SigConcat l _ r _) = toSignature l ++ toSignature r
+toSig : SigTree n -> Signature n
+toSig (SigLeaf ty) = signatureOf ty
+toSig (SigLeafAs ty alias) = aliasify alias $ signatureOf ty
+toSig (SigConcat l _ r _) = toSig l ++ toSig r
 
 public export
 data JoinTree : (st : SigTree n) -> (dir : Dir) -> Type where
@@ -86,7 +86,7 @@ sigTreeOf ty = sigTree {ty}
 
 public export
 {st : SigTree n} -> HasSignature n (JoinTree st) where
-  signature = toSignature st
+  signature = toSig st
 
 export
 {st : SigTree n} -> IsTupleLike n (JoinTree st) where
