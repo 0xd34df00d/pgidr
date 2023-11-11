@@ -41,6 +41,9 @@ public export
   fromToId = ?w3
   toFromId = ?w4
 
+public export
+Show (ty1 dir) => Show (ty2 dir) => Show (CrossJoin ty1 ty2 dir) where
+  show (MkCJR left right) = "(\{show left}) × (\{show right})"
 
 public export
 IsSelectSource ty1 => IsSelectSource ty2 => IsSelectSource (CrossJoin ty1 ty2) where
