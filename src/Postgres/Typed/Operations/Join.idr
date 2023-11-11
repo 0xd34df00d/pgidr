@@ -16,6 +16,13 @@ record CrossJoin {0 n1, n2 : Nat} (ty1, ty2 : Dir -> Type) (dir : Dir) where
   left : ty1 dir
   right : ty2 dir
 
+crossJoin : (ty1, ty2 : Dir -> Type) ->
+            HasSignature n1 ty1 =>
+            HasSignature n2 ty2 =>
+            Dir ->
+            Type
+crossJoin ty1 ty2 = CrossJoin {n1} {n2} ty1 ty2
+
 HasSignature n1 ty1 => HasSignature n2 ty2 => HasSignature (n1 + n2) (CrossJoin {n1} {n2} ty1 ty2) where
   signature = signatureOf ty1 ++ signatureOf ty2
 
