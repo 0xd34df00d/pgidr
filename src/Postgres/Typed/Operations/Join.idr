@@ -1,6 +1,7 @@
 module Postgres.Typed.Operations.Join
 
 import Data.Vect.Quantifiers.Extra
+import Derive.Prelude
 
 import Postgres.Typed.Signature
 import Postgres.Typed.Tuple
@@ -8,6 +9,7 @@ import Postgres.Typed.Tuple
 import Postgres.Typed.Operations.Expression
 import Postgres.Typed.Operations.Select
 
+%language ElabReflection
 %default total
 %prefix_record_projections off
 
@@ -28,6 +30,7 @@ rewrapAliasify {sig = (MkSE _ _ _ {pgType}) :: _} (x :: xs) = x :: rewrapAliasif
 
 public export
 data JoinType = Inner | Left | Right | Full
+%runElab derive "JoinType" [Eq, Ord, Show]
 
 public export
 data SigTree : (n : Nat) -> Type
