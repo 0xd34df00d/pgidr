@@ -124,7 +124,14 @@ aliasify : String -> Signature n -> Signature n
 aliasify alias = map (aliasifySig alias)
 
 public export
-rewrapAliasify : All (computeType' dir) sig ->
-                 All (computeType' dir) (aliasify alias sig)
-rewrapAliasify [] = []
-rewrapAliasify {sig = (MkSE _ _ _ {pgType}) :: _} (x :: xs) = x :: rewrapAliasify xs
+wrapAliasify : All (computeType' dir) sig ->
+               All (computeType' dir) (aliasify alias sig)
+wrapAliasify [] = []
+wrapAliasify {sig = (MkSE _ _ _ {pgType}) :: _} (x :: xs) = x :: wrapAliasify xs
+
+public export
+unwrapAliasify : {sig : _} ->
+                 All (computeType' dir) (aliasify alias sig) ->
+                 All (computeType' dir) sig
+unwrapAliasify {sig = []} [] = []
+unwrapAliasify {sig = (MkSE {}) :: _} (x :: xs) = x :: unwrapAliasify xs
