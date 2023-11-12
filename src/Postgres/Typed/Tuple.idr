@@ -113,3 +113,17 @@ public export
 
   fromToId (MkTup columns) = Refl
   toFromId v = Refl
+
+public export
+aliasifySig : String -> SignatureElem -> SignatureElem
+aliasifySig alias (MkSE name type mods) = MkSE (alias ++ "." ++ name) type mods  -- TODO record update syntax when Idris2#3083 is fixed
+
+public export
+aliasify : String -> Signature n -> Signature n
+aliasify alias = map (aliasifySig alias)
+
+public export
+rewrapAliasify : All (computeType' dir) sig ->
+                 All (computeType' dir) (aliasify alias sig)
+rewrapAliasify [] = []
+rewrapAliasify {sig = (MkSE _ _ _ {pgType}) :: _} (x :: xs) = x :: rewrapAliasify xs
