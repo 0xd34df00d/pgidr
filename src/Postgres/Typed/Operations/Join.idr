@@ -65,7 +65,6 @@ data JoinTree : (st : SigTree n) -> (dir : Dir) -> Type where
          JoinTree (SigLeaf ty) dir
   LeafAs : (IsTupleLike n ty, IsSelectSource ty) =>
            (leaf : ty dir) ->
-           (alias : String) ->
            JoinTree (SigLeafAs ty alias) dir
   Join : {sigl : SigTree nl} ->
          {sigr : SigTree nr} ->
@@ -93,12 +92,12 @@ public export
 public export
 {st : SigTree n} -> IsTupleLike n (JoinTree st) where
   toTuple (Leaf leaf) = toTuple leaf
-  toTuple (LeafAs leaf alias) = rewrapAliasify $ toTuple leaf
+  toTuple (LeafAs leaf) = rewrapAliasify $ toTuple leaf
   toTuple (Join jtl jtr) = toTuple jtl ++ toTuple jtr
 
   fromTuple tup with (st)
    _ | SigLeaf ty = Leaf $ fromTuple tup
-   _ | SigLeafAs ty alias = LeafAs ?rhs1_1 alias
+   _ | SigLeafAs ty alias = LeafAs ?rhs1_1
    _ | SigConcat {nl} sigl jtype sigr jcond with (splitAt nl tup)
      _ | (tupl, tupr) = let prf = sym $ concatSplitInverse (toSig sigl) (toSig sigr)
                          in Join
