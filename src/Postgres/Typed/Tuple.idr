@@ -63,6 +63,7 @@ public export
 Tuple : Signature n -> (dir : Dir) -> Type
 Tuple sig dir = All (computeType' dir) sig
 
+export
 prettyTuple : {dir : _} -> {s : Signature _} -> Tuple s dir -> String
 prettyTuple tup = "{ " ++ joinBy ", " (toList $ forget $ mapProperty' showElem tup) ++ " }"
   where
