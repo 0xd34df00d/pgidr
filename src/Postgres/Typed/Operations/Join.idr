@@ -19,6 +19,7 @@ public export
 aliasify : String -> Signature n -> Signature n
 aliasify alias = map (aliasifySig alias)
 
+public export
 rewrapAliasify : All (computeType' dir) sig ->
                  All (computeType' dir) (aliasify alias sig)
 rewrapAliasify [] = []
@@ -89,7 +90,7 @@ public export
 {st : SigTree n} -> HasSignature n (JoinTree st) where
   signature = toSig st
 
-export
+public export
 {st : SigTree n} -> IsTupleLike n (JoinTree st) where
   toTuple (Leaf leaf) = toTuple leaf
   toTuple (LeafAs leaf alias) = rewrapAliasify $ toTuple leaf
