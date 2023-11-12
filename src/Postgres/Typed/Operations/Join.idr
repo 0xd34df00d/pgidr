@@ -39,6 +39,11 @@ public export
 data JoinCondition : (sigl : SigTree nl) -> (sigr : SigTree nr) -> Type where
   JoinOn : Expr () Bool -> JoinCondition sigl sigr
 
+namespace JCOverloads
+  export
+  toFromPart : JoinCondition sigl sigr -> String
+  toFromPart (JoinOn expr) = toQueryPart expr
+
 public export
 data SigTree : (n : Nat) -> Type where
   SigLeaf : (0 ty : _) ->
@@ -110,9 +115,16 @@ public export
   fromToId = ?w3
   toFromId = ?w4
 
+namespace SigTreeOverloads
+  export
+  toFromPart : SigTree n -> String
+  toFromPart (SigLeaf ty) = selectSourceOf ty
+  toFromPart (SigLeafAs ty alias) = "\{selectSourceOf ty} AS \{alias}"
+  toFromPart (SigConcat sigl jtype sigr jcond) = "\{toFromPart sigl} \{show jtype} JOIN \{toFromPart sigr} \{toFromPart jcond}"
+
 public export
-IsSelectSource (JoinTree st) where
-  selectSource = ?selectSource_rhs
+{st : SigTree n} -> IsSelectSource (JoinTree st) where
+  selectSource = toFromPart st
 
 public export
 table : (ty : Dir -> Type) ->
