@@ -122,6 +122,16 @@ table : (ty : Dir -> Type) ->
         Dir -> Type
 table ty = JoinTree (SigLeaf ty)
 
+infix 3 `as`
+public export
+as : (ty : Dir -> Type) ->
+     (alias : String) ->
+     IsTupleLike n ty =>
+     IsSelectSource ty =>
+     Dir -> Type
+ty `as` alias = JoinTree (SigLeafAs ty alias)
+
+infixl 2 `crossJoin`
 public export
 crossJoin : {n1, n2 : _} ->
             (jt1, jt2 : Dir -> Type) ->
