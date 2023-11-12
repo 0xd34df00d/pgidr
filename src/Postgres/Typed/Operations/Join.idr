@@ -85,12 +85,12 @@ public export
 public export
 {st : SigTree n} -> IsTupleLike n (JoinTree st) where
   toTuple (Leaf leaf) = toTuple leaf
-  toTuple (LeafAs leaf) = rewrapAliasify $ toTuple leaf
+  toTuple (LeafAs leaf) = wrapAliasify $ toTuple leaf
   toTuple (Join jtl jtr) = toTuple jtl ++ toTuple jtr
 
   fromTuple tup with (st)
    _ | SigLeaf ty = Leaf $ fromTuple tup
-   _ | SigLeafAs ty alias = LeafAs ?rhs1_1
+   _ | SigLeafAs ty alias = LeafAs $ fromTuple $ unwrapAliasify tup
    _ | SigConcat {nl} sigl jtype sigr jcond with (splitAt nl tup)
      _ | (tupl, tupr) = let prf = sym $ concatSplitInverse (toSig sigl) (toSig sigr)
                          in Join
