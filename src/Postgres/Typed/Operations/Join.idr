@@ -112,6 +112,10 @@ public export
   selectSource = toFromPart st
 
 public export
+{dir, st : _} -> Show (JoinTree st dir) where
+  show jt = "\{toFromPart st} \{prettyTuple $ toTuple jt}"
+
+public export
 table : (ty : Dir -> Type) ->
         IsTupleLike n ty =>
         IsSelectSource ty =>
