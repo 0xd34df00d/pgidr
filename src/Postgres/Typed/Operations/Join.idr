@@ -27,7 +27,7 @@ data JoinCondition : (sigl : SigTree nl) -> (sigr : SigTree nr) -> Type where
 namespace JCOverloads
   export
   toFromPart : JoinCondition sigl sigr -> String
-  toFromPart (JoinOn expr) = toQueryPart expr
+  toFromPart (JoinOn expr) = "ON " ++ toQueryPart expr
 
 public export
 data SigTree : (n : Nat) -> Type where
