@@ -135,3 +135,11 @@ unwrapAliasify : {sig : _} ->
                  All (computeType' dir) sig
 unwrapAliasify {sig = []} [] = []
 unwrapAliasify {sig = (MkSE {}) :: _} (x :: xs) = x :: unwrapAliasify xs
+
+export
+unwrapWrapId : {sig : _} ->
+               (alias : _) ->
+               (alls : All (computeType' dir) sig) ->
+               unwrapAliasify {dir} {alias} (wrapAliasify {dir} {alias} alls) = alls
+unwrapWrapId _ [] = Refl
+unwrapWrapId {sig = (MkSE {}) :: _} alias (a :: as) = cong (a ::) (unwrapWrapId alias as)
