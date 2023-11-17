@@ -13,14 +13,14 @@ import Postgres.Typed.Operations.Select
 %default total
 %prefix_record_projections off
 
-public export
+export
 data JoinType = Inner | Left | Right | Full
 %runElab derive "JoinType" [Eq, Ord, Show]
 
-public export
+export
 data SigTree : (n : Nat) -> Type
 
-public export
+export
 data JoinCondition : (sigl : SigTree nl) -> (sigr : SigTree nr) -> Type where
   JoinOn : Expr () Bool -> JoinCondition sigl sigr
 
@@ -29,7 +29,7 @@ namespace JCOverloads
   toFromPart : JoinCondition sigl sigr -> String
   toFromPart (JoinOn expr) = "ON " ++ toQueryPart expr
 
-public export
+export
 data SigTree : (n : Nat) -> Type where
   SigLeaf : (0 ty : _) ->
             (IsTupleLike n ty, IsSelectSource ty) =>
@@ -45,13 +45,13 @@ data SigTree : (n : Nat) -> Type where
               (jcond : JoinCondition sigl sigr) ->
               SigTree (nl + nr)
 
-public export
+export
 toSig : SigTree n -> Signature n
 toSig (SigLeaf ty) = signatureOf ty
 toSig (SigLeafAs ty alias) = aliasify alias $ signatureOf ty
 toSig (SigConcat l _ r _) = toSig l ++ toSig r
 
-public export
+export
 data JoinTree : (st : SigTree n) -> (dir : Dir) -> Type where
   Leaf : (IsTupleLike n ty, IsSelectSource ty) =>
          (leaf : ty dir) ->
@@ -78,11 +78,11 @@ public export
 sigTreeOf : (0 ty : _) -> HasSigTree n ty => SigTree n
 sigTreeOf ty = sigTree {ty}
 
-public export
+export
 {st : SigTree n} -> HasSignature n (JoinTree st) where
   signature = toSig st
 
-public export
+export
 {st : SigTree n} -> IsTupleLike n (JoinTree st) where
   toTuple (Leaf leaf) = toTuple leaf
   toTuple (LeafAs leaf) = wrapAliasify $ toTuple leaf
@@ -107,11 +107,11 @@ namespace SigTreeOverloads
   toFromPart (SigLeafAs ty alias) = "\{selectSourceOf ty} AS \{alias}"
   toFromPart (SigConcat sigl jtype sigr jcond) = "\{toFromPart sigl} \{show jtype} JOIN \{toFromPart sigr} \{toFromPart jcond}"
 
-public export
+export
 {st : SigTree n} -> IsSelectSource (JoinTree st) where
   selectSource = toFromPart st
 
-public export
+export
 {dir, st : _} -> Show (JoinTree st dir) where
   show jt = "\{toFromPart st} \{prettyTuple $ toTuple jt}"
 
