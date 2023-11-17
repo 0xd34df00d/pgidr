@@ -106,7 +106,11 @@ export
   fromToId (LeafAs {alias} leaf) = rewrite unwrapWrapId {dir} alias (toTuple leaf) in
                                            cong LeafAs $ fromToId leaf
   fromToId (Join jtl jtr) = ?w3_2
-  toFromId tup = ?w4
+  toFromId tup with (st)
+    _ | SigLeaf _ = toFromId tup
+    _ | SigLeafAs ty alias = cong wrapAliasify (toFromId $ unwrapAliasify tup)
+                     `trans` wrapUnwrapId alias tup
+    _ | SigConcat {nl} sigl jtype sigr jcond = ?toFromId_rhs3
 
 namespace SigTreeOverloads
   export
