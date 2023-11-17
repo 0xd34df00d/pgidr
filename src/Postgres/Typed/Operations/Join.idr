@@ -20,9 +20,11 @@ data JoinType = Inner | Left | Right | Full
 export
 data SigTree : (n : Nat) -> Type
 
+record JoinOnExprSig (sl : SigTree nl) (sr : SigTree nr) where
+
 export
 data JoinCondition : (sigl : SigTree nl) -> (sigr : SigTree nr) -> Type where
-  JoinOn : Expr () Bool -> JoinCondition sigl sigr
+  JoinOn : Expr (JoinOnExprSig sigl sigr) Bool -> JoinCondition sigl sigr
 
 namespace JCOverloads
   export
@@ -77,6 +79,9 @@ public export
 public export
 sigTreeOf : (0 ty : _) -> HasSigTree n ty => SigTree n
 sigTreeOf ty = sigTree {ty}
+
+{sl : SigTree nl} -> {sr : SigTree nr} -> HasSignature (nl + nr) (JoinOnExprSig sl sr) where
+  signature = toSig sl ++ toSig sr
 
 export
 {st : SigTree n} -> HasSignature n (JoinTree st) where
