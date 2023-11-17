@@ -107,8 +107,20 @@ namespace SigTreeOverloads
   toFromPart (SigLeafAs ty alias) = "\{selectSourceOf ty} AS \{alias}"
   toFromPart (SigConcat sigl jtype sigr jcond) = "\{toFromPart sigl} \{show jtype} JOIN \{toFromPart sigr} \{toFromPart jcond}"
 
+public export
+sigTreeSources : SigTree n -> List String
+sigTreeSources (SigLeaf ty) = [selectSourceOf ty]
+sigTreeSources (SigLeafAs ty alias) = [alias]
+sigTreeSources (SigConcat sigl jtype sigr jcond) = sigTreeSources sigl ++ sigTreeSources sigr
+
+-- TODO better error messages when this fails
+public export
+record IsValidTree (st : SigTree n) where
+  constructor MkIVT
+  sourcesUnique : nub (sigTreeSources st) = sigTreeSources st
+
 export
-{st : SigTree n} -> IsSelectSource (JoinTree st) where
+{st : SigTree n} -> IsValidTree st => IsSelectSource (JoinTree st) where
   selectSource = toFromPart st
 
 export
