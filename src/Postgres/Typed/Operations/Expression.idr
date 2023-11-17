@@ -30,9 +30,9 @@ public export
 data Expr : (0 ty : a) -> (ety : Type) -> Type where
   EConst  : (val : PgConst ety) ->
             Expr ty ety
-  EColumn : (ix : Fin n) ->
-            (sig : Signature n) ->
-            Expr ty (ix `index` sig).type
+  EColumn : HasSignature n ty =>
+            (ix : Fin n) ->
+            Expr ty (ix `index` signatureOf ty).type
   EBinRel : (op : BinRelOp) ->
             (l, r : Expr ty ety) ->
             Expr ty Bool
@@ -73,7 +73,7 @@ namespace EDSL
         (name : String) ->
         {auto inSig : name `InSignature` signatureOf ty} ->
         Expr ty (anyToFin inSig `index` signatureOf ty).type
-  col _ = EColumn (anyToFin inSig) (signatureOf ty)
+  col _ = EColumn (anyToFin inSig)
 
 isLeaf : Expr ty ety -> Bool
 isLeaf (EConst{}) = True
@@ -92,7 +92,7 @@ mutual
                                   PCBool b => case b of
                                                    True => "TRUE"
                                                    False => "FALSE"
-  toQueryPart (EColumn ix sig) = (ix `index` sig).name
+  toQueryPart (EColumn ix) = (ix `index` signatureOf ty).name
   toQueryPart (EBinRel op l r) = "\{parens l} \{opToSql op} \{parens r}"
   toQueryPart (EAnd l r) = "\{parens l} AND \{parens r}"
   toQueryPart (EOr l r) = "\{parens l} OR \{parens r}"
