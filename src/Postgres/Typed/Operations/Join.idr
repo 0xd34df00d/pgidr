@@ -102,8 +102,11 @@ export
                              (fromTuple $ rewrite cong fst prf in tupl)
                              (fromTuple $ rewrite cong snd prf in tupr)
 
-  fromToId = ?w3
-  toFromId = ?w4
+  fromToId (Leaf leaf) = cong Leaf $ fromToId leaf
+  fromToId (LeafAs {alias} leaf) = rewrite unwrapWrapId {dir} alias (toTuple leaf) in
+                                           cong LeafAs $ fromToId leaf
+  fromToId (Join jtl jtr) = ?w3_2
+  toFromId tup = ?w4
 
 namespace SigTreeOverloads
   export
