@@ -8,6 +8,7 @@ import Postgres.Typed.Modifiers
 import Postgres.Typed.Tuple
 
 import Postgres.Typed.Operations
+import Postgres.Typed.Operations.Join
 
 dumpResult : HasIO io => Result s -> io ()
 dumpResult res = do
@@ -57,7 +58,8 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
     >>= handleResult "inserted person 4"
 
   execute' conn (select from Person id) >>= handleResult "selected all persons"
-
+  execute' conn (select from Person { whereClause := col "last_name" == "Doe", orderBy := "first_name" }) >>= handleResult "selected all persons"
+  execute' conn (select from (Person `as` "p1" `crossJoin` Person `as` "p2") id) >>= handleResult "selected all persons"
 {-
   let insertQuery = "INSERT INTO persons (first_name, last_name, age, country) VALUES ($1, $2, $3, $4)"
 
