@@ -96,11 +96,12 @@ export
   fromTuple tup with (st)
    _ | SigLeaf ty = Leaf $ fromTuple tup
    _ | SigLeafAs ty alias = LeafAs $ fromTuple $ unwrapAliasify tup
-   _ | SigConcat {nl} sigl jtype sigr jcond with (splitAt nl tup)
-     _ | (tupl, tupr) = let prf = sym $ concatSplitInverse (toSig sigl) (toSig sigr)
-                         in Join
-                             (fromTuple $ rewrite cong fst prf in tupl)
-                             (fromTuple $ rewrite cong snd prf in tupr)
+   _ | SigConcat {nl} sigl jtype sigr jcond =
+        let splits = splitAt nl tup
+            prf = sym $ concatSplitInverse (toSig sigl) (toSig sigr)
+         in Join
+              (fromTuple $ rewrite cong fst prf in fst splits)
+              (fromTuple $ rewrite cong snd prf in snd splits)
 
   fromToId (Leaf leaf) = cong Leaf $ fromToId leaf
   fromToId (LeafAs {alias} leaf) = rewrite unwrapWrapId {dir} alias (toTuple leaf) in
