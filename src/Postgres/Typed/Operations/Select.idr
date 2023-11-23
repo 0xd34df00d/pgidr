@@ -10,6 +10,7 @@ import public Postgres.Typed.Tuple
 import Postgres.Typed.Operations.Class
 import public Postgres.Typed.Operations.Expression
 import public Postgres.Typed.Operations.Helpers
+import public Postgres.Typed.Operations.SelectSource
 
 %default total
 %prefix_record_projections off
@@ -92,22 +93,6 @@ namespace Grouping
   export
   toQueryPart : List (SomeExpr ty) -> String
   toQueryPart = joinBy ", " . map (\se => toQueryPart se.expr)
-
-public export
-interface IsSelectSource (0 ty : a) where
-  constructor MkSelectSource
-  selectSource : String
-
-public export
-selectSourceOf : (0 ty : a) ->
-                 IsSelectSource ty =>
-                 String
-selectSourceOf ty = selectSource {ty}
-
-public export
-HasTableName ty => IsSelectSource ty where
-  selectSource = tableNameOf ty
-
 
 public export
 record Select (ty : Dir -> Type) (ret : Type) where
