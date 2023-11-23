@@ -95,7 +95,7 @@ namespace Grouping
 
 public export
 interface IsSelectSource (0 ty : a) where
-  constructor Mk
+  constructor MkSelectSource
   selectSource : String
 
 public export
