@@ -7,7 +7,7 @@ import Postgres.Typed.Signature
 import Postgres.Typed.Tuple
 
 import Postgres.Typed.Operations.Expression
-import Postgres.Typed.Operations.Select
+import Postgres.Typed.Operations.SelectSource
 
 %language ElabReflection
 %default total
