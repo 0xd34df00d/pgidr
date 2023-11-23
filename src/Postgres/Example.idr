@@ -60,37 +60,3 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
   execute' conn (select from Person id) >>= handleResult "selected all persons"
   execute' conn (select from Person { whereClause := col "last_name" == "Doe", orderBy := "first_name" }) >>= handleResult "selected all persons"
   execute' conn (select from (Person `as` "p1" `crossJoin` Person `as` "p2") id) >>= handleResult "selected all persons"
-{-
-  let insertQuery = "INSERT INTO persons (first_name, last_name, age, country) VALUES ($1, $2, $3, $4)"
-
-  putStrLn "inserting..."
-  execParams conn insertQuery [Just "John", Just "Doe", Just "42", Nothing] >>= dumpResult
-
-  putStrLn "preparing..."
-  prepare conn "inserter" insertQuery >>= dumpResult
-
-  putStrLn "inserting more..."
-  execPrepared conn "inserter" [Just "Jane", Just "Doe", Just "36", Just "us"] >>= dumpResult
-  execPrepared conn "inserter" [Just "Uncle", Just "Bob", Just "10", Nothing] >>= dumpResult
-
-  putStrLn "querying..."
-  res <- exec conn "SELECT * FROM persons"
-  dumpResult res
-
-  putStrLn "shape:"
-  let fieldsCnt = nfields res
-      rowsCnt = ntuples res
-  printLn (rowsCnt, fieldsCnt)
-
-  putStrLn "names:"
-  forTo_ 0 fieldsCnt $ printLn . fname res
-
-  putStrLn "formats:"
-  forTo_ 0 fieldsCnt $ printLn . fformat res
-
-  putStrLn "mods:"
-  forTo_ 0 fieldsCnt $ printLn . fmod res
-
-  putStrLn "types:"
-  forTo_ 0 fieldsCnt $ printLn . ftype res
-  -}
