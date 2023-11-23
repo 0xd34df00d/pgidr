@@ -29,6 +29,7 @@ modules = Postgres.C
         , Postgres.Typed.Operations.Helpers
         , Postgres.Typed.Operations.Insert
         , Postgres.Typed.Operations.Select
+        , Postgres.Typed.Operations.SelectSource
 
         , Data.Vect.Quantifiers.Extra
 
