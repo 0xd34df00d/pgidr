@@ -116,9 +116,8 @@ sigTreeSources (SigConcat sigl jtype sigr jcond) = sigTreeSources sigl ++ sigTre
 
 -- TODO better error messages when this fails
 public export
-record IsValidTree (st : SigTree n) where
-  constructor MkIVT
-  sourcesUnique : nub (sigTreeSources st) = sigTreeSources st
+IsValidTree : (st : SigTree n) -> Type
+IsValidTree st = nub (sigTreeSources st) = sigTreeSources st
 
 export
 {st : SigTree n} -> IsValidTree st => IsSelectSource (JoinTree st) where
