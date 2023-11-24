@@ -117,7 +117,7 @@ sigTreeSources (SigConcat sigl jtype sigr jcond) = sigTreeSources sigl ++ sigTre
 -- TODO better error messages when this fails
 public export
 IsValidTree : (st : SigTree n) -> Type
-IsValidTree st = nub (sigTreeSources st) = sigTreeSources st
+IsValidTree st = let srcs := sigTreeSources st in nub srcs = srcs
 
 export
 {st : SigTree n} -> IsValidTree st => IsSelectSource (JoinTree st) where
