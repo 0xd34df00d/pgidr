@@ -106,7 +106,7 @@ namespace SigTreeOverloads
   toFromPart : SigTree n -> String
   toFromPart (SigLeaf ty) = selectSourceOf ty
   toFromPart (SigLeafAs ty alias) = "\{selectSourceOf ty} AS \{alias}"
-  toFromPart (SigConcat sigl jtype sigr jcond) = "\{toFromPart sigl} \{show jtype} JOIN \{toFromPart sigr} \{toFromPart jcond}"
+  toFromPart (SigConcat sigl jtype sigr jcond) = "(\{toFromPart sigl} \{show jtype} JOIN \{toFromPart sigr} \{toFromPart jcond})"
 
 public export
 sigTreeSources : SigTree n -> List String
