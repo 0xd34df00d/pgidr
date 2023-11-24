@@ -160,11 +160,13 @@ infixl 2 `crossJoin`
 public export
 crossJoin : {n1, n2 : _} ->
             (jt1, jt2 : Dir -> Type) ->
-            HasSigTree n1 jt1 =>
-            HasSigTree n2 jt2 =>
+            {st1 : SigTree n1} ->
+            {st2 : SigTree n2} ->
+            (jt1 = JoinTree st1) =>
+            (jt2 = JoinTree st2) =>
             Dir -> Type
 crossJoin jt1 jt2 = JoinTree $ SigConcat
-                                  (sigTreeOf jt1)
+                                  st1
                                   Inner
-                                  (sigTreeOf jt2)
+                                  st2
                                   (JoinOn $ EConst $ PCBool True)
