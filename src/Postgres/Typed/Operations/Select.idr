@@ -130,7 +130,7 @@ namespace SelectJoin
            IsValidTree st =>
            (Select (JoinTree st) (JoinTree st Read) -> Select (JoinTree st) ret) ->
            Select (JoinTree st) ret
-  select _ ty f = f (MkSelect _ %search %search CAll (1 == 1) [] Nothing)
+  select _ st f = f (MkSelect _ %search %search CAll (1 == 1) [] Nothing)
 
 namespace OptMaybe
   export
