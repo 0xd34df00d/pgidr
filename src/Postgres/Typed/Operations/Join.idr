@@ -34,10 +34,12 @@ namespace JCOverloads
 export
 data SigTree : (n : Nat) -> Type where
   SigLeaf : (0 ty : _) ->
-            (IsTupleLike n ty, IsSelectSource ty) =>
+            IsTupleLike n ty =>
+            IsSelectSource ty =>
             SigTree n
   SigLeafAs : (ty : _) ->
-              (IsTupleLike n ty, IsSelectSource ty) =>
+              IsTupleLike n ty =>
+              IsSelectSource ty =>
               (alias : String) ->
               SigTree n
   SigConcat : {nl, nr : Nat} ->
@@ -55,10 +57,12 @@ toSig (SigConcat l _ r _) = toSig l ++ toSig r
 
 export
 data JoinTree : (st : SigTree n) -> (dir : Dir) -> Type where
-  Leaf : (IsTupleLike n ty, IsSelectSource ty) =>
+  Leaf : IsTupleLike n ty =>
+         IsSelectSource ty =>
          (leaf : ty dir) ->
          JoinTree (SigLeaf ty) dir
-  LeafAs : (IsTupleLike n ty, IsSelectSource ty) =>
+  LeafAs : IsTupleLike n ty =>
+           IsSelectSource ty =>
            (leaf : ty dir) ->
            JoinTree (SigLeafAs ty alias) dir
   Join : {sigl : SigTree nl} ->
