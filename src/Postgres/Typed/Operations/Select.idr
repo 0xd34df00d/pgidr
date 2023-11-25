@@ -114,7 +114,8 @@ public export
 select : Dummy DFrom ->
          (ty : Dir -> Type) ->
          {n : _} ->
-         (IsTupleLike n ty, IsSelectSource ty) =>
+         IsTupleLike n ty =>
+         IsSelectSource ty =>
          (Select ty (ty Read) -> Select ty ret) ->
          Select ty ret
 select _ ty f = f (MkSelect _ %search %search CAll (1 == 1) [] Nothing)
