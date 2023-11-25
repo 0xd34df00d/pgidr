@@ -110,7 +110,7 @@ public export
 from : Dummy DFrom
 from = MkDF
 
-public export
+export
 select : Dummy DFrom ->
          (ty : Dir -> Type) ->
          {n : _} ->
