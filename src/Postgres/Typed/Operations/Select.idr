@@ -11,6 +11,7 @@ import Postgres.Typed.Operations.Class
 import public Postgres.Typed.Operations.Expression
 import public Postgres.Typed.Operations.Helpers
 import public Postgres.Typed.Operations.SelectSource
+import Postgres.Typed.Operations.Join
 
 %default total
 %prefix_record_projections off
@@ -110,15 +111,26 @@ public export
 from : Dummy DFrom
 from = MkDF
 
-export
-select : Dummy DFrom ->
-         (ty : Dir -> Type) ->
-         {n : _} ->
-         IsTupleLike n ty =>
-         IsSelectSource ty =>
-         (Select ty (ty Read) -> Select ty ret) ->
-         Select ty ret
-select _ ty f = f (MkSelect _ %search %search CAll (1 == 1) [] Nothing)
+namespace SelectTable
+  export
+  select : Dummy DFrom ->
+           (ty : Dir -> Type) ->
+           {n : _} ->
+           IsTupleLike n ty =>
+           IsSelectSource ty =>
+           (Select ty (ty Read) -> Select ty ret) ->
+           Select ty ret
+  select _ ty f = f (MkSelect _ %search %search CAll (1 == 1) [] Nothing)
+
+namespace SelectJoin
+  export
+  select : Dummy DFrom ->
+           {n : _} ->
+           (st : SigTree n) ->
+           IsValidTree st =>
+           (Select (JoinTree st) (JoinTree st Read) -> Select (JoinTree st) ret) ->
+           Select (JoinTree st) ret
+  select _ ty f = f (MkSelect _ %search %search CAll (1 == 1) [] Nothing)
 
 namespace OptMaybe
   export

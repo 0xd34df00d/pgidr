@@ -135,8 +135,8 @@ public export
 table : (ty : Dir -> Type) ->
         IsTupleLike n ty =>
         IsSelectSource ty =>
-        Dir -> Type
-table ty = JoinTree (SigLeaf ty)
+        SigTree n
+table ty = SigLeaf ty
 
 infix 3 `as`
 public export
@@ -144,20 +144,17 @@ as : (ty : Dir -> Type) ->
      (alias : String) ->
      IsTupleLike n ty =>
      IsSelectSource ty =>
-     Dir -> Type
-ty `as` alias = JoinTree (SigLeafAs ty alias)
+     SigTree n
+ty `as` alias = SigLeafAs ty alias
 
 infixl 2 `crossJoin`
 public export
 crossJoin : {n1, n2 : _} ->
-            (jt1, jt2 : Dir -> Type) ->
-            {st1 : SigTree n1} ->
-            {st2 : SigTree n2} ->
-            (jt1 = JoinTree st1) =>
-            (jt2 = JoinTree st2) =>
-            Dir -> Type
-crossJoin jt1 jt2 = JoinTree $ SigConcat
-                                  st1
-                                  Inner
-                                  st2
-                                  (JoinOn $ EConst $ PCBool True)
+            (st1 : SigTree n1) ->
+            (st2 : SigTree n2) ->
+            SigTree (n1 + n2)
+crossJoin st1 st2 = SigConcat
+                      st1
+                      Inner
+                      st2
+                      (JoinOn $ EConst $ PCBool True)
