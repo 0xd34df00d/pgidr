@@ -24,7 +24,7 @@ dropTable conn = do
 Person : (dir : Dir) -> Type
 Person = NamedTuple "persons" [Serial "id", "first_name" @: String, "last_name" @: String, "age" @: Integer]
 
-handleResult : (Show res, Show err, HasIO io) => String -> Either err res -> io ()
+handleResult : Show res => String -> Either ExecError res -> IO ()
 handleResult success = \case Left err => putStrLn $ "error: " ++ show err
                              Right r => putStrLn $ success ++ ": " ++ show r
 
