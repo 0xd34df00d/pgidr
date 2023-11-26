@@ -37,7 +37,7 @@ data SigTree : (n : Nat) -> Type where
             IsTupleLike n ty =>
             IsSelectSource ty =>
             SigTree n
-  SigLeafAs : (ty : _) ->
+  SigLeafAs : (0 ty : _) ->
               IsTupleLike n ty =>
               IsSelectSource ty =>
               (alias : String) ->
