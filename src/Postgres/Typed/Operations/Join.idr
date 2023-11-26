@@ -124,10 +124,6 @@ IsValidTree : (st : SigTree n) -> Type
 IsValidTree st = let srcs := sigTreeSources st in nub srcs = srcs
 
 export
-{st : SigTree n} -> IsValidTree st => IsSelectSource (JoinTree st) where
-  selectSource = toFromPart st
-
-export
 {dir, st : _} -> Show (JoinTree st dir) where
   show jt = "\{toFromPart st} \{prettyTuple $ toTuple jt}"
 
