@@ -154,7 +154,7 @@ export
             opt "GROUP BY " toQueryPart groupBy ++
             opt "ORDER BY " toQueryPart orderBy
     result <- execParams' conn query []
-    checkQueryStatus result
+    checkQueryStatus query result
     let rows = Data.Vect.Fin.tabulate {len = ntuples result} id
     case columns of
          CAll => do matches <- ensureMatches {numRows = ntuples result}

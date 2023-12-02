@@ -45,4 +45,5 @@ create : MonadExec m =>
          (HasSignature _ ty, HasTableName ty) =>
          {auto alls : All (CreatablePgType . (.type)) (signatureOf ty)} ->
          m ()
-create conn ty = exec conn (createQuery ty alls) >>= checkQueryStatus
+create conn ty = let query = createQuery ty alls
+                  in exec conn query >>= checkQueryStatus query

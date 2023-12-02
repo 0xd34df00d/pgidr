@@ -173,7 +173,7 @@ export
         query = mkInsertQuery {ty} cols returning
         params = map (.value) cols
     result <- execParams' conn query params
-    checkQueryStatus result
+    checkQueryStatus query result
     case returning of
          CNone => pure ()
          CAll => fromTuple <$> (extractFirstRow result _ =<<| ensureMatches)

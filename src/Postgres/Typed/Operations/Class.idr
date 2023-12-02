@@ -14,7 +14,7 @@ import Postgres.Typed.PgType
 public export
 data ExecError
   = ExpectationsMismatch String
-  | QueryFailure ResultStatus String
+  | QueryFailure ResultStatus String String
   | ValueParseError PgTyParseError
   | TODO
 %runElab derive "ExecError" [Eq, Ord]
@@ -22,7 +22,7 @@ data ExecError
 export
 Show ExecError where
   show (ExpectationsMismatch str) = "expectations mismatch: \{str}"
-  show (QueryFailure st str) = "query failed, status code: \{show st}, error: \{str}"
+  show (QueryFailure st str query) = "query `\{query}` failed, status code: \{show st}, error: \{str}"
   show (ValueParseError str) = "failed to parse value: " ++ str
   show TODO = "unimplemented (TODO)"
 
@@ -55,10 +55,11 @@ execute' conn op = runMonadExec (execute conn op)
 
 export
 checkQueryStatus : MonadExec m =>
-                   Result s ->
+                   (query : String) ->
+                   (res : Result s) ->
                    m ()
-checkQueryStatus res = do
+checkQueryStatus query res = do
   status <- resultStatus res
   when (not $ isSuccessfulQuery status) $ do
     msg <- resultErrorMessage res
-    throwError $ QueryFailure status msg
+    throwError $ QueryFailure status msg query
