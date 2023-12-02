@@ -78,7 +78,7 @@ namesToIxes : HasSignature n ty =>
 namesToIxes [] = []
 namesToIxes (inSig :: inSigs) = anyToFin inSig :: namesToIxes inSigs
 
-infixl 7 @:, @:?
+infixl 7 @:, @:?, @>
 public export
 (@:), (@:?) : (name : String) ->
               (ty : Type) ->
@@ -86,6 +86,18 @@ public export
               SignatureElem
 name @: ty = MkSE name ty [NotNull]
 name @:? ty = MkSE name ty []
+
+public export
+(@>) : (name : String) ->
+       (otherTy : a) ->
+       (otherName : String) ->
+       HasSignature n otherTy =>
+       HasTableName otherTy =>
+       {auto inSig : otherName `InSignature` signatureOf otherTy} ->
+       SignatureElem
+(@>) name otherTy otherName = let idx := anyToFin inSig
+                                  pgTy := (idx `index` signatureOf otherTy).pgType
+                               in MkSE name _ [References otherTy idx]
 
 public export
 Serial : (name : String) ->
