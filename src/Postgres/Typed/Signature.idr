@@ -8,17 +8,6 @@ import Postgres.Typed.PgType
 %prefix_record_projections off
 
 public export
-TypeLookup : Type
-TypeLookup = Int -> SomePgType
-
-export
-defLookup : TypeLookup
-defLookup 23 = MkSomePgType Integer
-defLookup 25 = MkSomePgType String
-defLookup _ = MkSomePgType UnknownPgType
-
-
-public export
 data PKeySort : (ty : Type) -> Type where
   PKeyNormal : PKeySort ty
   PKeySerial : PKeySort Integer
