@@ -100,9 +100,9 @@ public export
                                in MkSE name _ [References otherTy idx]
 
 public export
-Serial : (name : String) ->
-         SignatureElem
-Serial name = MkSE name Integer [PKey PKeySerial]
+PKeyInt : (name : String) ->
+          SignatureElem
+PKeyInt name = MkSE name Integer [PKey PKeySerial]
 
 public export
 subSignature : Signature n ->

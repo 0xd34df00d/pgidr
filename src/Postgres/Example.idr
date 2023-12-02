@@ -22,7 +22,7 @@ dropTable conn = do
   dumpResult res
 
 Person : (dir : Dir) -> Type
-Person = NamedTuple "persons" [Serial "id", "first_name" @: String, "last_name" @: String, "age" @: Integer]
+Person = NamedTuple "persons" [PKeyInt "id", "first_name" @: String, "last_name" @: String, "age" @: Integer]
 
 handleResult : Show res => String -> Either ExecError res -> IO ()
 handleResult success = \case Left err => putStrLn $ "error: " ++ show err
