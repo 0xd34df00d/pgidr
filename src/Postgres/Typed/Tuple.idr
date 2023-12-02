@@ -65,7 +65,7 @@ Tuple sig dir = All (computeType' dir) sig
 
 export
 prettyTuple : {dir : _} -> {s : Signature _} -> Tuple s dir -> String
-prettyTuple tup = "{ " ++ joinBy ", " (toList $ forget $ mapProperty' showElem tup) ++ " }"
+prettyTuple tup = "{ " ++ joinBy ", " (toList $ forget $ mapPropertyRelevant showElem tup) ++ " }"
   where
   showElem : (se : SignatureElem) -> computeType' dir se -> String
   showElem se elt = let value = maybe "IS NULL" ("= " ++) $ onSigValUniform show se elt

@@ -29,7 +29,7 @@ fieldStr (MkSE name type mods) =
 fieldsStr : (sig : Signature _) ->
             All (CreatablePgType . (.type)) sig ->
             String
-fieldsStr sig alls = joinBy ", " $ toList $ forget $ mapProperty' fieldStr alls
+fieldsStr sig alls = joinBy ", " $ toList $ forget $ mapPropertyRelevant fieldStr alls
 
 export
 createQuery : (ty : _) ->

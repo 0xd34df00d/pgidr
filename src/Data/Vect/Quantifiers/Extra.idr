@@ -6,14 +6,6 @@ import Data.Vect.Quantifiers
 %default total
 
 export
-mapProperty' : {xs : Vect n a} ->
-               (f : (x : a) -> p x -> q x) ->
-               All p xs ->
-               All q xs
-mapProperty' f [] = []
-mapProperty' f (x :: xs) = f _ x :: mapProperty' f xs
-
-export
 concatSplitInverse : {n : Nat} ->
                      (xs : Vect n a) ->
                      (ys : Vect m a) ->

@@ -97,7 +97,7 @@ mkInsertColumns : IsTupleLike n ty =>
                   (k ** Vect k InsertColumn)
 mkInsertColumns = catMaybes
                 . forget
-                . mapProperty' (\se => onSigValUniform (MkIC se.name . toTextual) se)
+                . mapPropertyRelevant (\se => onSigValUniform (MkIC se.name . toTextual) se)
                 . toTuple
 
 public export
