@@ -3,8 +3,7 @@ module Postgres.Typed.Operations.Expression
 import Data.Vect
 import Data.Vect.Quantifiers
 
-import public Postgres.Typed.InSignature
-import Postgres.Typed.Tuple
+import public Postgres.Typed.Tuple
 
 %default total
 %prefix_record_projections off

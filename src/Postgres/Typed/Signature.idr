@@ -1,6 +1,7 @@
 module Postgres.Typed.Signature
 
 import public Data.Vect
+import Data.Vect.Quantifiers
 
 import Postgres.Typed.PgType
 
@@ -59,6 +60,23 @@ data Modifier : (ty : Type) -> Type where
   Default : (defVal : ty) ->
             Modifier ty
   NotNull : Modifier ty
+
+public export
+data HasName : SignatureElem -> String -> Type where
+  MkHN : PgType type => (name : String) -> HasName (MkSE name type modifiers) name
+
+public export
+InSignature : String -> Signature n -> Type
+InSignature name sig = Any (`HasName` name) sig
+
+public export
+namesToIxes : HasSignature n ty =>
+              {k : _} ->
+              {names : Vect k String} ->
+              (alls : All (`InSignature` signatureOf ty) names) ->
+              Vect k (Fin n)
+namesToIxes [] = []
+namesToIxes (inSig :: inSigs) = anyToFin inSig :: namesToIxes inSigs
 
 infixl 7 @:, @:?
 public export

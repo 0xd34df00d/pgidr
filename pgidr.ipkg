@@ -16,7 +16,6 @@ modules = Postgres.C
         , Postgres.C.Query
         , Postgres.C.Utils
 
-        , Postgres.Typed.InSignature
         , Postgres.Typed.Modifiers
         , Postgres.Typed.PgType
         , Postgres.Typed.Signature

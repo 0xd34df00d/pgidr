@@ -7,7 +7,6 @@ import Data.Vect.Quantifiers.Extra
 
 import Postgres.C
 
-import public Postgres.Typed.InSignature
 import public Postgres.Typed.Tuple
 
 import Postgres.Typed.Operations.Class
