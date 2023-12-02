@@ -46,17 +46,18 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
   putStr e
 
   dropTable conn
-  runMonadExec (create conn Person) >>= handleResult "created persons"
+  res <- runMonadExec $ do
+    create conn Person
 
-  execute' conn (insert into Person [ Nothing, "John", "Doe", 42 ])
-    >>= handleResult "inserted person 1"
-  execute' conn (insert' into Person [ Nothing, "Jane", "Doe", 32 ] { returning := all })
-    >>= handleResult "inserted person 2"
-  execute' conn (insert' into Person [ Nothing, "Johnny", "Donny", 41 ] { returning := column "id" })
-    >>= handleResult "inserted person 3"
-  execute' conn (insert' into Person [ Nothing, "Foo", "Bar", 666 ] { returning := columns ["id", "first_name"] })
-    >>= handleResult "inserted person 4"
+    () <- execute conn (insert into Person [ Nothing, "John", "Doe", 42 ])
+    p2 <- execute conn (insert' into Person [ Nothing, "Jane", "Doe", 32 ] { returning := all })
+    p3id <- execute conn (insert' into Person [ Nothing, "Johnny", "Donny", 41 ] { returning := column "id" })
+    [p4id, _] <- execute conn (insert' into Person [ Nothing, "Foo", "Bar", 666 ] { returning := columns ["id", "first_name"] })
 
-  execute' conn (select from Person id) >>= handleResult "selected all persons"
-  execute' conn (select from Person { whereClause := col "last_name" == "Doe", orderBy := "first_name" }) >>= handleResult "selected all persons"
-  execute' conn (select from (Person `as` "p1" `crossJoin` Person `as` "p2") id) >>= handleResult "selected all persons"
+    allPersons <- execute conn (select from Person id)
+    does <- execute conn (select from Person { whereClause := col "last_name" == "Doe", orderBy := "first_name" })
+    _ <- execute conn (select from (Person `as` "p1" `crossJoin` Person `as` "p2") id)
+    pure ()
+  case res of
+       Left err => putStrLn $ "error: " ++ show err
+       Right _ => putStrLn "all good!"
