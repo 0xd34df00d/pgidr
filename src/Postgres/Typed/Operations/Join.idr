@@ -72,6 +72,7 @@ data JoinTree : (st : SigTree n) -> (dir : Dir) -> Type where
          (jtr : JoinTree sigr dir) ->
          JoinTree (SigConcat sigl jtype sigr jcond) dir
 
+public export
 {sl : SigTree nl} -> {sr : SigTree nr} -> HasSignature (nl + nr) (JoinOnExprSig sl sr) where
   signature = toSig sl ++ toSig sr
 
