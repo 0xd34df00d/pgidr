@@ -98,8 +98,8 @@ namespace Grouping
 public export
 record Select (ty : Dir -> Type) (ret : Type) where
   constructor MkSelect
-  colCount : Nat
-  isTableType : IsTupleLike colCount ty -- TODO auto implicit when Idris2#3083 is fixed
+  {colCount : Nat}
+  {auto isTableType : IsTupleLike colCount ty}
   selSrc : String
   columns : Columns ty ret
   whereClause : Expr ty Bool
@@ -120,7 +120,7 @@ namespace SelectTable
            IsSelectSource ty =>
            (Select ty (ty Read) -> Select ty ret) ->
            Select ty ret
-  select _ ty f = f (MkSelect _ %search (selectSourceOf ty) CAll (1 == 1) [] Nothing)
+  select _ ty f = f (MkSelect (selectSourceOf ty) CAll (1 == 1) [] Nothing)
 
 namespace SelectJoin
   export
@@ -130,7 +130,7 @@ namespace SelectJoin
            IsValidTree st =>
            (Select (JoinTree st) (JoinTree st Read) -> Select (JoinTree st) ret) ->
            Select (JoinTree st) ret
-  select _ st f = f (MkSelect _ %search (toFromPart st) CAll (1 == 1) [] Nothing)
+  select _ st f = f (MkSelect (toFromPart st) CAll (1 == 1) [] Nothing)
 
 namespace OptMaybe
   export
@@ -147,7 +147,7 @@ namespace OptList
 export
 {ty, ret : _} -> Operation (Select ty ret) where
   returnType _ = List ret
-  execute conn (MkSelect _ _ selSrc columns whereClause groupBy orderBy) = do
+  execute conn (MkSelect selSrc columns whereClause groupBy orderBy) = do
     let query = "SELECT \{joinBy ", " $ toColumnNames columns} " ++
                 "FROM \{selSrc} " ++
                 "WHERE \{toQueryPart whereClause} " ++

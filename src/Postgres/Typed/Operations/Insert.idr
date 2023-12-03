@@ -102,9 +102,9 @@ mkInsertColumns = catMaybes
 public export
 record Insert (ty : Dir -> Type) (ret : Type) where
   constructor MkInsert
-  fieldsCount : Nat
-  tyIsTuple : IsTupleLike fieldsCount ty    -- TODO make auto implicit when Idris2#3083 is fixed
-  tyHasTable : HasTableName ty
+  {fieldsCount : Nat}
+  {auto tyIsTuple : IsTupleLike fieldsCount ty}
+  {auto tyHasTable : HasTableName ty}
   value : ty Write
   returning : Columns ty ret
 
@@ -121,7 +121,7 @@ namespace InsertRecord
            (IsTupleLike n ty, HasTableName ty) =>
            (val : ty Write) ->
            Insert ty ()
-  insert _ _ val = MkInsert _ %search %search val CNone
+  insert _ _ val = MkInsert val CNone
 
   public export
   insert' : Dummy DInto ->
@@ -168,7 +168,7 @@ f =<<| act = act >>= \r => f r
 export
 {ty, ret : _} -> Operation (Insert ty ret) where
   returnType _ = ret
-  execute conn (MkInsert _ _ _ val returning) = do
+  execute conn (MkInsert val returning) = do
     let (_ ** cols) = mkInsertColumns val
         query = mkInsertQuery {ty} cols returning
         params = map (.value) cols
