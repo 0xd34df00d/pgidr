@@ -20,15 +20,16 @@ data EffectiveNullability = Nullable | NonNullable
 
 public export
 computeNullability : List (Modifier ty) -> Dir -> EffectiveNullability
-computeNullability mods dir = case dir of
-                                   Read => case find (\e => isNotNull e || isSerial e) mods of
-                                                Just _ => NonNullable
-                                                Nothing => Nullable
-                                   Write => case find (\e => isSerial e || isDefaulted e) mods of
-                                                 Just _ => Nullable
-                                                 Nothing => case find isNotNull mods of
-                                                                 Just _ => NonNullable
-                                                                 Nothing => Nullable
+computeNullability mods Read =
+  case find (\e => isNotNull e || isSerial e) mods of
+       Just _ => NonNullable
+       Nothing => Nullable
+computeNullability mods Write =
+ case find (\e => isSerial e || isDefaulted e) mods of
+      Just _ => Nullable
+      Nothing => case find isNotNull mods of
+                      Just _ => NonNullable
+                      Nothing => Nullable
 
 public export
 computeType : Dir -> (ty : Type) -> List (Modifier ty) -> Type
