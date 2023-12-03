@@ -155,3 +155,11 @@ crossJoin st1 st2 = SigConcat
                       Inner
                       st2
                       (JoinOn $ EConst $ PCBool True)
+
+public export
+innerJoin : {n1, n2 : _} ->
+            (st1 : SigTree n1) ->
+            (st2 : SigTree n2) ->
+            (joinExpr : Expr (JoinOnExprSig st1 st2) Bool) ->
+            SigTree (n1 + n2)
+innerJoin st1 st2 joinExpr = SigConcat st1 Inner st2 (JoinOn joinExpr)
