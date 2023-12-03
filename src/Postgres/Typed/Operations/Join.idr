@@ -17,7 +17,7 @@ export
 data JoinType = Inner | Left | Right | Full
 %runElab derive "JoinType" [Eq, Ord, Show]
 
-export
+public export
 data SigTree : (n : Nat) -> Type
 
 record JoinOnExprSig (sl : SigTree nl) (sr : SigTree nr) where
@@ -31,7 +31,7 @@ namespace JCOverloads
   toFromPart : JoinCondition sigl sigr -> String
   toFromPart (JoinOn expr) = "ON " ++ toQueryPart expr
 
-export
+public export
 data SigTree : (n : Nat) -> Type where
   SigLeaf : (0 ty : _) ->
             IsTupleLike n ty =>
@@ -49,7 +49,7 @@ data SigTree : (n : Nat) -> Type where
               (jcond : JoinCondition sigl sigr) ->
               SigTree (nl + nr)
 
-export
+public export
 toSig : SigTree n -> Signature n
 toSig (SigLeaf ty) = signatureOf ty
 toSig (SigLeafAs ty alias) = aliasify alias $ signatureOf ty
