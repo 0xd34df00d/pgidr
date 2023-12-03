@@ -132,8 +132,9 @@ public export
 table : (ty : Dir -> Type) ->
         IsTupleLike n ty =>
         IsSelectSource ty =>
+        HasTableName ty =>
         SigTree n
-table ty = SigLeaf ty
+table ty = SigLeafAs ty (tableNameOf ty)
 
 infix 3 `as`
 public export
