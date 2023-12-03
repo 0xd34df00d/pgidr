@@ -97,7 +97,7 @@ public export
        SignatureElem
 (@>) name otherTy otherName = let idx := anyToFin inSig
                                   pgTy := (idx `index` signatureOf otherTy).pgType
-                               in MkSE name _ [References otherTy idx]
+                               in MkSE name _ [References otherTy idx, NotNull]
 
 public export
 PKeyInt : (name : String) ->
