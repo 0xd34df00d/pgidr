@@ -8,8 +8,9 @@ import Postgres.C
 import public Postgres.C.Connection
 import Postgres.Typed.PgType
 
-%default total
 %language ElabReflection
+%default total
+%prefix_record_projections off
 
 public export
 data ExecError
@@ -38,20 +39,25 @@ export
 runMonadExec : HasIO io => (forall m. MonadExec m => m res) -> io (Either ExecError res)
 runMonadExec action = runEitherT {m = io} action
 
+public export 0
+ExecuteFun : Type -> Type
+ExecuteFun res = forall m, s. MonadExec m => Conn s -> m res
+
 public export
-interface Operation opTy where
-  returnType : opTy -> Type
-  execute : MonadExec m =>
-            Conn s ->
-            (op : opTy) ->
-            m (returnType op)
+record Operation res where
+  constructor Op
+  execute : ExecuteFun res
 
 export
-execute' : (Operation opTy, HasIO io) =>
+execute : MonadExec m => Conn s -> Operation res -> m res
+execute conn op = op.execute conn
+
+export
+execute' : HasIO io =>
            Conn s ->
-           (op : opTy) ->
-           io (Either ExecError (returnType op))
-execute' conn op = runMonadExec (execute conn op)
+           Operation res ->
+           io (Either ExecError res)
+execute' conn op = runMonadExec (op.execute conn)
 
 export
 checkQueryStatus : MonadExec m =>

@@ -19,11 +19,11 @@ import Postgres.Typed.Operations.Join
 namespace Output
   public export
   data Columns : (0 ty : Dir -> Type) -> (0 ret : Type) -> Type where
-    CAll    : HasSignature n ty => Columns ty (ty Read)
+    CAll    : HasSignature n ty => Columns ty (List (ty Read))
     CSome   : HasSignature n ty =>
               {k : _} ->
               (ixes : Vect k (Fin n)) ->
-              Columns ty (subTuple ty ixes Read)
+              Columns ty (List (subTuple ty ixes Read))
 
   export
   toColumnNames : Columns ty ret ->
@@ -111,27 +111,6 @@ public export
 from : Dummy DFrom
 from = MkDF
 
-namespace SelectTable
-  export
-  select : Dummy DFrom ->
-           (ty : Dir -> Type) ->
-           {n : _} ->
-           IsTupleLike n ty =>
-           IsSelectSource ty =>
-           (Select ty (ty Read) -> Select ty ret) ->
-           Select ty ret
-  select _ ty f = f (MkSelect (selectSourceOf ty) CAll (1 == 1) [] Nothing)
-
-namespace SelectJoin
-  export
-  select : Dummy DFrom ->
-           {n : _} ->
-           (st : SigTree n) ->
-           IsValidTree st =>
-           (Select (JoinTree st) (JoinTree st Read) -> Select (JoinTree st) ret) ->
-           Select (JoinTree st) ret
-  select _ st f = f (MkSelect (toFromPart st) CAll (1 == 1) [] Nothing)
-
 namespace OptMaybe
   export
   opt : String -> (a -> String) -> Maybe a -> String
@@ -144,20 +123,42 @@ namespace OptList
   opt _ _ [] = ""
   opt pref f ls = opt pref f (Just ls)
 
-export
-{ty, ret : _} -> Operation (Select ty ret) where
-  returnType _ = List ret
-  execute conn (MkSelect selSrc columns whereClause groupBy orderBy) = do
-    let query = "SELECT \{joinBy ", " $ toColumnNames columns} " ++
-                "FROM \{selSrc} " ++
-                "WHERE \{toQueryPart whereClause} " ++
-            opt "GROUP BY " toQueryPart groupBy ++
-            opt "ORDER BY " toQueryPart orderBy
-    result <- execParams' conn query []
-    checkQueryStatus query result
-    let rows = Data.Vect.Fin.tabulate {len = ntuples result} id
-    case columns of
-         CAll => do matches <- ensureMatches {numRows = ntuples result}
-                    map toList $ for rows $ \row => fromTuple <$> extractFields result row _ matches
-         CSome ixes => do matches <- ensureMatches {numRows = ntuples result}
-                          map toList $ for rows $ \row => extractFields result row _ matches
+execSelect : Select ty ret -> ExecuteFun ret
+execSelect (MkSelect selSrc columns whereClause groupBy orderBy) conn = do
+  let query = "SELECT \{joinBy ", " $ toColumnNames columns} " ++
+              "FROM \{selSrc} " ++
+              "WHERE \{toQueryPart whereClause} " ++
+          opt "GROUP BY " toQueryPart groupBy ++
+          opt "ORDER BY " toQueryPart orderBy
+  result <- execParams' conn query []
+  checkQueryStatus query result
+  let rows = Data.Vect.Fin.tabulate {len = ntuples result} id
+  case columns of
+       CAll => do matches <- ensureMatches {numRows = ntuples result}
+                  map toList $ for rows $ \row => fromTuple <$> extractFields result row _ matches
+       CSome ixes => do matches <- ensureMatches {numRows = ntuples result}
+                        map toList $ for rows $ \row => extractFields result row _ matches
+
+selectOp : Select ty ret -> Operation ret
+selectOp = Op . execSelect
+
+namespace SelectTable
+  export
+  select : Dummy DFrom ->
+           (ty : Dir -> Type) ->
+           {n : _} ->
+           IsTupleLike n ty =>
+           IsSelectSource ty =>
+           (Select ty (List (ty Read)) -> Select ty (List ret)) ->
+           Operation (List ret)
+  select _ ty f = selectOp $ f $ MkSelect (selectSourceOf ty) CAll (1 == 1) [] Nothing
+
+namespace SelectJoin
+  export
+  select : Dummy DFrom ->
+           {n : _} ->
+           (st : SigTree n) ->
+           IsValidTree st =>
+           (Select (JoinTree st) (List (JoinTree st Read)) -> Select (JoinTree st) (List ret)) ->
+           Operation (List ret)
+  select _ st f = selectOp $ f $ MkSelect (toFromPart st) CAll (1 == 1) [] Nothing

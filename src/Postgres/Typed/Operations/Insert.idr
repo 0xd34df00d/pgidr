@@ -113,46 +113,6 @@ public export
 into : Dummy DInto
 into = MkDF
 
-namespace InsertRecord
-  public export
-  insert : Dummy DInto ->
-           (ty : Dir -> Type) ->
-           {n : _} ->
-           (IsTupleLike n ty, HasTableName ty) =>
-           (val : ty Write) ->
-           Insert ty ()
-  insert _ _ val = MkInsert val CNone
-
-  public export
-  insert' : Dummy DInto ->
-            (ty : Dir -> Type) ->
-            {n : _} ->
-            (IsTupleLike n ty, HasTableName ty) =>
-            (val : ty Write) ->
-            (Insert ty () -> Insert ty ret) ->
-            Insert ty ret
-  insert' d ty val f = f (insert d ty val)
-
-namespace InsertTuple
-  public export
-  insert : Dummy DInto ->
-           (ty : Dir -> Type) ->
-           {n : _} ->
-           (IsTupleLike n ty, HasTableName ty) =>
-           (val : Tuple (signatureOf ty) Write) ->
-           Insert ty ()
-  insert d ty = insert d ty . fromTuple
-
-  public export
-  insert' : Dummy DInto ->
-            (ty : Dir -> Type) ->
-            {n : _} ->
-            (IsTupleLike n ty, HasTableName ty) =>
-            (val : Tuple (signatureOf ty) Write) ->
-            (Insert ty () -> Insert ty ret) ->
-            Insert ty ret
-  insert' d ty val f = insert' d ty (fromTuple val) f
-
 extractFirstRow : MonadError ExecError m =>
                   {n : _} ->
                   (res : Result s) ->
@@ -165,17 +125,66 @@ infixl 1 =<<|
 (=<<|) : Monad m => ((0 _ : a) -> m b) -> m a -> m b
 f =<<| act = act >>= \r => f r
 
-export
-{ty, ret : _} -> Operation (Insert ty ret) where
-  returnType _ = ret
-  execute conn (MkInsert val returning) = do
-    let (_ ** cols) = mkInsertColumns val
-        query = mkInsertQuery {ty} cols returning
-        params = map (.value) cols
-    result <- execParams' conn query params
-    checkQueryStatus query result
-    case returning of
-         CNone => pure ()
-         CAll => fromTuple <$> (extractFirstRow result _ =<<| ensureMatches)
-         COne idx => head <$> (extractFirstRow result (subSignature _ [idx]) =<<| ensureMatches)
-         CSome idxes => extractFirstRow result _ =<<| ensureMatches
+execInsert : Insert ty ret -> ExecuteFun ret
+execInsert (MkInsert val returning) conn = do
+  let (_ ** cols) = mkInsertColumns val
+      query = mkInsertQuery {ty} cols returning
+      params = map (.value) cols
+  result <- execParams' conn query params
+  checkQueryStatus query result
+  case returning of
+       CNone => pure ()
+       CAll => fromTuple <$> (extractFirstRow result _ =<<| ensureMatches)
+       COne idx => head <$> (extractFirstRow result (subSignature _ [idx]) =<<| ensureMatches)
+       CSome idxes => extractFirstRow result _ =<<| ensureMatches
+
+insertBase : Dummy DInto ->
+             (ty : Dir -> Type) ->
+             {n : _} ->
+             (IsTupleLike n ty, HasTableName ty) =>
+             (val : ty Write) ->
+             Insert ty ()
+insertBase _ _ val = MkInsert val CNone
+
+insertOp : Insert ty ret -> Operation ret
+insertOp = Op . execInsert
+
+namespace InsertRecord
+  public export
+  insert : Dummy DInto ->
+           (ty : Dir -> Type) ->
+           {n : _} ->
+           (IsTupleLike n ty, HasTableName ty) =>
+           (val : ty Write) ->
+           Operation ()
+  insert d ty val = insertOp $ insertBase d ty val
+
+  public export
+  insert' : Dummy DInto ->
+            (ty : Dir -> Type) ->
+            {n : _} ->
+            (IsTupleLike n ty, HasTableName ty) =>
+            (val : ty Write) ->
+            (Insert ty () -> Insert ty ret) ->
+            Operation ret
+  insert' d ty val f = insertOp $ f (insertBase d ty val)
+
+namespace InsertTuple
+  public export
+  insert : Dummy DInto ->
+           (ty : Dir -> Type) ->
+           {n : _} ->
+           (IsTupleLike n ty, HasTableName ty) =>
+           (val : Tuple (signatureOf ty) Write) ->
+           Operation ()
+  insert d ty = insertOp . insertBase d ty . fromTuple
+
+  public export
+  insert' : Dummy DInto ->
+            (ty : Dir -> Type) ->
+            {n : _} ->
+            (IsTupleLike n ty, HasTableName ty) =>
+            (val : Tuple (signatureOf ty) Write) ->
+            (Insert ty () -> Insert ty ret) ->
+            Operation ret
+  insert' d ty val f = insertOp $ f (insertBase d ty (fromTuple val))
