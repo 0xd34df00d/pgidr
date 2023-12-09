@@ -142,6 +142,10 @@ execSelect (MkSelect selSrc columns whereClause groupBy orderBy) conn = do
 selectOp : Select ty ret -> Operation ret
 selectOp = Op . execSelect
 
+public export
+SelectMod : (Dir -> Type) -> Type -> Type
+SelectMod ty ret = Select ty (List (ty Read)) -> Select ty (List ret)
+
 namespace SelectTable
   export
   select : Dummy DFrom ->
@@ -149,7 +153,7 @@ namespace SelectTable
            {n : _} ->
            IsTupleLike n ty =>
            IsSelectSource ty =>
-           (Select ty (List (ty Read)) -> Select ty (List ret)) ->
+           SelectMod ty ret ->
            Operation (List ret)
   select _ ty f = selectOp $ f $ MkSelect (selectSourceOf ty) CAll (1 == 1) [] Nothing
 
@@ -159,6 +163,6 @@ namespace SelectJoin
            {n : _} ->
            (st : SigTree n) ->
            IsValidTree st =>
-           (Select (JoinTree st) (List (JoinTree st Read)) -> Select (JoinTree st) (List ret)) ->
+           SelectMod (JoinTree st) ret ->
            Operation (List ret)
   select _ st f = selectOp $ f $ MkSelect (toFromPart st) CAll (1 == 1) [] Nothing
