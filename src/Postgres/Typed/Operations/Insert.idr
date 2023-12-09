@@ -150,7 +150,7 @@ insertOp : Insert ty ret -> Operation ret
 insertOp = Op . execInsert
 
 namespace InsertRecord
-  public export
+  export
   insert : Dummy DInto ->
            (ty : Dir -> Type) ->
            {n : _} ->
@@ -159,7 +159,7 @@ namespace InsertRecord
            Operation ()
   insert d ty val = insertOp $ insertBase d ty val
 
-  public export
+  export
   insert' : Dummy DInto ->
             (ty : Dir -> Type) ->
             {n : _} ->
@@ -170,7 +170,7 @@ namespace InsertRecord
   insert' d ty val f = insertOp $ f (insertBase d ty val)
 
 namespace InsertTuple
-  public export
+  export
   insert : Dummy DInto ->
            (ty : Dir -> Type) ->
            {n : _} ->
@@ -179,7 +179,7 @@ namespace InsertTuple
            Operation ()
   insert d ty = insertOp . insertBase d ty . fromTuple
 
-  public export
+  export
   insert' : Dummy DInto ->
             (ty : Dir -> Type) ->
             {n : _} ->
