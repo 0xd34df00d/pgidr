@@ -70,13 +70,19 @@ InSignature : String -> Signature n -> Type
 InSignature name sig = Any (`HasName` name) sig
 
 public export
+inSigToFin : {0 sig : Signature n} ->
+             name `InSignature` sig ->
+             Fin n
+inSigToFin prf = anyToFin prf
+
+public export
 namesToIxes : HasSignature n ty =>
               {k : _} ->
               {names : Vect k String} ->
               (alls : All (`InSignature` signatureOf ty) names) ->
               Vect k (Fin n)
 namesToIxes [] = []
-namesToIxes (inSig :: inSigs) = anyToFin inSig :: namesToIxes inSigs
+namesToIxes (inSig :: inSigs) = inSigToFin inSig :: namesToIxes inSigs
 
 infixl 7 @:, @:?, @>
 public export
@@ -95,7 +101,7 @@ public export
        HasTableName otherTy =>
        {auto inSig : otherName `InSignature` signatureOf otherTy} ->
        SignatureElem
-(@>) name otherTy otherName = let idx := anyToFin inSig
+(@>) name otherTy otherName = let idx := inSigToFin inSig
                                   pgTy := (idx `index` signatureOf otherTy).pgType
                                in MkSE name _ [References otherTy idx, NotNull]
 

@@ -60,8 +60,8 @@ namespace Returning
   column : HasSignature n ty =>
            (name : String) ->
            {auto inSig : name `InSignature` signatureOf ty} ->
-           Columns ty (computeType' Read (anyToFin inSig `index` signatureOf ty))
-  column _ = COne $ anyToFin inSig
+           Columns ty (computeType' Read (inSigToFin inSig `index` signatureOf ty))
+  column _ = COne $ inSigToFin inSig
 
   export
   toColumnNames : Columns ty ret -> Maybe (List String)
