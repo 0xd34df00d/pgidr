@@ -12,9 +12,15 @@ public export
 data QualKind = Qualified | Unqualified
 
 public export
-data Qualification : (qk : QualKind) -> Type where
-  QualAs    : String -> Qualification Qualified
-  Isn'tQual : Qualification Unqualified
+record QualifiedName where
+  constructor MkQN
+  qname : String
+  qualifier : String
+
+public export
+Name : (qk : QualKind) -> Type
+Name Unqualified = String
+Name Qualified = QualifiedName
 
 
 public export
@@ -28,10 +34,9 @@ data Modifier : (ty : Type) -> Type
 public export
 record SignatureElem (qk : QualKind) where
   constructor MkSE
-  name : String
+  name : Name qk
   type : Type
   modifiers : List (Modifier type)
-  qual : Qualification qk
   {auto pgType : PgType type}
 
 public export
@@ -119,8 +124,8 @@ public export
               (ty : Type) ->
               PgType ty =>
               SignatureElem Unqualified
-name @: ty = MkSE name ty [NotNull] Isn'tQual
-name @:? ty = MkSE name ty [] Isn'tQual
+name @: ty = MkSE name ty [NotNull]
+name @:? ty = MkSE name ty []
 
 public export
 (@>) : (name : String) ->
@@ -132,12 +137,12 @@ public export
        SignatureElem Unqualified
 (@>) name otherTy otherName = let idx := inSigToFin inSig
                                   pgTy := (idx `index` signatureOf otherTy).pgType
-                               in MkSE name _ [References otherTy idx, NotNull] Isn'tQual
+                               in MkSE name _ [References otherTy idx, NotNull]
 
 public export
 PKeyInt : (name : String) ->
           SignatureElem Unqualified
-PKeyInt name = MkSE name Integer [PKey PKeySerial] Isn'tQual
+PKeyInt name = MkSE name Integer [PKey PKeySerial]
 
 public export
 subSignature : Signature qk n ->
@@ -149,11 +154,11 @@ export
 columnNames : (0 ty : _) ->
               HasSignature qk n ty =>
               Vect k (Fin n) ->
-              Vect k String
+              Vect k (Name qk)
 columnNames ty = map (.name . (`index` signatureOf ty))
 
 export
 allColumnNames : (0 ty : _) ->
                  HasSignature qk n ty =>
-                 Vect n String
+                 Vect n (Name qk)
 allColumnNames ty = map (.name) $ signatureOf ty
