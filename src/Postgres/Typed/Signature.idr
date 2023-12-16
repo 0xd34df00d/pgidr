@@ -66,14 +66,28 @@ data HasName : SignatureElem -> String -> Type where
   MkHN : PgType type => (name : String) -> HasName (MkSE name type modifiers) name
 
 public export
-InSignature : String -> Signature n -> Type
-InSignature name sig = Any (`HasName` name) sig
+findName : String -> Signature n -> Maybe (Fin n)
+findName name [] = Nothing
+findName name (x :: xs) = if x.name == name then Just FZ else FS <$> findName name xs
 
 public export
-inSigToFin : {0 sig : Signature n} ->
+data IsJust' : Maybe a -> Type where
+  ItIsJust' : (v : a) -> IsJust' (Just v)
+
+public export
+fromIsJust' : {0 mv : Maybe a} -> IsJust' mv -> a
+fromIsJust' (ItIsJust' v) = v
+
+public export
+InSignature : String -> Signature n -> Type
+InSignature name sig = IsJust' $ findName name sig
+
+public export
+inSigToFin : (0 name : _) ->
+             (0 sig : Signature n) ->
              name `InSignature` sig ->
              Fin n
-inSigToFin prf = anyToFin prf
+inSigToFin _ _ = fromIsJust'
 
 public export
 namesToIxes : HasSignature n ty =>
@@ -82,7 +96,7 @@ namesToIxes : HasSignature n ty =>
               (alls : All (`InSignature` signatureOf ty) names) ->
               Vect k (Fin n)
 namesToIxes [] = []
-namesToIxes (inSig :: inSigs) = inSigToFin inSig :: namesToIxes inSigs
+namesToIxes (inSig :: inSigs) = inSigToFin _ _ inSig :: namesToIxes inSigs
 
 infixl 7 @:, @:?, @>
 public export
@@ -101,7 +115,7 @@ public export
        HasTableName otherTy =>
        {auto inSig : otherName `InSignature` signatureOf otherTy} ->
        SignatureElem
-(@>) name otherTy otherName = let idx := inSigToFin inSig
+(@>) name otherTy otherName = let idx := inSigToFin _ _ inSig
                                   pgTy := (idx `index` signatureOf otherTy).pgType
                                in MkSE name _ [References otherTy idx, NotNull]
 
