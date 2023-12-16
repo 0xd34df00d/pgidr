@@ -82,12 +82,20 @@ public export
 InSignature : String -> Signature n -> Type
 InSignature name sig = IsJust' $ findName name sig
 
-public export
-inSigToFin : (0 name : _) ->
-             (0 sig : Signature n) ->
+{-
+This should really read as
+
+inSigToFin : {0 sig : Signature n} ->
              name `InSignature` sig ->
              Fin n
-inSigToFin _ _ = fromIsJust'
+
+but due to a some inconsistencies of the current Idris unification algo,
+we resort to a less specialized and obvious type,
+which somehow helps unification though.
+-}
+public export
+inSigToFin : {0 mv : Maybe a} -> IsJust' mv -> a
+inSigToFin = fromIsJust'
 
 public export
 namesToIxes : HasSignature n ty =>
@@ -96,7 +104,7 @@ namesToIxes : HasSignature n ty =>
               (alls : All (`InSignature` signatureOf ty) names) ->
               Vect k (Fin n)
 namesToIxes [] = []
-namesToIxes (inSig :: inSigs) = inSigToFin _ _ inSig :: namesToIxes inSigs
+namesToIxes (inSig :: inSigs) = inSigToFin inSig :: namesToIxes inSigs
 
 infixl 7 @:, @:?, @>
 public export
@@ -115,7 +123,7 @@ public export
        HasTableName otherTy =>
        {auto inSig : otherName `InSignature` signatureOf otherTy} ->
        SignatureElem
-(@>) name otherTy otherName = let idx := inSigToFin _ _ inSig
+(@>) name otherTy otherName = let idx := inSigToFin inSig
                                   pgTy := (idx `index` signatureOf otherTy).pgType
                                in MkSE name _ [References otherTy idx, NotNull]
 
