@@ -81,10 +81,13 @@ data Modifier : (ty : Type) -> Type where
   NotNull : Modifier ty
 
 public export
--- TODO generalize
-findName : String -> Signature Unqualified n -> Maybe (Fin n)
+findName : {qk : _} -> Name qk -> Signature qk n -> Maybe (Fin n)
 findName name [] = Nothing
-findName name (x :: xs) = if x.name == name then Just FZ else FS <$> findName name xs
+findName name (x :: xs) = if case qk of
+                                  Qualified => name == x.name
+                                  Unqualified => name == x.name
+                             then Just FZ
+                             else FS <$> findName name xs
 
 public export
 data IsJust' : Maybe a -> Type where
@@ -95,7 +98,7 @@ fromIsJust' : {0 mv : Maybe a} -> IsJust' mv -> a
 fromIsJust' (ItIsJust' v) = v
 
 public export
-InSignature : String -> Signature Unqualified n -> Type
+InSignature : {qk : _} -> Name qk -> Signature qk n -> Type
 InSignature name sig = IsJust' $ findName name sig
 
 {-
