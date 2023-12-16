@@ -62,10 +62,6 @@ data Modifier : (ty : Type) -> Type where
   NotNull : Modifier ty
 
 public export
-data HasName : SignatureElem -> String -> Type where
-  MkHN : PgType type => (name : String) -> HasName (MkSE name type modifiers) name
-
-public export
 findName : String -> Signature n -> Maybe (Fin n)
 findName name [] = Nothing
 findName name (x :: xs) = if x.name == name then Just FZ else FS <$> findName name xs
