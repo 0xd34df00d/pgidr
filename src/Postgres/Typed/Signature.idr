@@ -17,6 +17,10 @@ record QualifiedName where
   qualifier : String
   qname : String
 
+public export
+Eq QualifiedName where
+  n1 == n2 = n1.qualifier == n2.qualifier && n1.qname == n2.qname
+
 public export 0
 Name : (0 qk : QualKind) -> Type
 Name Unqualified = String
