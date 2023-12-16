@@ -9,6 +9,15 @@ import Postgres.Typed.PgType
 %prefix_record_projections off
 
 public export
+data QualKind = Qualified | Unqualified
+
+public export
+data Qualification : (qk : QualKind) -> Type where
+  QualAs    : String -> Qualification Qualified
+  Isn'tQual : Qualification Unqualified
+
+
+public export
 data PKeySort : (ty : Type) -> Type where
   PKeyNormal : PKeySort ty
   PKeySerial : PKeySort Integer
@@ -17,16 +26,17 @@ public export
 data Modifier : (ty : Type) -> Type
 
 public export
-record SignatureElem where
+record SignatureElem (qk : QualKind) where
   constructor MkSE
   name : String
   type : Type
   modifiers : List (Modifier type)
+  qual : Qualification qk
   {auto pgType : PgType type}
 
 public export
-Signature : Nat -> Type
-Signature n = Vect n SignatureElem
+Signature : (qk : QualKind) -> (n : Nat) -> Type
+Signature qk n = Vect n (SignatureElem qk)
 
 public export
 interface HasTableName (0 ty : a) where
@@ -39,21 +49,21 @@ tableNameOf : (0 ty : _) ->
 tableNameOf ty = tableName {ty}
 
 public export
-interface HasSignature n (0 ty : a) | ty where
+interface HasSignature qk n (0 ty : a) | ty where
   constructor MkHasSignature
-  signature : Signature n
+  signature : Signature qk n
 
 public export
 signatureOf : (0 ty : _) ->
-              {auto hasSig : HasSignature n ty} ->
-              Signature n
+              {auto hasSig : HasSignature qk n ty} ->
+              Signature qk n
 signatureOf ty = signature {ty}
 
 public export
 data Modifier : (ty : Type) -> Type where
   PKey : PKeySort ty -> Modifier ty
   References : (0 other : a) ->
-               (HasTableName other, HasSignature _ other) =>
+               (HasTableName other, HasSignature Unqualified _ other) =>
                (idx : Fin n) ->
                {auto teq : ty = (idx `index` signatureOf other).type} ->
                Modifier ty
@@ -62,7 +72,8 @@ data Modifier : (ty : Type) -> Type where
   NotNull : Modifier ty
 
 public export
-findName : String -> Signature n -> Maybe (Fin n)
+-- TODO generalize
+findName : String -> Signature Unqualified n -> Maybe (Fin n)
 findName name [] = Nothing
 findName name (x :: xs) = if x.name == name then Just FZ else FS <$> findName name xs
 
@@ -75,13 +86,13 @@ fromIsJust' : {0 mv : Maybe a} -> IsJust' mv -> a
 fromIsJust' (ItIsJust' v) = v
 
 public export
-InSignature : String -> Signature n -> Type
+InSignature : String -> Signature Unqualified n -> Type
 InSignature name sig = IsJust' $ findName name sig
 
 {-
 This should really read as
 
-inSigToFin : {0 sig : Signature n} ->
+inSigToFin : {0 sig : Signature qk n} ->
              name `InSignature` sig ->
              Fin n
 
@@ -94,7 +105,7 @@ inSigToFin : {0 mv : Maybe a} -> IsJust' mv -> a
 inSigToFin = fromIsJust'
 
 public export
-namesToIxes : HasSignature n ty =>
+namesToIxes : HasSignature Unqualified n ty =>
               {k : _} ->
               {names : Vect k String} ->
               (alls : All (`InSignature` signatureOf ty) names) ->
@@ -107,42 +118,42 @@ public export
 (@:), (@:?) : (name : String) ->
               (ty : Type) ->
               PgType ty =>
-              SignatureElem
-name @: ty = MkSE name ty [NotNull]
-name @:? ty = MkSE name ty []
+              SignatureElem Unqualified
+name @: ty = MkSE name ty [NotNull] Isn'tQual
+name @:? ty = MkSE name ty [] Isn'tQual
 
 public export
 (@>) : (name : String) ->
        (otherTy : a) ->
        (otherName : String) ->
-       HasSignature n otherTy =>
+       HasSignature Unqualified n otherTy =>
        HasTableName otherTy =>
        {auto inSig : otherName `InSignature` signatureOf otherTy} ->
-       SignatureElem
+       SignatureElem Unqualified
 (@>) name otherTy otherName = let idx := inSigToFin inSig
                                   pgTy := (idx `index` signatureOf otherTy).pgType
-                               in MkSE name _ [References otherTy idx, NotNull]
+                               in MkSE name _ [References otherTy idx, NotNull] Isn'tQual
 
 public export
 PKeyInt : (name : String) ->
-          SignatureElem
-PKeyInt name = MkSE name Integer [PKey PKeySerial]
+          SignatureElem Unqualified
+PKeyInt name = MkSE name Integer [PKey PKeySerial] Isn'tQual
 
 public export
-subSignature : Signature n ->
+subSignature : Signature qk n ->
                Vect k (Fin n) ->
-               Signature k
+               Signature qk k
 subSignature sig cols = map (`index` sig) cols
 
 export
 columnNames : (0 ty : _) ->
-              HasSignature n ty =>
+              HasSignature qk n ty =>
               Vect k (Fin n) ->
               Vect k String
 columnNames ty = map (.name . (`index` signatureOf ty))
 
 export
 allColumnNames : (0 ty : _) ->
-                 HasSignature n ty =>
+                 HasSignature qk n ty =>
                  Vect n String
 allColumnNames ty = map (.name) $ signatureOf ty
