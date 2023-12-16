@@ -14,8 +14,8 @@ data QualKind = Qualified | Unqualified
 public export
 record QualifiedName where
   constructor MkQN
-  qname : String
   qualifier : String
+  qname : String
 
 public export 0
 Name : (0 qk : QualKind) -> Type
