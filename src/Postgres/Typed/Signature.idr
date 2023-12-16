@@ -17,8 +17,8 @@ record QualifiedName where
   qname : String
   qualifier : String
 
-public export
-Name : (qk : QualKind) -> Type
+public export 0
+Name : (0 qk : QualKind) -> Type
 Name Unqualified = String
 Name Qualified = QualifiedName
 
