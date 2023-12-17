@@ -36,12 +36,8 @@ data SigTree : (n : Nat) -> Type where
   SigLeaf : (0 ty : _) ->
             IsTupleLike n ty =>
             IsSelectSource ty =>
+            (alias : String) ->
             SigTree n
-  SigLeafAs : (0 ty : _) ->
-              IsTupleLike n ty =>
-              IsSelectSource ty =>
-              (alias : String) ->
-              SigTree n
   SigConcat : {nl, nr : Nat} ->
               (sigl : SigTree nl) ->
               (jtype : JoinType) ->
@@ -51,8 +47,7 @@ data SigTree : (n : Nat) -> Type where
 
 public export
 toSig : SigTree n -> Signature n
-toSig (SigLeaf ty) = signatureOf ty
-toSig (SigLeafAs ty alias) = aliasify alias $ signatureOf ty
+toSig (SigLeaf ty alias) = aliasify alias $ signatureOf ty
 toSig (SigConcat l _ r _) = toSig l ++ toSig r
 
 export
@@ -60,11 +55,7 @@ data JoinTree : (st : SigTree n) -> (dir : Dir) -> Type where
   Leaf : IsTupleLike n ty =>
          IsSelectSource ty =>
          (leaf : ty dir) ->
-         JoinTree (SigLeaf ty) dir
-  LeafAs : IsTupleLike n ty =>
-           IsSelectSource ty =>
-           (leaf : ty dir) ->
-           JoinTree (SigLeafAs ty alias) dir
+         JoinTree (SigLeaf ty alias) dir
   Join : {sigl : SigTree nl} ->
          {sigr : SigTree nr} ->
          {jcond : JoinCondition sigl sigr} ->
@@ -82,13 +73,11 @@ export
 
 export
 {st : SigTree n} -> IsTupleLike n (JoinTree st) where
-  toTuple (Leaf leaf) = toTuple leaf
-  toTuple (LeafAs leaf) = wrapAliasify $ toTuple leaf
+  toTuple (Leaf leaf) = wrapAliasify $ toTuple leaf
   toTuple (Join jtl jtr) = toTuple jtl ++ toTuple jtr
 
   fromTuple tup with (st)
-   _ | SigLeaf ty = Leaf $ fromTuple tup
-   _ | SigLeafAs ty alias = LeafAs $ fromTuple $ unwrapAliasify tup
+   _ | SigLeaf ty alias = Leaf $ fromTuple $ unwrapAliasify tup
    _ | SigConcat {nl} sigl jtype sigr jcond =
         let splits = splitAt nl tup
             prf = sym $ concatSplitInverse (toSig sigl) (toSig sigr)
@@ -96,27 +85,23 @@ export
               (fromTuple $ rewrite cong fst prf in fst splits)
               (fromTuple $ rewrite cong snd prf in snd splits)
 
-  fromToId (Leaf leaf) = cong Leaf $ fromToId leaf
-  fromToId (LeafAs {alias} leaf) = rewrite unwrapWrapId {dir} alias (toTuple leaf) in
-                                           cong LeafAs $ fromToId leaf
+  fromToId (Leaf {alias} leaf) = rewrite unwrapWrapId {dir} alias (toTuple leaf) in
+                                         cong Leaf $ fromToId leaf
   fromToId (Join jtl jtr) = ?w3_2
   toFromId tup with (st)
-    _ | SigLeaf _ = toFromId tup
-    _ | SigLeafAs ty alias = cong wrapAliasify (toFromId $ unwrapAliasify tup)
-                     `trans` wrapUnwrapId alias tup
+    _ | SigLeaf ty alias = cong wrapAliasify (toFromId $ unwrapAliasify tup)
+                   `trans` wrapUnwrapId alias tup
     _ | SigConcat {nl} sigl jtype sigr jcond = ?toFromId_rhs3
 
 namespace SigTreeOverloads
   export
   toFromPart : SigTree n -> String
-  toFromPart (SigLeaf ty) = selectSourceOf ty
-  toFromPart (SigLeafAs ty alias) = "\{selectSourceOf ty} AS \{alias}"
+  toFromPart (SigLeaf ty alias) = "\{selectSourceOf ty} AS \{alias}"
   toFromPart (SigConcat sigl jtype sigr jcond) = "(\{toFromPart sigl} \{show jtype} JOIN \{toFromPart sigr} \{toFromPart jcond})"
 
 public export
 sigTreeSources : SigTree n -> List String
-sigTreeSources (SigLeaf ty) = [selectSourceOf ty]
-sigTreeSources (SigLeafAs ty alias) = [alias]
+sigTreeSources (SigLeaf ty alias) = [alias]
 sigTreeSources (SigConcat sigl jtype sigr jcond) = sigTreeSources sigl ++ sigTreeSources sigr
 
 -- TODO better error messages when this fails
@@ -134,7 +119,7 @@ table : (ty : Dir -> Type) ->
         IsSelectSource ty =>
         HasTableName ty =>
         SigTree n
-table ty = SigLeafAs ty (tableNameOf ty)
+table ty = SigLeaf ty (tableNameOf ty)
 
 infix 3 `as`
 public export
@@ -143,7 +128,7 @@ as : (ty : Dir -> Type) ->
      IsTupleLike n ty =>
      IsSelectSource ty =>
      SigTree n
-ty `as` alias = SigLeafAs ty alias
+ty `as` alias = SigLeaf ty alias
 
 infixl 2 `crossJoin`
 public export
