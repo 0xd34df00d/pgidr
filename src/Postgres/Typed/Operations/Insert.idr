@@ -24,7 +24,7 @@ namespace Returning
   typeAt ty idx = computeType' Read (idx `index` signatureOf ty)
 
   public export
-  data Columns : (0 ty : Dir -> Type) -> (0 ret : Type) -> Type where
+  data Columns : (ty : Dir -> Type) -> (ret : Type) -> Type where
     CNone : Columns ty ()
     CAll  : HasSignature Unqualified n ty => Columns ty (ty Read)
     COne  : HasSignature Unqualified n ty =>
