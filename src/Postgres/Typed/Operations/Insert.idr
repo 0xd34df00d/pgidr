@@ -139,7 +139,7 @@ execInsert (MkInsert val returning) conn = do
        CSome idxes => extractFirstRow result _ =<<| ensureMatches
 
 insertBase : Dummy DInto ->
-             (ty : Dir -> Type) ->
+             (0 ty : Dir -> Type) ->
              {n : _} ->
              (IsTupleLike Unqualified n ty, HasTableName ty) =>
              (val : ty Write) ->
@@ -152,7 +152,7 @@ insertOp = Op . execInsert
 namespace InsertRecord
   export
   insert : Dummy DInto ->
-           (ty : Dir -> Type) ->
+           (0 ty : Dir -> Type) ->
            {n : _} ->
            (IsTupleLike Unqualified n ty, HasTableName ty) =>
            (val : ty Write) ->
@@ -161,7 +161,7 @@ namespace InsertRecord
 
   export
   insert' : Dummy DInto ->
-            (ty : Dir -> Type) ->
+            (0 ty : Dir -> Type) ->
             {n : _} ->
             (IsTupleLike Unqualified n ty, HasTableName ty) =>
             (val : ty Write) ->
@@ -172,7 +172,7 @@ namespace InsertRecord
 namespace InsertTuple
   export
   insert : Dummy DInto ->
-           (ty : Dir -> Type) ->
+           (0 ty : Dir -> Type) ->
            {n : _} ->
            (IsTupleLike Unqualified n ty, HasTableName ty) =>
            (val : Tuple (signatureOf ty) Write) ->
@@ -181,7 +181,7 @@ namespace InsertTuple
 
   export
   insert' : Dummy DInto ->
-            (ty : Dir -> Type) ->
+            (0 ty : Dir -> Type) ->
             {n : _} ->
             (IsTupleLike Unqualified n ty, HasTableName ty) =>
             (val : Tuple (signatureOf ty) Write) ->
