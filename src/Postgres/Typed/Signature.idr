@@ -14,14 +14,32 @@ public export
 data QualKind = Qualified | Unqualified
 
 public export
-record QualifiedName where
-  constructor MkQN
-  qualifier : String
-  qname : String
+data Name : (qk : QualKind) -> Type where
+  UName : (name : String) -> Name Unqualified
+  QName : (qualifier, qname : String) -> Name Qualified
 
 public export
-Eq QualifiedName where
-  n1 == n2 = n1.qualifier == n2.qualifier && n1.qname == n2.qname
+(.uname) : Name Unqualified -> String
+(.uname) (UName n) = n
+
+public export
+Eq (Name qk) where
+  UName n1 == UName n2 = n1 == n2
+  QName q1 n1 == QName q2 n2 = q1 == q2 && n1 == n2
+
+export
+showName : Name qk -> String
+showName (UName name) = name
+showName (QName qualifier qname) = qualifier ++ "." ++ qname
+
+export
+Interpolation (Name qk) where
+  interpolate = showName
+
+namespace UNFS
+  public export
+  fromString : (str : String) -> Name Unqualified
+  fromString = UName
 
 namespace QNFS
   public export
@@ -31,19 +49,9 @@ namespace QNFS
   public export
   fromString : (str : String) ->
                ValidQualifiedString str =>
-               QualifiedName
+               Name Qualified
   fromString str = let qual ::: [name] = split (== '.') str
-                    in MkQN qual name
-
-public export 0
-Name : (0 qk : QualKind) -> Type
-Name Unqualified = String
-Name Qualified = QualifiedName
-
-export
-showName : {qk : _} -> Name qk -> String
-showName {qk = Unqualified} n = n
-showName {qk = Qualified} n = n.qualifier ++ "." ++ n.qname
+                    in QName qual name
 
 public export
 data PKeySort : (ty : Type) -> Type where
@@ -99,11 +107,9 @@ data Modifier : (ty : Type) -> Type where
   NotNull : Modifier ty
 
 public export
-findName : {qk : _} -> Name qk -> Signature qk n -> Maybe (Fin n)
+findName : Name qk -> Signature qk n -> Maybe (Fin n)
 findName name [] = Nothing
-findName name (x :: xs) = if case qk of
-                                  Qualified => name == x.name
-                                  Unqualified => name == x.name
+findName name (x :: xs) = if name == x.name
                              then Just FZ
                              else FS <$> findName name xs
 
@@ -116,7 +122,7 @@ fromIsJust' : {0 mv : Maybe a} -> IsJust' mv -> a
 fromIsJust' (ItIsJust' v) = v
 
 public export
-InSignature : {qk : _} -> Name qk -> Signature qk n -> Type
+InSignature : Name qk -> Signature qk n -> Type
 InSignature name sig = IsJust' $ findName name sig
 
 {-
@@ -137,7 +143,7 @@ inSigToFin = fromIsJust'
 public export
 namesToIxes : HasSignature Unqualified n ty =>
               {k : _} ->
-              {names : Vect k String} ->
+              {names : Vect k (Name Unqualified)} ->
               (alls : All (`InSignature` signatureOf ty) names) ->
               Vect k (Fin n)
 namesToIxes [] = []
@@ -149,25 +155,26 @@ public export
               (ty : Type) ->
               PgType ty =>
               SignatureElem Unqualified
-name @: ty = MkSE name ty [NotNull]
-name @:? ty = MkSE name ty []
+name @: ty = MkSE (UName name) ty [NotNull]
+name @:? ty = MkSE (UName name) ty []
 
 public export
 (@>) : (name : String) ->
        (otherTy : a) ->
-       (otherName : String) ->
+       (otherName : Name Unqualified) ->
        HasSignature Unqualified n otherTy =>
        HasTableName otherTy =>
        {auto inSig : otherName `InSignature` signatureOf otherTy} ->
        SignatureElem Unqualified
-(@>) name otherTy otherName = let idx := inSigToFin inSig
-                                  pgTy := (idx `index` signatureOf otherTy).pgType
-                               in MkSE name _ [References otherTy idx, NotNull]
+(@>) name otherTy otherName =
+  let idx := inSigToFin inSig
+      pgTy := (idx `index` signatureOf otherTy).pgType
+   in MkSE (UName name) _ [References otherTy idx, NotNull]
 
 public export
 PKeyInt : (name : String) ->
           SignatureElem Unqualified
-PKeyInt name = MkSE name Integer [PKey PKeySerial]
+PKeyInt name = MkSE (UName name) Integer [PKey PKeySerial]
 
 public export
 subSignature : Signature qk n ->

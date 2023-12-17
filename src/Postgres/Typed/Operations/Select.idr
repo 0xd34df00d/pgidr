@@ -27,8 +27,7 @@ namespace Output
               Columns ty qk (List (subTuple ty ixes Read))
 
   export
-  toColumnNames : {qk : _} ->
-                  Columns ty qk ret ->
+  toColumnNames : Columns ty qk ret ->
                   List String
   toColumnNames CAll = map showName $ toList $ allColumnNames ty
   toColumnNames (CSome ixes) = map showName $ toList $ columnNames ty ixes
@@ -58,17 +57,15 @@ namespace Ordering
 
   namespace FSU
     public export
-    fromString : {qk : _} ->
-                 HasSignature Unqualified n ty =>
+    fromString : HasSignature Unqualified n ty =>
                  (name : String) ->
-                 {auto inSig : name `InSignature` signatureOf ty} ->
+                 {auto inSig : UName name `InSignature` signatureOf ty} ->
                  Maybe (Order ty)
-    fromString name = Just $ MkOrder (col name) Nothing Nothing
+    fromString name = Just $ MkOrder (col $ UName name) Nothing Nothing
 
   namespace FSQ
     public export
-    fromString : {qk : _} ->
-                 HasSignature Qualified n ty =>
+    fromString : HasSignature Qualified n ty =>
                  (name : String) ->
                  ValidQualifiedString name =>
                  {auto inSig : fromString name `InSignature` signatureOf ty} ->
@@ -91,8 +88,7 @@ namespace Grouping
 
   namespace FSSingle
     public export
-    fromString : {qk : _} ->
-                 HasSignature qk n ty =>
+    fromString : HasSignature qk n ty =>
                  (name : Name qk) ->
                  {auto inSig : name `InSignature` signatureOf ty} ->
                  List (SomeExpr ty)
@@ -100,8 +96,7 @@ namespace Grouping
 
   namespace FSMulti
     public export
-    fromString : {qk : _} ->
-                 HasSignature qk n ty =>
+    fromString : HasSignature qk n ty =>
                  (name : Name qk) ->
                  {auto inSig : name `InSignature` signatureOf ty} ->
                  SomeExpr ty
@@ -115,7 +110,6 @@ public export
 record Select (ty : Dir -> Type) (ret : Type) where
   constructor MkSelect
   {colCount : Nat}
-  {qk : QualKind}
   {auto isTableType : IsTupleLike qk colCount ty}
   selSrc : String
   columns : Columns ty qk ret
@@ -167,7 +161,7 @@ namespace SelectTable
   export
   select : Dummy DFrom ->
            (ty : Dir -> Type) ->
-           {n, qk : _} ->
+           {n : _} ->
            IsTupleLike qk n ty =>
            IsSelectSource ty =>
            SelectMod ty ret ->

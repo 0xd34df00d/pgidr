@@ -25,7 +25,6 @@ parseTextual' textual = case fromTextual textual of
 
 public export
 parseTextual : MonadError ExecError m =>
-               {qk : _} ->
                (sigElem : SignatureElem qk) ->
                (textual : Maybe String) ->
                m (computeType' Read sigElem)
@@ -67,7 +66,7 @@ extractTextual res row col = if getisnull res row col
 
 public export
 extractFields : MonadError ExecError m =>
-                {qk, n : _} ->
+                {n : _} ->
                 (res : Result s) ->
                 (row : RowI res) ->
                 (sig : Signature qk n) ->

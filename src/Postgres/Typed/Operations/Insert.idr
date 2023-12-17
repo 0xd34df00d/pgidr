@@ -43,7 +43,7 @@ namespace Returning
   ColsType : (ty : Dir -> Type) ->
              HasSignature Unqualified n ty =>
              {k : _} ->
-             {names : Vect k String} ->
+             {names : Vect k (Name Unqualified)} ->
              (alls : All (`InSignature` signatureOf ty) names) ->
              Type
   ColsType ty alls = Tuple (signatureOf ty `subSignature` namesToIxes alls) Read
@@ -51,14 +51,14 @@ namespace Returning
   public export
   columns : HasSignature Unqualified n ty =>
             {k : _} ->
-            (names : Vect (S k) String) ->
+            (names : Vect (S k) (Name Unqualified)) ->
             {auto alls : All (`InSignature` signatureOf ty) names} ->
             Columns ty (ColsType ty alls)
   columns _ = CSome $ namesToIxes alls
 
   public export
   column : HasSignature Unqualified n ty =>
-           (name : String) ->
+           (name : Name Unqualified) ->
            {auto inSig : name `InSignature` signatureOf ty} ->
            Columns ty (computeType' Read (inSigToFin inSig `index` signatureOf ty))
   column _ = COne $ inSigToFin inSig
@@ -66,9 +66,9 @@ namespace Returning
   export
   toColumnNames : Columns ty ret -> Maybe (List String)
   toColumnNames CNone = Nothing
-  toColumnNames CAll = Just $ toList $ allColumnNames ty
-  toColumnNames (COne idx) = Just [(idx `index` signatureOf ty).name]
-  toColumnNames (CSome idxes) = Just $ toList $ columnNames ty idxes
+  toColumnNames CAll = Just $ map (.uname) $ toList $ allColumnNames ty
+  toColumnNames (COne idx) = Just [(idx `index` signatureOf ty).name.uname]
+  toColumnNames (CSome idxes) = Just $ map (.uname) $ toList $ columnNames ty idxes
 
 record InsertColumn where
   constructor MkIC
@@ -96,7 +96,7 @@ mkInsertColumns : IsTupleLike Unqualified n ty =>
                   (k ** Vect k InsertColumn)
 mkInsertColumns = catMaybes
                 . forget
-                . mapPropertyRelevant (\se => onSigValUniform (MkIC se.name . toTextual) se)
+                . mapPropertyRelevant (\se => onSigValUniform (MkIC se.name.uname . toTextual) se)
                 . toTuple
 
 public export

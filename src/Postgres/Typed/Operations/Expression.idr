@@ -29,8 +29,7 @@ public export
 data Expr : (0 ty : a) -> (ety : Type) -> Type where
   EConst  : (val : PgConst ety) ->
             Expr ty ety
-  EColumn : {qk : _} ->
-            HasSignature qk n ty =>
+  EColumn : HasSignature qk n ty =>
             (ix : Fin n) ->
             Expr ty (ix `index` signatureOf ty).type
   EBinRel : (op : BinRelOp) ->
@@ -69,8 +68,7 @@ namespace EDSL
     fromString = EConst . PCString
 
   public export
-  col : {qk : _} ->
-        HasSignature qk n ty =>
+  col : HasSignature qk n ty =>
         (name : Name qk) ->
         {auto inSig : name `InSignature` signatureOf ty} ->
         Expr ty (inSigToFin inSig `index` signatureOf ty).type

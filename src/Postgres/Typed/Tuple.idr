@@ -65,7 +65,7 @@ Tuple : Signature qk n -> (dir : Dir) -> Type
 Tuple sig dir = All (computeType' dir) sig
 
 export
-prettyTuple : {qk, dir : _} -> {s : Signature qk _} -> Tuple s dir -> String
+prettyTuple : {dir : _} -> {s : Signature qk _} -> Tuple s dir -> String
 prettyTuple tup = "{ " ++ joinBy ", " (toList $ forget $ mapPropertyRelevant showElem tup) ++ " }"
   where
   showElem : (se : SignatureElem qk) -> computeType' dir se -> String
@@ -86,7 +86,7 @@ record NamedTuple (name : String) (s : Signature qk n) (dir : Dir) where
   columns : Tuple s dir
 
 export
-{qk, dir, name : _} -> {s : Signature qk n} -> Show (NamedTuple name s dir) where
+{dir, name : _} -> {s : Signature qk n} -> Show (NamedTuple name s dir) where
   show tup = name ++ " " ++ prettyTuple tup.columns
 
 public export
@@ -118,7 +118,7 @@ public export
 
 public export
 aliasifySig : String -> SignatureElem Unqualified -> SignatureElem Qualified
-aliasifySig alias (MkSE name type mods) = MkSE (MkQN alias name) type mods  -- TODO record update syntax when Idris2#3083 is fixed
+aliasifySig alias (MkSE n type mods) = MkSE (QName alias n.uname) type mods  -- TODO record update syntax when Idris2#3083 is fixed
 
 public export
 aliasify : String -> Signature Unqualified n -> Signature Qualified n
