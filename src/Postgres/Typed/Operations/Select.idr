@@ -160,7 +160,7 @@ SelectMod ty ret = Select ty (List (ty Read)) -> Select ty (List ret)
 namespace SelectTable
   export
   select : Dummy DFrom ->
-           (ty : Dir -> Type) ->
+           (0 ty : Dir -> Type) ->
            {n : _} ->
            IsTupleLike qk n ty =>
            IsSelectSource ty =>
