@@ -25,15 +25,16 @@ parseTextual' textual = case fromTextual textual of
 
 public export
 parseTextual : MonadError ExecError m =>
-               (sigElem : SignatureElem) ->
+               {qk : _} ->
+               (sigElem : SignatureElem qk) ->
                (textual : Maybe String) ->
                m (computeType' Read sigElem)
 parseTextual (MkSE name ty mods) textual with (computeNullability mods Read)
-  _ | NonNullable = maybe (unexpected "NULL value for \{name}") parseTextual' textual
+  _ | NonNullable = maybe (unexpected "NULL value for \{showName name}") parseTextual' textual
   _ | Nullable = traverse parseTextual' textual
 
 public export
-record ResultMatches (res : Result s) (sig : Signature n) (numRows : Nat) where
+record ResultMatches (res : Result s) (sig : Signature qk n) (numRows : Nat) where
   constructor MkRM
   rowsMatch : ntuples res = numRows
   colsMatch : nfields res = n
@@ -42,7 +43,7 @@ public export
 ensureMatches : MonadError ExecError m =>
                 {n, numRows : _} ->
                 {res : Result s} ->
-                {0 sig : Signature n} ->
+                {0 sig : Signature qk n} ->
                 m (ResultMatches res sig numRows)
 ensureMatches = do
   let natInterpolateLocal = MkInterpolation {a = Nat} show
@@ -66,10 +67,10 @@ extractTextual res row col = if getisnull res row col
 
 public export
 extractFields : MonadError ExecError m =>
-                {n : _} ->
+                {qk, n : _} ->
                 (res : Result s) ->
                 (row : RowI res) ->
-                (sig : Signature n) ->
+                (sig : Signature qk n) ->
                 (0 matches : ResultMatches res sig numRows) ->
                 m (Tuple sig Read)
 extractFields res row sig (MkRM _ Refl) = do

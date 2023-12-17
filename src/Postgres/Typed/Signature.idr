@@ -1,5 +1,7 @@
 module Postgres.Typed.Signature
 
+import public Data.String
+import public Data.List1
 import public Data.Vect
 import Data.Vect.Quantifiers
 
@@ -21,11 +23,27 @@ public export
 Eq QualifiedName where
   n1 == n2 = n1.qualifier == n2.qualifier && n1.qname == n2.qname
 
+namespace QNFS
+  public export
+  ValidQualifiedString : String -> Type
+  ValidQualifiedString str = length (split (== '.') str) = 2
+
+  public export
+  fromString : (str : String) ->
+               ValidQualifiedString str =>
+               QualifiedName
+  fromString str = let qual ::: [name] = split (== '.') str
+                    in MkQN qual name
+
 public export 0
 Name : (0 qk : QualKind) -> Type
 Name Unqualified = String
 Name Qualified = QualifiedName
 
+export
+showName : {qk : _} -> Name qk -> String
+showName {qk = Unqualified} n = n
+showName {qk = Qualified} n = n.qualifier ++ "." ++ n.qname
 
 public export
 data PKeySort : (ty : Type) -> Type where

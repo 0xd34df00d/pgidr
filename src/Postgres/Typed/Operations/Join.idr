@@ -34,7 +34,7 @@ namespace JCOverloads
 public export
 data SigTree : (n : Nat) -> Type where
   SigLeaf : (0 ty : _) ->
-            IsTupleLike n ty =>
+            IsTupleLike Unqualified n ty =>
             IsSelectSource ty =>
             (alias : String) ->
             SigTree n
@@ -46,13 +46,13 @@ data SigTree : (n : Nat) -> Type where
               SigTree (nl + nr)
 
 public export
-toSig : SigTree n -> Signature n
+toSig : SigTree n -> Signature Qualified n
 toSig (SigLeaf ty alias) = aliasify alias $ signatureOf ty
 toSig (SigConcat l _ r _) = toSig l ++ toSig r
 
 export
 data JoinTree : (st : SigTree n) -> (dir : Dir) -> Type where
-  Leaf : IsTupleLike n ty =>
+  Leaf : IsTupleLike Unqualified n ty =>
          IsSelectSource ty =>
          (leaf : ty dir) ->
          JoinTree (SigLeaf ty alias) dir
@@ -64,15 +64,15 @@ data JoinTree : (st : SigTree n) -> (dir : Dir) -> Type where
          JoinTree (SigConcat sigl jtype sigr jcond) dir
 
 public export
-{sl : SigTree nl} -> {sr : SigTree nr} -> HasSignature (nl + nr) (JoinOnExprSig sl sr) where
+{sl : SigTree nl} -> {sr : SigTree nr} -> HasSignature Qualified (nl + nr) (JoinOnExprSig sl sr) where
   signature = toSig sl ++ toSig sr
 
 export
-{st : SigTree n} -> HasSignature n (JoinTree st) where
+{st : SigTree n} -> HasSignature Qualified n (JoinTree st) where
   signature = toSig st
 
 export
-{st : SigTree n} -> IsTupleLike n (JoinTree st) where
+{st : SigTree n} -> IsTupleLike Qualified n (JoinTree st) where
   toTuple (Leaf leaf) = wrapAliasify $ toTuple leaf
   toTuple (Join jtl jtr) = toTuple jtl ++ toTuple jtr
 
@@ -115,7 +115,7 @@ export
 
 public export
 table : (ty : Dir -> Type) ->
-        IsTupleLike n ty =>
+        IsTupleLike Unqualified n ty =>
         IsSelectSource ty =>
         HasTableName ty =>
         SigTree n
@@ -125,7 +125,7 @@ infix 3 `as`
 public export
 as : (ty : Dir -> Type) ->
      (alias : String) ->
-     IsTupleLike n ty =>
+     IsTupleLike Unqualified n ty =>
      IsSelectSource ty =>
      SigTree n
 ty `as` alias = SigLeaf ty alias

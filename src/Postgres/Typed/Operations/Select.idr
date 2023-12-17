@@ -18,18 +18,20 @@ import Postgres.Typed.Operations.Join
 
 namespace Output
   public export
-  data Columns : (0 ty : Dir -> Type) -> (0 ret : Type) -> Type where
-    CAll    : HasSignature n ty => Columns ty (List (ty Read))
-    CSome   : HasSignature n ty =>
+  data Columns : (0 ty : Dir -> Type) -> (0 qk : QualKind) ->(0 ret : Type) -> Type where
+    CAll    : HasSignature qk n ty =>
+              Columns ty qk (List (ty Read))
+    CSome   : HasSignature qk n ty =>
               {k : _} ->
               (ixes : Vect k (Fin n)) ->
-              Columns ty (List (subTuple ty ixes Read))
+              Columns ty qk (List (subTuple ty ixes Read))
 
   export
-  toColumnNames : Columns ty ret ->
+  toColumnNames : {qk : _} ->
+                  Columns ty qk ret ->
                   List String
-  toColumnNames CAll = toList $ allColumnNames ty
-  toColumnNames (CSome ixes) = toList $ columnNames ty ixes
+  toColumnNames CAll = map showName $ toList $ allColumnNames ty
+  toColumnNames (CSome ixes) = map showName $ toList $ columnNames ty ixes
 
 namespace Ordering
   public export
@@ -54,12 +56,24 @@ namespace Ordering
     direction : Maybe OrderDir
     nulls : Maybe NullsPos
 
-  public export
-  fromString : HasSignature n ty =>
-               (name : String) ->
-               {auto inSig : name `InSignature` signatureOf ty} ->
-               Maybe (Order ty)
-  fromString name = Just $ MkOrder (col name) Nothing Nothing
+  namespace FSU
+    public export
+    fromString : {qk : _} ->
+                 HasSignature Unqualified n ty =>
+                 (name : String) ->
+                 {auto inSig : name `InSignature` signatureOf ty} ->
+                 Maybe (Order ty)
+    fromString name = Just $ MkOrder (col name) Nothing Nothing
+
+  namespace FSQ
+    public export
+    fromString : {qk : _} ->
+                 HasSignature Qualified n ty =>
+                 (name : String) ->
+                 ValidQualifiedString name =>
+                 {auto inSig : fromString name `InSignature` signatureOf ty} ->
+                 Maybe (Order ty)
+    fromString name = Just $ MkOrder (col $ fromString name) Nothing Nothing
 
   export
   toQueryPart : Order ty ->
@@ -77,16 +91,18 @@ namespace Grouping
 
   namespace FSSingle
     public export
-    fromString : HasSignature n ty =>
-                 (name : String) ->
+    fromString : {qk : _} ->
+                 HasSignature qk n ty =>
+                 (name : Name qk) ->
                  {auto inSig : name `InSignature` signatureOf ty} ->
                  List (SomeExpr ty)
     fromString name = [MkSE $ col name]
 
   namespace FSMulti
     public export
-    fromString : HasSignature n ty =>
-                 (name : String) ->
+    fromString : {qk : _} ->
+                 HasSignature qk n ty =>
+                 (name : Name qk) ->
                  {auto inSig : name `InSignature` signatureOf ty} ->
                  SomeExpr ty
     fromString name = MkSE $ col name
@@ -99,9 +115,10 @@ public export
 record Select (ty : Dir -> Type) (ret : Type) where
   constructor MkSelect
   {colCount : Nat}
-  {auto isTableType : IsTupleLike colCount ty}
+  {qk : QualKind}
+  {auto isTableType : IsTupleLike qk colCount ty}
   selSrc : String
-  columns : Columns ty ret
+  columns : Columns ty qk ret
   whereClause : Expr ty Bool
   groupBy : List (SomeExpr ty)
   orderBy : Maybe (Order ty)
@@ -150,8 +167,8 @@ namespace SelectTable
   export
   select : Dummy DFrom ->
            (ty : Dir -> Type) ->
-           {n : _} ->
-           IsTupleLike n ty =>
+           {n, qk : _} ->
+           IsTupleLike qk n ty =>
            IsSelectSource ty =>
            SelectMod ty ret ->
            Operation (List ret)
@@ -162,7 +179,7 @@ namespace SelectJoin
   select : Dummy DFrom ->
            {n : _} ->
            (st : SigTree n) ->
-           IsValidTree st =>
+           -- IsValidTree st =>
            SelectMod (JoinTree st) ret ->
            Operation (List ret)
   select _ st f = selectOp $ f $ MkSelect (toFromPart st) CAll (1 == 1) [] Nothing

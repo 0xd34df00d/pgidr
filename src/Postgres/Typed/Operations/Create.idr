@@ -18,7 +18,7 @@ import Postgres.Typed.Operations.Class
 modsStr : Show (Modifier ty) => List (Modifier ty) -> String
 modsStr = joinBy " " . map show
 
-fieldStr : (se : SignatureElem) ->
+fieldStr : (se : SignatureElem Unqualified) ->
            CreatablePgType (se.type) =>
            String
 fieldStr (MkSE name type mods) =
@@ -26,14 +26,14 @@ fieldStr (MkSE name type mods) =
      then "\{name} \{modsStr mods}"
      else "\{name} \{fieldTypeNameOf type} \{modsStr mods}"
 
-fieldsStr : (sig : Signature _) ->
+fieldsStr : (sig : Signature Unqualified _) ->
             All (CreatablePgType . (.type)) sig ->
             String
 fieldsStr sig alls = joinBy ", " $ toList $ forget $ mapPropertyRelevant fieldStr alls
 
 export
 createQuery : (ty : _) ->
-              (HasSignature _ ty, HasTableName ty) =>
+              (HasSignature Unqualified _ ty, HasTableName ty) =>
               All (CreatablePgType . (.type)) (signatureOf ty) ->
               String
 createQuery ty creatables = "CREATE TABLE \{tableNameOf ty} (\{fieldsStr _ creatables})"
@@ -42,7 +42,7 @@ export
 create : MonadExec m =>
          Conn s ->
          (ty : _) ->
-         (HasSignature _ ty, HasTableName ty) =>
+         (HasSignature Unqualified _ ty, HasTableName ty) =>
          {auto alls : All (CreatablePgType . (.type)) (signatureOf ty)} ->
          m ()
 create conn ty = let query = createQuery ty alls

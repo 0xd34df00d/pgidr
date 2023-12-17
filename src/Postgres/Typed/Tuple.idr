@@ -38,14 +38,14 @@ computeType dir ty mods = case computeNullability mods dir of
                                NonNullable => ty
 
 public export
-computeType' : Dir -> (_ : SignatureElem) -> Type
+computeType' : Dir -> (_ : SignatureElem qk) -> Type
 computeType' dir (MkSE _ ty modifiers) = computeType dir ty modifiers
 
 public export
 onSigVal : {dir : Dir} ->
            (fNull : forall ty. PgType ty => Maybe ty -> a) ->
            (fNonNull : forall ty. PgType ty => ty -> a) ->
-           (se : SignatureElem) ->
+           (se : SignatureElem qk) ->
            (elt : computeType' dir se) ->
            a
 onSigVal fNull fNonNull (MkSE _ ty mods) elt with (computeNullability mods dir)
@@ -55,42 +55,42 @@ onSigVal fNull fNonNull (MkSE _ ty mods) elt with (computeNullability mods dir)
 public export
 onSigValUniform : {dir : Dir} ->
                   (f : forall ty. PgType ty => ty -> a) ->
-                  (se : SignatureElem) ->
+                  (se : SignatureElem qk) ->
                   (elt : computeType' dir se) ->
                   Maybe a
 onSigValUniform f = onSigVal (map f) (Just . f)
 
 public export
-Tuple : Signature n -> (dir : Dir) -> Type
+Tuple : Signature qk n -> (dir : Dir) -> Type
 Tuple sig dir = All (computeType' dir) sig
 
 export
-prettyTuple : {dir : _} -> {s : Signature _} -> Tuple s dir -> String
+prettyTuple : {qk, dir : _} -> {s : Signature qk _} -> Tuple s dir -> String
 prettyTuple tup = "{ " ++ joinBy ", " (toList $ forget $ mapPropertyRelevant showElem tup) ++ " }"
   where
-  showElem : (se : SignatureElem) -> computeType' dir se -> String
+  showElem : (se : SignatureElem qk) -> computeType' dir se -> String
   showElem se elt = let value = maybe "IS NULL" ("= " ++) $ onSigValUniform show se elt
-                     in "\{se.name} \{value}"
+                     in "\{showName se.name} \{value}"
 
 public export
 subTuple : (0 ty : _) ->
-           HasSignature n ty =>
+           HasSignature qn n ty =>
            (idxes : Vect k (Fin n)) ->
            Dir ->
            Type
 subTuple ty idxes = Tuple (signatureOf ty `subSignature` idxes)
 
 public export
-record NamedTuple (name : String) (s : Signature n) (dir : Dir) where
+record NamedTuple (name : String) (s : Signature qk n) (dir : Dir) where
   constructor MkTup
   columns : Tuple s dir
 
 export
-{dir : _} -> {name : _} -> {s : Signature n} -> Show (NamedTuple name s dir) where
+{qk, dir, name : _} -> {s : Signature qk n} -> Show (NamedTuple name s dir) where
   show tup = name ++ " " ++ prettyTuple tup.columns
 
 public export
-{s : Signature n} -> HasSignature n (NamedTuple name s) where
+{s : Signature qk n} -> HasSignature qk n (NamedTuple name s) where
   signature = s
 
 public export
@@ -98,7 +98,7 @@ public export
   tableName = name
 
 public export
-interface HasSignature n ty => IsTupleLike n (0 ty : Dir -> Type) | ty where
+interface HasSignature qk n ty => IsTupleLike qk n (0 ty : Dir -> Type) | ty where
   constructor MkIsTupleLike
   toTuple : ty dir -> Tuple (signatureOf ty) dir
   fromTuple : Tuple (signatureOf ty) dir -> ty dir
@@ -109,7 +109,7 @@ interface HasSignature n ty => IsTupleLike n (0 ty : Dir -> Type) | ty where
              toTuple (fromTuple {dir} v) = v
 
 public export
-{name : _} -> {s : Signature n} -> IsTupleLike n (NamedTuple name s) where
+{name : _} -> {s : Signature qk n} -> IsTupleLike qk n (NamedTuple name s) where
   toTuple = .columns
   fromTuple = MkTup
 
@@ -117,11 +117,11 @@ public export
   toFromId v = Refl
 
 public export
-aliasifySig : String -> SignatureElem -> SignatureElem
-aliasifySig alias (MkSE name type mods) = MkSE (alias ++ "." ++ name) type mods  -- TODO record update syntax when Idris2#3083 is fixed
+aliasifySig : String -> SignatureElem Unqualified -> SignatureElem Qualified
+aliasifySig alias (MkSE name type mods) = MkSE (MkQN alias name) type mods  -- TODO record update syntax when Idris2#3083 is fixed
 
 public export
-aliasify : String -> Signature n -> Signature n
+aliasify : String -> Signature Unqualified n -> Signature Qualified n
 aliasify alias = map (aliasifySig alias)
 
 public export
