@@ -32,7 +32,7 @@ fieldsStr : (sig : Signature Unqualified _) ->
 fieldsStr sig alls = joinBy ", " $ toList $ forget $ mapPropertyRelevant fieldStr alls
 
 export
-createQuery : (ty : _) ->
+createQuery : (0 ty : _) ->
               (HasSignature Unqualified _ ty, HasTableName ty) =>
               All (CreatablePgType . (.type)) (signatureOf ty) ->
               String
@@ -41,7 +41,7 @@ createQuery ty creatables = "CREATE TABLE \{tableNameOf ty} (\{fieldsStr _ creat
 export
 create : MonadExec m =>
          Conn s ->
-         (ty : _) ->
+         (0 ty : _) ->
          (HasSignature Unqualified _ ty, HasTableName ty) =>
          {auto alls : All (CreatablePgType . (.type)) (signatureOf ty)} ->
          m ()
