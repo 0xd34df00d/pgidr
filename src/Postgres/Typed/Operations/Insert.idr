@@ -16,7 +16,7 @@ import Postgres.Typed.Operations.Helpers
 %prefix_record_projections off
 
 namespace Returning
-  public export
+  public export 0
   typeAt : (0 ty : Dir -> Type) ->
            HasSignature Unqualified n ty =>
            (idx : Fin n) ->
