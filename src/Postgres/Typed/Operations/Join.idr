@@ -114,7 +114,7 @@ export
   show jt = "\{toFromPart st} \{prettyTuple $ toTuple jt}"
 
 public export
-table : (ty : Dir -> Type) ->
+table : (0 ty : Dir -> Type) ->
         IsTupleLike Unqualified n ty =>
         IsSelectSource ty =>
         HasTableName ty =>
@@ -123,7 +123,7 @@ table ty = SigLeaf ty (tableNameOf ty)
 
 infix 3 `as`
 public export
-as : (ty : Dir -> Type) ->
+as : (0 ty : Dir -> Type) ->
      (alias : String) ->
      IsTupleLike Unqualified n ty =>
      IsSelectSource ty =>

@@ -31,13 +31,13 @@ computeNullability mods Write =
                       Just _ => NonNullable
                       Nothing => Nullable
 
-public export
+public export 0
 computeType : Dir -> (ty : Type) -> List (Modifier ty) -> Type
 computeType dir ty mods = case computeNullability mods dir of
                                Nullable => Maybe ty
                                NonNullable => ty
 
-public export
+public export 0
 computeType' : Dir -> (_ : SignatureElem qk) -> Type
 computeType' dir (MkSE _ ty modifiers) = computeType dir ty modifiers
 

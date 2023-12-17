@@ -23,10 +23,10 @@ dropTable conn = do
   res <- exec conn "DROP TABLE IF EXISTS persons"
   dumpResult res
 
-Person : (dir : Dir) -> Type
+0 Person : (dir : Dir) -> Type
 Person = NamedTuple "persons" [PKeyInt "id", "first_name" @: String, "last_name" @: String, "age" @: Integer]
 
-Payout : (dir : Dir) -> Type
+0 Payout : (dir : Dir) -> Type
 Payout = NamedTuple "payouts" [PKeyInt "id", "person_id" @> Person $ "id", "payout_sum" @: Integer]
 
 handleResult : Show res => String -> Either ExecError res -> IO ()

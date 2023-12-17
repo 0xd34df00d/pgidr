@@ -65,11 +65,11 @@ public export
 record SignatureElem (qk : QualKind) where
   constructor MkSE
   name : Name qk
-  type : Type
+  0 type : Type
   modifiers : List (Modifier type)
   {auto pgType : PgType type}
 
-public export
+public export 0
 Signature : (qk : QualKind) -> (n : Nat) -> Type
 Signature qk n = Vect n (SignatureElem qk)
 
@@ -152,7 +152,7 @@ namesToIxes (inSig :: inSigs) = inSigToFin inSig :: namesToIxes inSigs
 infixl 7 @:, @:?, @>
 public export
 (@:), (@:?) : (name : String) ->
-              (ty : Type) ->
+              (0 ty : Type) ->
               PgType ty =>
               SignatureElem Unqualified
 name @: ty = MkSE (UName name) ty [NotNull]
@@ -160,7 +160,7 @@ name @:? ty = MkSE (UName name) ty []
 
 public export
 (@>) : (name : String) ->
-       (otherTy : a) ->
+       (0 otherTy : a) ->
        (otherName : Name Unqualified) ->
        HasSignature Unqualified n otherTy =>
        HasTableName otherTy =>
