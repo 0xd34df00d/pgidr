@@ -74,6 +74,13 @@ namespace EDSL
         Expr ty (inSigToFin inSig `index` signatureOf ty).type
   col _ = EColumn (inSigToFin inSig)
 
+  public export
+  (.) : HasSignature Qualified n ty =>
+        (qual, name : String) ->
+        {auto inSig : QName qual name `InSignature` signatureOf ty} ->
+        Expr ty (inSigToFin inSig `index` signatureOf ty).type
+  (.) _ _ = EColumn (inSigToFin inSig)
+
 isLeaf : Expr ty ety -> Bool
 isLeaf (EConst{}) = True
 isLeaf (EColumn{}) = True
