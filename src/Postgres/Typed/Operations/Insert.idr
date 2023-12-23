@@ -138,13 +138,12 @@ execInsert (MkInsert val returning) conn = do
        COne idx => head <$> (extractFirstRow result (subSignature _ [idx]) =<<| ensureMatches)
        CSome idxes => extractFirstRow result _ =<<| ensureMatches
 
-insertBase : Dummy DInto ->
-             (0 ty : Dir -> Type) ->
+insertBase : (0 ty : Dir -> Type) ->
              {n : _} ->
              (IsTupleLike Unqualified n ty, HasTableName ty) =>
              (val : ty Write) ->
              Insert ty ()
-insertBase _ _ val = MkInsert val CNone
+insertBase _ val = MkInsert val CNone
 
 insertOp : Insert ty ret -> Operation ret
 insertOp = Op . execInsert
@@ -157,7 +156,7 @@ namespace InsertRecord
            (IsTupleLike Unqualified n ty, HasTableName ty) =>
            (val : ty Write) ->
            Operation ()
-  insert d ty val = insertOp $ insertBase d ty val
+  insert _ ty val = insertOp $ insertBase ty val
 
   export
   insert' : Dummy DInto ->
@@ -167,7 +166,7 @@ namespace InsertRecord
             (val : ty Write) ->
             (Insert ty () -> Insert ty ret) ->
             Operation ret
-  insert' d ty val f = insertOp $ f (insertBase d ty val)
+  insert' _ ty val f = insertOp $ f (insertBase ty val)
 
 namespace InsertTuple
   export
@@ -177,7 +176,7 @@ namespace InsertTuple
            (IsTupleLike Unqualified n ty, HasTableName ty) =>
            (val : Tuple (signatureOf ty) Write) ->
            Operation ()
-  insert d ty = insertOp . insertBase d ty . fromTuple
+  insert _ ty = insertOp . insertBase ty . fromTuple
 
   export
   insert' : Dummy DInto ->
@@ -187,4 +186,4 @@ namespace InsertTuple
             (val : Tuple (signatureOf ty) Write) ->
             (Insert ty () -> Insert ty ret) ->
             Operation ret
-  insert' d ty val f = insertOp $ f (insertBase d ty (fromTuple val))
+  insert' _ ty val f = insertOp $ f (insertBase ty (fromTuple val))
