@@ -106,8 +106,11 @@ sigTreeSources (SigConcat sigl jtype sigr jcond) = sigTreeSources sigl ++ sigTre
 
 -- TODO better error messages when this fails
 public export 0
-IsValidTree : (st : SigTree n) -> Type
-IsValidTree st = let srcs := sigTreeSources st in nub srcs = srcs
+CanBeJoined : (st1, st2 : SigTree _) -> Type
+CanBeJoined st1 st2 = isect (sigTreeSources st1) (sigTreeSources st2) = []
+  where
+  isect : List String -> List String -> List String
+  isect xs ys = [x | x <- xs, any (== x) ys]
 
 export
 {dir, st : _} -> Show (JoinTree st dir) where
@@ -135,6 +138,7 @@ public export
 crossJoin : {n1, n2 : _} ->
             (st1 : SigTree n1) ->
             (st2 : SigTree n2) ->
+            CanBeJoined st1 st2 =>
             SigTree (n1 + n2)
 crossJoin st1 st2 = SigConcat
                       st1
@@ -146,6 +150,7 @@ public export
 innerJoin : {n1, n2 : _} ->
             (st1 : SigTree n1) ->
             (st2 : SigTree n2) ->
+            CanBeJoined st1 st2 =>
             (joinExpr : Expr (JoinOnExprSig st1 st2) Bool) ->
             SigTree (n1 + n2)
 innerJoin st1 st2 joinExpr = SigConcat st1 Inner st2 (JoinOn joinExpr)

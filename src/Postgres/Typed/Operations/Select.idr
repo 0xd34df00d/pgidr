@@ -173,7 +173,6 @@ namespace SelectJoin
   select : (0 _ : Dummy DFrom) ->
            {n : _} ->
            (st : SigTree n) ->
-           -- IsValidTree st =>
            SelectMod (JoinTree st) ret ->
            Operation (List ret)
   select _ st f = selectOp $ f $ MkSelect (toFromPart st) CAll (1 == 1) [] Nothing
