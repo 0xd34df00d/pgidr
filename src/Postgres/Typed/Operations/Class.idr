@@ -57,7 +57,7 @@ execute' : HasIO io =>
            Conn s ->
            Operation res ->
            io (Either ExecError res)
-execute' conn op = runMonadExec (op.execute conn)
+execute' conn op = runMonadExec (execute conn op)
 
 export
 checkQueryStatus : MonadExec m =>
