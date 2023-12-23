@@ -43,14 +43,21 @@ public export 0
 ExecuteFun : Type -> Type
 ExecuteFun res = forall m, s. MonadExec m => Conn s -> m res
 
-public export
-record Operation res where
-  constructor Op
-  execute : ExecuteFun res
+export
+data Operation : (res : Type) -> Type where
+  Pure : (val : res) -> Operation res
+  Op : (opFun : ExecuteFun r1) -> (cont : r1 -> Operation r2) -> Operation r2
+
+export
+singleOp : ExecuteFun res -> Operation res
+singleOp = (`Op` Pure)
 
 export
 execute : MonadExec m => Conn s -> Operation res -> m res
-execute conn op = op.execute conn
+execute conn (Pure val) = pure val
+execute conn (Op opFun cont) = do
+  r <- opFun conn
+  execute conn $ cont r
 
 export
 execute' : HasIO io =>

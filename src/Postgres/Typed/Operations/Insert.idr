@@ -146,7 +146,7 @@ insertBase : (0 ty : Dir -> Type) ->
 insertBase _ val = MkInsert val CNone
 
 insertOp : Insert ty ret -> Operation ret
-insertOp = Op . execInsert
+insertOp = singleOp . execInsert
 
 namespace InsertRecord
   export

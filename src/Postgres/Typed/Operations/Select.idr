@@ -151,7 +151,7 @@ execSelect (MkSelect selSrc columns whereClause groupBy orderBy) conn = do
                         map toList $ for rows $ \row => extractFields result row _ matches
 
 selectOp : Select ty ret -> Operation ret
-selectOp = Op . execSelect
+selectOp = singleOp . execSelect
 
 public export 0
 SelectMod : (Dir -> Type) -> Type -> Type
