@@ -150,7 +150,7 @@ insertOp = Op . execInsert
 
 namespace InsertRecord
   export
-  insert : Dummy DInto ->
+  insert : (0 _ : Dummy DInto) ->
            (0 ty : Dir -> Type) ->
            {n : _} ->
            (IsTupleLike Unqualified n ty, HasTableName ty) =>
@@ -159,7 +159,7 @@ namespace InsertRecord
   insert _ ty val = insertOp $ insertBase ty val
 
   export
-  insert' : Dummy DInto ->
+  insert' : (0 _ : Dummy DInto) ->
             (0 ty : Dir -> Type) ->
             {n : _} ->
             (IsTupleLike Unqualified n ty, HasTableName ty) =>
@@ -170,7 +170,7 @@ namespace InsertRecord
 
 namespace InsertTuple
   export
-  insert : Dummy DInto ->
+  insert : (0 _ : Dummy DInto) ->
            (0 ty : Dir -> Type) ->
            {n : _} ->
            (IsTupleLike Unqualified n ty, HasTableName ty) =>
@@ -179,7 +179,7 @@ namespace InsertTuple
   insert _ ty = insertOp . insertBase ty . fromTuple
 
   export
-  insert' : Dummy DInto ->
+  insert' : (0 _ : Dummy DInto) ->
             (0 ty : Dir -> Type) ->
             {n : _} ->
             (IsTupleLike Unqualified n ty, HasTableName ty) =>

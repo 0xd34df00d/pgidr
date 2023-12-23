@@ -18,7 +18,7 @@ import Postgres.Typed.Operations.Join
 
 namespace Output
   public export
-  data Columns : (0 ty : Dir -> Type) -> (0 qk : QualKind) ->(0 ret : Type) -> Type where
+  data Columns : (ty : Dir -> Type) -> (qk : QualKind) -> (ret : Type) -> Type where
     CAll    : HasSignature qk n ty =>
               Columns ty qk (List (ty Read))
     CSome   : HasSignature qk n ty =>
@@ -82,7 +82,7 @@ namespace Ordering
 
 namespace Grouping
   public export
-  record SomeExpr (0 ty : Dir -> Type) where
+  record SomeExpr (ty : Dir -> Type) where
     constructor MkSE
     expr : Expr ty a
 
@@ -118,7 +118,7 @@ record Select (ty : Dir -> Type) (ret : Type) where
   orderBy : Maybe (Order ty)
 
 data DFrom : Type where
-public export
+public export 0
 from : Dummy DFrom
 from = MkDF
 
@@ -153,13 +153,13 @@ execSelect (MkSelect selSrc columns whereClause groupBy orderBy) conn = do
 selectOp : Select ty ret -> Operation ret
 selectOp = Op . execSelect
 
-public export
+public export 0
 SelectMod : (Dir -> Type) -> Type -> Type
 SelectMod ty ret = Select ty (List (ty Read)) -> Select ty (List ret)
 
 namespace SelectTable
   export
-  select : Dummy DFrom ->
+  select : (0 _ : Dummy DFrom) ->
            (0 ty : Dir -> Type) ->
            {n : _} ->
            IsTupleLike qk n ty =>
@@ -170,7 +170,7 @@ namespace SelectTable
 
 namespace SelectJoin
   export
-  select : Dummy DFrom ->
+  select : (0 _ : Dummy DFrom) ->
            {n : _} ->
            (st : SigTree n) ->
            -- IsValidTree st =>

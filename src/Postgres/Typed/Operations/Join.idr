@@ -105,7 +105,7 @@ sigTreeSources (SigLeaf ty alias) = [alias]
 sigTreeSources (SigConcat sigl jtype sigr jcond) = sigTreeSources sigl ++ sigTreeSources sigr
 
 -- TODO better error messages when this fails
-public export
+public export 0
 IsValidTree : (st : SigTree n) -> Type
 IsValidTree st = let srcs := sigTreeSources st in nub srcs = srcs
 

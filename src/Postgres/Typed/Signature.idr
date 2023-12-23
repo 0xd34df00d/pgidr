@@ -42,7 +42,7 @@ namespace UNFS
   fromString = UName
 
 namespace QNFS
-  public export
+  public export 0
   ValidQualifiedString : String -> Type
   ValidQualifiedString str = length (split (== '.') str) = 2
 
@@ -121,7 +121,7 @@ public export
 fromIsJust' : {0 mv : Maybe a} -> IsJust' mv -> a
 fromIsJust' (ItIsJust' v) = v
 
-public export
+public export 0
 InSignature : Name qk -> Signature qk n -> Type
 InSignature name sig = IsJust' $ findName name sig
 
