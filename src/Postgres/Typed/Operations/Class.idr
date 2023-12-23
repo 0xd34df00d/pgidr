@@ -27,7 +27,7 @@ Show ExecError where
   show (ValueParseError str) = "failed to parse value: " ++ str
   show TODO = "unimplemented (TODO)"
 
-public export
+public export 0
 MonadExec : (Type -> Type) -> Type
 MonadExec m = (HasIO m, MonadError ExecError m)
 
