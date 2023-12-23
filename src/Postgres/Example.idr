@@ -55,20 +55,22 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
     create conn Person
     create conn Payout
 
-    () <- execute conn (insert into Person [ Nothing, "John", "Doe", 42 ])
-    p2 <- execute conn (insert' into Person [ Nothing, "Jane", "Doe", 32 ] { returning := all })
-    p3id <- execute conn (insert' into Person [ Nothing, "Johnny", "Donny", 41 ] { returning := column "id" })
-    [p4id, _] <- execute conn (insert' into Person [ Nothing, "Foo", "Bar", 666 ] { returning := columns ["id", "first_name"] })
+    execute conn $ do
+      () <- insert into Person [ Nothing, "John", "Doe", 42 ]
+      p2 <- insert' into Person [ Nothing, "Jane", "Doe", 32 ] { returning := all }
+      p3id <- insert' into Person [ Nothing, "Johnny", "Donny", 41 ] { returning := column "id" }
+      [p4id, _] <- insert' into Person [ Nothing, "Foo", "Bar", 666 ] { returning := columns ["id", "first_name"] }
 
-    for_ {t = List} [100, 300, 200, 400] $ \sum =>
-      execute conn (insert into Payout [ Nothing, p3id, sum ])
-    for_ {t = List} [10, 30, 20, 40] $ \sum =>
-      execute conn (insert into Payout [ Nothing, p4id, sum ])
+      for_ {t = List} [100, 300, 200, 400] $ \sum =>
+        insert into Payout [ Nothing, p3id, sum ]
+      for_ {t = List} [10, 30, 20, 40] $ \sum =>
+        insert into Payout [ Nothing, p4id, sum ]
 
-    allPersons <- execute conn (select from Person id)
-    allDoes <- execute conn (select from Person { whereClause := col "last_name" == "Doe", orderBy := "first_name" })
-    _ <- execute conn (select from (Person `as` "p1" `crossJoin` Person `as` "p2") id)
-    payouts <- execute conn (select from (innerJoin (table Person) (table Payout) $ col "payouts.person_id" == col "persons.id") id)
+      allPersons <- select from Person id
+      allDoes <- select from Person { whereClause := col "last_name" == "Doe", orderBy := "first_name" }
+      _ <- select from (Person `as` "p1" `crossJoin` Person `as` "p2") id
+      pure ()
+    payouts <- execute conn (select from (innerJoin (table Person) (table Payout) $ "payouts"."person_id" == "persons"."id") id)
     print payouts
   case res of
        Left err => putStrLn $ "error: " ++ show err
