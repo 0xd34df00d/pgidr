@@ -49,6 +49,28 @@ data Operation : (res : Type) -> Type where
   Op : (opFun : ExecuteFun r1) -> (cont : r1 -> Operation r2) -> Operation r2
 
 export
+Functor Operation where
+  map f (Pure val) = Pure (f val)
+  map f (Op opFun cont) = Op opFun (map f . cont)
+
+infix 1 `bind`
+bind : Operation a -> (a -> Operation b) -> Operation b
+Pure val `bind` f = f val
+Op opFun cont `bind` f = Op opFun (\r => cont r `bind` f)
+
+export
+Applicative Operation where
+  pure = Pure
+  opFun <*> opVal = opFun `bind`
+            \fun => opVal `bind`
+            \val => pure $ fun val
+
+export
+Monad Operation where
+  (>>=) = bind
+  join mm = mm >>= id
+
+export
 singleOp : ExecuteFun res -> Operation res
 singleOp = (`Op` Pure)
 
