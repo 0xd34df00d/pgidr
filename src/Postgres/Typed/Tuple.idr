@@ -4,6 +4,7 @@ import Data.List
 import Data.String
 import public Data.Vect.Quantifiers
 
+import public Control.Syntax
 import Data.Vect.Quantifiers.Extra
 
 import Postgres.Typed.Modifiers
@@ -18,23 +19,19 @@ data Dir = Read | Write
 public export
 data EffectiveNullability = Nullable | NonNullable
 
-namespace LocalOr
-  public export
-  (||) : (a -> Bool) -> (a -> Bool) -> a -> Bool
-  f1 || f2 = \v => f1 v || f2 v
-
 public export
 computeNullability : List (Modifier ty) -> Dir -> EffectiveNullability
 computeNullability mods Read =
-  case find (isNotNull || isSerial) mods of
-       Just _ => NonNullable
-       Nothing => Nullable
+  contains mods
+    [ isNotNull ~> NonNullable
+    , isSerial ~> NonNullable
+    ] (otherwise Nullable)
 computeNullability mods Write =
- case find (isSerial || isDefaulted) mods of
-      Just _ => Nullable
-      Nothing => case find isNotNull mods of
-                      Just _ => NonNullable
-                      Nothing => Nullable
+  contains mods
+    [ isSerial ~> Nullable
+    , isDefaulted ~> Nullable
+    , isNotNull ~> NonNullable
+    ] (otherwise Nullable)
 
 public export 0
 computeType : Dir -> (ty : Type) -> List (Modifier ty) -> Type

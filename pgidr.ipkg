@@ -30,6 +30,7 @@ modules = Postgres.C
         , Postgres.Typed.Operations.Select
         , Postgres.Typed.Operations.SelectSource
 
+        , Control.Syntax
         , Data.Vect.Quantifiers.Extra
 
 prebuild = "./prebuild.sh"
