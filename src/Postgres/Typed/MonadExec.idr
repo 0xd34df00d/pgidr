@@ -1,6 +1,8 @@
 module Postgres.Typed.MonadExec
 
 import Control.Monad.Error.Either
+import Control.Monad.Writer.CPS
+import Control.Monad.Writer.Interface
 import public Control.Monad.Error.Interface
 import Derive.Prelude
 
@@ -49,6 +51,25 @@ runMonadExec action = runEitherT {m = io} action
     execQueryParams = Postgres.C.execParams'
     resultStatus res = do
       status <- Postgres.C.resultStatus res
+      if isSuccessfulQuery status
+         then pure ResultSuccess
+         else ResultError status <$> resultErrorMessage res
+
+-- TODO having a list as the monoid is unnecessarily slow
+export
+runMonadExecLogging : HasIO io => (forall m. MonadExec m => m res) -> io (Either ExecError res, List String)
+runMonadExecLogging action = runWriterT $ runEitherT {m = WriterT (List String) io} action
+  where
+  MonadExec (EitherT ExecError (WriterT (List String) io)) where
+    execQuery conn q = do
+      tell $ pure $ "executing `\{q}`"
+      Postgres.C.exec conn q
+    execQueryParams conn q params = do
+      tell $ pure $ "executing `\{q}` with params `\{show params}`"
+      Postgres.C.execParams' conn q params
+    resultStatus res = do
+      status <- Postgres.C.resultStatus res
+      tell $ pure $ "query status: `\{show status}`"
       if isSuccessfulQuery status
          then pure ResultSuccess
          else ResultError status <$> resultErrorMessage res
