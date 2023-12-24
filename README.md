@@ -18,7 +18,8 @@ Person = NamedTuple "persons" [ MkSE "id" Integer [PKey PKeySerial]
 ```
 The `Dir` is a technicality to account for different types on reads/writes/updates to the same table:
 for instance, a primary key or a `DEFAULT`ed value that is `NOT NULL`
-is optional when adding a record but it's always present when reading,
+is optional when storing a record to the database
+but it's always present when reading it back,
 so it is modeled by a `Maybe a` on writes and `a` on reads.
 
 Now we can create a table with `Person`s.
@@ -75,14 +76,19 @@ The types of the corresponding `result`s will be just as you'd expect!
 * [x] `WHERE`
 * [x] `ORDER BY`
 * [x] `GROUP BY`
-* [ ] Joins
+* [x] Inner joins
+* [ ] Outer joins
 * [ ] Aggregate functions
-* [ ] Typecheck `GROUP BY` vs the `WHERE` clause.
-* [ ] Smart return type (`List ty` vs `ty` vs `Maybe ty`) calculation.
+* [ ] Typecheck `GROUP BY` vs the `WHERE` clause
+* [ ] Smart return type (`List ty` vs `ty` vs `Maybe ty`) calculation
 
 `UPDATE`:
 
 * [ ] Basic updates with `WHERE`
+
+`DELETE`:
+
+* [ ] Basic deletes with `WHERE`
 
 ## Building
 
@@ -91,13 +97,6 @@ Assuming you have [pack](https://github.com/stefan-hoeck/idris2-pack) and Postgr
 pack build pgidr.ipkg
 ```
 should do.
-
-## Package structure
-
-The most important modules are:
-
-* `Postgres.C.Connection` — all things connection: establishing the connection, querying its status, and so on.
-* `Postgres.C.Query` — making queries (via a previously established connection).
 
 ## Caveats and compromises
 
