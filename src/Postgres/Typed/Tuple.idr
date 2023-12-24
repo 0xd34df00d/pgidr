@@ -18,14 +18,19 @@ data Dir = Read | Write
 public export
 data EffectiveNullability = Nullable | NonNullable
 
+namespace LocalOr
+  public export
+  (||) : (a -> Bool) -> (a -> Bool) -> a -> Bool
+  f1 || f2 = \v => f1 v || f2 v
+
 public export
 computeNullability : List (Modifier ty) -> Dir -> EffectiveNullability
 computeNullability mods Read =
-  case find (\e => isNotNull e || isSerial e) mods of
+  case find (isNotNull || isSerial) mods of
        Just _ => NonNullable
        Nothing => Nullable
 computeNullability mods Write =
- case find (\e => isSerial e || isDefaulted e) mods of
+ case find (isSerial || isDefaulted) mods of
       Just _ => Nullable
       Nothing => case find isNotNull mods of
                       Just _ => NonNullable
