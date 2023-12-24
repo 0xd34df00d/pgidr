@@ -130,8 +130,8 @@ execInsert (MkInsert val returning) conn = do
   let (_ ** cols) = mkInsertColumns val
       query = mkInsertQuery {ty} cols returning
       params = map (.value) cols
-  result <- execParams' conn query params
-  checkQueryStatus query result
+  result <- execQueryParams conn query params
+  ensureQuerySuccess query result
   case returning of
        CNone => pure ()
        CAll => fromTuple <$> (extractFirstRow result _ =<<| ensureMatches)

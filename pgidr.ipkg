@@ -17,6 +17,7 @@ modules = Postgres.C
         , Postgres.C.Utils
 
         , Postgres.Typed.Modifiers
+        , Postgres.Typed.MonadExec
         , Postgres.Typed.PgType
         , Postgres.Typed.Signature
         , Postgres.Typed.Tuple

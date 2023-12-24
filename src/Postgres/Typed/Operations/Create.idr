@@ -46,4 +46,4 @@ create : MonadExec m =>
          {auto alls : All (CreatablePgType . (.type)) (signatureOf ty)} ->
          m ()
 create conn ty = let query = createQuery ty alls
-                  in exec conn query >>= checkQueryStatus query
+                  in execQuery conn query >>= ensureQuerySuccess query

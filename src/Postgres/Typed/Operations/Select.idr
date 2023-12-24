@@ -141,8 +141,8 @@ execSelect (MkSelect selSrc columns whereClause groupBy orderBy) conn = do
               "WHERE \{toQueryPart whereClause} " ++
           opt "GROUP BY " toQueryPart groupBy ++
           opt "ORDER BY " toQueryPart orderBy
-  result <- execParams' conn query []
-  checkQueryStatus query result
+  result <- execQueryParams conn query []
+  ensureQuerySuccess query result
   let rows = Data.Vect.Fin.tabulate {len = ntuples result} id
   case columns of
        CAll => do matches <- ensureMatches {numRows = ntuples result}
