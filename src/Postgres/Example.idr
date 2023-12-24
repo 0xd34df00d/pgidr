@@ -67,7 +67,7 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
         insert into Payout [ Nothing, p4id, sum ]
 
       allPersons <- select from Person id
-      allDoes <- select from Person { whereClause := col "last_name" == "Doe", orderBy := "first_name" }
+      allDoes <- select from Person { where' := col "last_name" == "Doe", orderBy := "first_name" }
       _ <- select from (Person `as` "p1" `crossJoin` Person `as` "p2") id
       pure ()
     payouts <- execute conn (select from (innerJoin (table Person) (table Payout) $ "payouts"."person_id" == "persons"."id") id)

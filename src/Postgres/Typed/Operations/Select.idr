@@ -113,7 +113,7 @@ record Select (ty : Dir -> Type) (ret : Type) where
   {auto isTableType : IsTupleLike qk colCount ty}
   selSrc : String
   columns : Columns ty qk ret
-  whereClause : Expr ty Bool
+  where' : Expr ty Bool
   groupBy : List (SomeExpr ty)
   orderBy : Maybe (Order ty)
 
