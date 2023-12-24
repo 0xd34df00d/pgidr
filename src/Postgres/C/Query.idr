@@ -58,9 +58,9 @@ exec conn query = wrapFFIResult (`ffi_exec` query) conn
 %foreign (libpq "resultStatus")
 ffi_resultStatus : ResultHandle -> PrimIO Int
 
-namespace ResultStatus
+namespace ResultStatusCode
   public export
-  data ResultStatus
+  data ResultStatusCode
     = EmptyQuery
     | CommandOk
     | TuplesOk
@@ -74,21 +74,21 @@ namespace ResultStatus
     | PipelineSync
     | PipelineAborted
     | Other Int
-%runElab derive "ResultStatus" [Eq, Ord, Show]
+%runElab derive "ResultStatusCode" [Eq, Ord, Show]
 
 export
-isSuccessfulQuery : ResultStatus -> Bool
+isSuccessfulQuery : ResultStatusCode -> Bool
 isSuccessfulQuery s = s == CommandOk || s == TuplesOk || s == SingleTuple
 
 -- TODO eventually we'll need to query the actual values of these constants from C,
 -- but this requires non-trivial changes to the build system to introduce our own
 -- C helper library, which we're trying to avoid.
-toResultStatus : Int -> ResultStatus
+toResultStatus : Int -> ResultStatusCode
 toResultStatus n = case integerToFin (cast n) (length knownStatuses) of
                         Nothing => Other n
                         Just idx => idx `index` knownStatuses
   where
-  knownStatuses : Vect ? ResultStatus
+  knownStatuses : Vect ? ResultStatusCode
   knownStatuses = [ EmptyQuery
                   , CommandOk
                   , TuplesOk
@@ -106,7 +106,7 @@ toResultStatus n = case integerToFin (cast n) (length knownStatuses) of
 export
 resultStatus : HasIO io =>
                (res : Result s) ->
-               io ResultStatus
+               io ResultStatusCode
 resultStatus = map toResultStatus . wrapFFI ffi_resultStatus
 
 

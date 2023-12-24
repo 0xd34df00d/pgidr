@@ -15,7 +15,7 @@ import Postgres.Typed.PgType
 public export
 data ExecError
   = ExpectationsMismatch String
-  | QueryFailure ResultStatus String String
+  | QueryFailure ResultStatusCode String String
   | ValueParseError PgTyParseError
   | TODO
 %runElab derive "ExecError" [Eq, Ord]
