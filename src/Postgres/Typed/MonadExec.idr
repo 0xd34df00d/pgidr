@@ -1,9 +1,9 @@
 module Postgres.Typed.MonadExec
 
 import Control.Monad.Error.Either
+import public Control.Monad.Error.Interface
 import Control.Monad.Writer.CPS
 import Control.Monad.Writer.Interface
-import public Control.Monad.Error.Interface
 import Derive.Prelude
 
 import Postgres.C
@@ -34,7 +34,7 @@ data ResultStatus : Type where
   ResultError : (code : ResultStatusCode) -> (msg : String) -> ResultStatus
 
 public export
-interface MonadError ExecError m => MonadExec m where
+interface (MonadError ExecError m, HasIO m) => MonadExec m where
   ||| Execute a query without any parameters.
   execQuery : Conn s -> String -> m (Result s)
   ||| Execute a query with a given vector of parameters.
