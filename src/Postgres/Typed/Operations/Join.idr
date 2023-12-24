@@ -80,7 +80,7 @@ export
    _ | SigLeaf ty alias = Leaf $ fromTuple $ unwrapAliasify tup
    _ | SigConcat {nl} sigl jtype sigr jcond =
         let splits = splitAt nl tup
-            prf = sym $ concatSplitInverse (toSig sigl) (toSig sigr)
+            0 prf = sym $ concatSplitInverse (toSig sigl) (toSig sigr)
          in Join
               (fromTuple $ rewrite cong fst prf in fst splits)
               (fromTuple $ rewrite cong snd prf in snd splits)
