@@ -17,6 +17,8 @@ typeAt : (0 ty : Dir -> Type) ->
 typeAt ty idx = computeType' Read (idx `index` signatureOf ty)
 
 public export
+data ColumnsCount = OneColumn | ManyColumns
+
 data Columns : (ty : Dir -> Type) -> (ret : Type) -> Type where
   CNone : Columns ty ()
   CAll  : HasSignature Unqualified n ty => Columns ty (ty Read)
@@ -78,6 +80,11 @@ extractFirstRow : MonadError ExecError m =>
                   (0 matches : ResultMatches res sig 1) ->
                   m (Tuple sig Read)
 extractFirstRow res sig matches = extractFields res (rewrite matches.rowsMatch in 0) sig matches
+
+public export
+toType : ColumnsCount -> Type -> Type
+toType OneColumn ty = ty
+toType ManyColumns ty = List ty
 
 export
 extractReturning : MonadError ExecError m =>
