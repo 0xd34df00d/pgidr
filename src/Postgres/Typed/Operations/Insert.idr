@@ -24,7 +24,7 @@ record InsertColumn where
 mkInsertQuery : {k : _} ->
                 (HasSignature Unqualified n ty, HasTableName ty) =>
                 (cols : Vect k InsertColumn) ->
-                (returning : Columns ty ret) ->
+                (returning : Columns OneRow ty ret) ->
                 String
 mkInsertQuery cols returning =
   let namesStr = joinBy ", " $ toList $ .colName <$> cols
@@ -49,7 +49,7 @@ record Insert (ty : Dir -> Type) (ret : Type) where
   {auto tyIsTuple : IsTupleLike Unqualified fieldsCount ty}
   {auto tyHasTable : HasTableName ty}
   value : ty Write
-  returning : Columns ty ret
+  returning : Columns OneRow ty ret
 
 execInsert : Insert ty ret -> ExecuteFun ret
 execInsert (MkInsert val returning) conn = do
