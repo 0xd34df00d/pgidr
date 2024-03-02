@@ -43,6 +43,11 @@ data Expr : (0 ty : a) -> (ety : Type) -> Type where
   ENot : (e : Expr ty Bool) -> Expr ty Bool
   -- TODO there's more! https://www.postgresql.org/docs/current/sql-expressions.html
 
+namespace IntegerVal
+  public export
+  val : Integer -> Expr ty Integer
+  val = EConst . PCNum
+
 namespace EDSL
   infix 6 ==, <=, >=, <, >
   public export
