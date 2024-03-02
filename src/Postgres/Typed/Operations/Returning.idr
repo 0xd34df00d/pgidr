@@ -17,7 +17,7 @@ typeAt : (0 ty : Dir -> Type) ->
 typeAt ty idx = computeType' Read (idx `index` signatureOf ty)
 
 public export
-data ColumnsCount = OneColumn | ManyColumns
+data RowCount = OneRow | ManyRows
 
 data Columns : (ty : Dir -> Type) -> (ret : Type) -> Type where
   CNone : Columns ty ()
@@ -83,9 +83,10 @@ extractFirstRow res sig matches = extractFields res (rewrite matches.rowsMatch i
 
 public export
 0
-toType : ColumnsCount -> Type -> Type
-toType OneColumn ty = ty
-toType ManyColumns ty = List ty
+toType : Columns cnt ty ret -> Type
+toType CNone = ()
+toType {cnt = OneRow} _ = ret
+toType {cnt = ManyRows} _ = List ret
 
 export
 extractReturning : MonadError ExecError m =>
