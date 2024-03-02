@@ -8,6 +8,9 @@ import Postgres.Typed.Operations.Class
 import public Postgres.Typed.Operations.Expression
 import Postgres.Typed.Operations.Helpers
 
+%default total
+%prefix_record_projections off
+
 data DFrom : Type where
 public export
 from : Dummy DFrom
