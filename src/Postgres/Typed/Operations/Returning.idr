@@ -82,6 +82,7 @@ extractFirstRow : MonadError ExecError m =>
 extractFirstRow res sig matches = extractFields res (rewrite matches.rowsMatch in 0) sig matches
 
 public export
+0
 toType : ColumnsCount -> Type -> Type
 toType OneColumn ty = ty
 toType ManyColumns ty = List ty
