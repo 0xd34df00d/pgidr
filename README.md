@@ -32,7 +32,7 @@ Now we can create a table with `Person`s.
 `Postgres.Typed.Operations.create` does the trick, so in any `HasIO` context, we can:
 ```idris
 withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
-  result <- runMonadExec (create conn Person)
+  result <- runMonadExec conn (create Person)
 ```
 Here, `runMonadExec` executes an operation or a sequence of SQL operations,
 and it is responsible for error reporting, among other things.
@@ -43,14 +43,14 @@ where `res` is the result of the `action` (a `()` in this particular case).
 
 From now on, let's assume we're inside a `runMonadExec`:
 ```idris
-runMonadExec $ do
+runMonadExec conn $ do
   ...
 ```
 
 Then, we can insert a few records into our DB:
 ```idris
-runMonadExec $ do
-  result <- execute conn $ insert into Person [ Nothing, "John", "Doe", 42, Nothing ]
+runMonadExec conn $ do
+  result <- execute $ insert into Person [ Nothing, "John", "Doe", 42, Nothing ]
 ```
 The `result` here is also a `()`, since a plain `INSERT` query doesn't return anything.
 Also note that we don't provide anything for the primary key, passing a `Nothing` instead:
@@ -58,22 +58,22 @@ PostgreSQL will generate it for us.
 
 We can ask to return the primary key of the record we just inserted, though:
 ```idris
-  janeId <- execute conn $ insert' into Person [ Nothing, "Jane", "Doe", 42, Just "555-55-55" ] { returning := column "id" }
+  janeId <- execute $ insert' into Person [ Nothing, "Jane", "Doe", 42, Just "555-55-55" ] { returning := column "id" }
 ```
 and `johnId` here is an `Integer`
 (so if we wrote `pure johnId` next and ended the `runMonadExec` block, we'd get an `Either ExecError Integer`).
 
 We can also ask for more than one column:
 ```idris
-  result <- execute conn $ insert' into Person [ Nothing, "John", "Doe", 42, Just "555-55-555" ] { returning := columns ["id", "first_name"] }
+  result <- execute $ insert' into Person [ Nothing, "John", "Doe", 42, Just "555-55-555" ] { returning := columns ["id", "first_name"] }
 ```
 getting a tuple of the two corresponding elements, and it's perhaps easier to pattern-match it straight away:
 ```idris
-  [johnId, johnName] <- execute conn $ insert' into Person [ Nothing, "John", "Doe", 42, Just "555-55-555" ] { returning := columns ["id", "first_name"] }
+  [johnId, johnName] <- execute $ insert' into Person [ Nothing, "John", "Doe", 42, Just "555-55-555" ] { returning := columns ["id", "first_name"] }
 ```
 We can even ask for the whole row:
 ```idris
-  johnDoeRow <- execute conn $ insert' into Person [ Nothing, "John", "Doe", 22, Nothing ] { returning := all }
+  johnDoeRow <- execute $ insert' into Person [ Nothing, "John", "Doe", 22, Nothing ] { returning := all }
 ```
 getting a `Person` back!
 
