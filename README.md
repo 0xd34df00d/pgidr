@@ -5,15 +5,19 @@ as well as higher-level type-safe wrappers around basic SQL commands.
 
 ## A quick intro
 
+### Creating tables
+
 For an example of the latter, let's define a type representing a person:
 ```idris
 import Postgres.Typed.Tuple
 
-Person : Dir -> Type
-Person = NamedTuple "persons" [ MkSE "id" Integer [PKey PKeySerial]
+0
+Person : (dir : Dir) -> Type
+Person = NamedTuple "persons" [ PKeyInt "id"   -- a shortcut for a PRIMARY KEY that is SERIAL
                               , "first_name" @: String
                               , "last_name" @: String
                               , "age" @: Integer
+                              , "home_phone" @:? String   -- ? marks a nullable field
                               ]
 ```
 The `Dir` is a technicality to account for different types on reads/writes/updates to the same table:
@@ -22,45 +26,56 @@ is optional when storing a record to the database
 but it's always present when reading it back,
 so it is modeled by a `Maybe a` on writes and `a` on reads.
 
+It is also a good idea to mark tables as runtime-irrelevant via `0` to ensure they are erased at compile-time.
+
 Now we can create a table with `Person`s.
 `Postgres.Typed.Operations.create` does the trick, so in any `HasIO` context, we can:
 ```idris
 withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
   result <- runMonadExec (create conn Person)
 ```
-Here, `runMonadExec` executes an operation (that is, a `MonadExec` action),
+Here, `runMonadExec` executes an operation or a sequence of SQL operations,
 and it is responsible for error reporting, among other things.
 The `result` of `runMonadExec action` is a `Either ExecError res`,
-where `res` is the original result of the action (a `()` in this particular case).
+where `res` is the result of the `action` (a `()` in this particular case).
 
 ### Inserting records
 
+From now on, let's assume we're inside a `runMonadExec`:
+```idris
+runMonadExec $ do
+  ...
+```
+
 Then, we can insert a few records into our DB:
 ```idris
-  let query = insert into Person [ Nothing, "John", "Doe", 42 ]
-  result <- execute' conn query
+runMonadExec $ do
+  result <- execute conn $ insert into Person [ Nothing, "John", "Doe", 42, Nothing ]
 ```
-Here, `execute'` is another shortcut for executing `MonadExec` actions.
-The `result` here is also `Either ExecError ()`,
-since a plain `INSERT` query doesn't return anything.
+The `result` here is also a `()`, since a plain `INSERT` query doesn't return anything.
+Also note that we don't provide anything for the primary key, passing a `Nothing` instead:
+PostgreSQL will generate it for us.
 
-We can ask it to return the primary key of the record we just inserted, though:
+We can ask to return the primary key of the record we just inserted, though:
 ```idris
-  let query = insert' into Person [ Nothing, "John", "Doe", 42 ] { returning := column "id" }
-  result <- execute' conn query
+  janeId <- execute conn $ insert' into Person [ Nothing, "Jane", "Doe", 42, Just "555-55-55" ] { returning := column "id" }
 ```
-and `result` here is an `Either ExecError Integer`.
-We can ask for more than one column:
+and `johnId` here is an `Integer`
+(so if we wrote `pure johnId` next and ended the `runMonadExec` block, we'd get an `Either ExecError Integer`).
+
+We can also ask for more than one column:
 ```idris
-  let query = insert' into Person [ Nothing, "John", "Doe", 42 ] { returning := columns ["id", "first_name"] }
-  result <- execute' conn query
+  result <- execute conn $ insert' into Person [ Nothing, "John", "Doe", 42, Just "555-55-555" ] { returning := columns ["id", "first_name"] }
 ```
-or even the whole row:
+getting a tuple of the two corresponding elements, and it's perhaps easier to pattern-match it straight away:
 ```idris
-  let query = insert' into Person [ Nothing, "John", "Doe", 22 ] { returning := all }
-  result <- execute' conn query
+  [johnId, johnName] <- execute conn $ insert' into Person [ Nothing, "John", "Doe", 42, Just "555-55-555" ] { returning := columns ["id", "first_name"] }
 ```
-The types of the corresponding `result`s will be just as you'd expect!
+We can even ask for the whole row:
+```idris
+  johnDoeRow <- execute conn $ insert' into Person [ Nothing, "John", "Doe", 22, Nothing ] { returning := all }
+```
+getting a `Person` back!
 
 ## Features
 
