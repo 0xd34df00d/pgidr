@@ -64,7 +64,7 @@ extractTextual res row col = if getisnull res row col
                                 then Nothing
                                 else Just $ getvalueTextual res row col
 
-public export
+export
 extractFields : MonadError ExecError m =>
                 {n : _} ->
                 (res : Result s) ->
@@ -76,7 +76,7 @@ extractFields res row sig (MkRM _ Refl) = do
   let indices = tabulate (extractTextual res row)
   traversePropertyRelevant parseTextual indices
 
-public export
+export
 extractFieldsMany : MonadError ExecError m =>
                     {n : _} ->
                     (res : Result s) ->
