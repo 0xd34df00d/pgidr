@@ -75,3 +75,14 @@ extractFields : MonadError ExecError m =>
 extractFields res row sig (MkRM _ Refl) = do
   let indices = tabulate (extractTextual res row)
   traversePropertyRelevant parseTextual indices
+
+public export
+extractFieldsMany : MonadError ExecError m =>
+                    {n : _} ->
+                    (res : Result s) ->
+                    (sig : Signature qk n) ->
+                    m (List (Tuple sig Read))
+extractFieldsMany res sig = do
+  let rows = Data.Vect.Fin.tabulate {len = ntuples res} id
+  matches <- ensureMatches {numRows = ntuples res}
+  map toList $ for rows $ \row => extractFields res row _ matches

@@ -143,12 +143,9 @@ execSelect (MkSelect selSrc columns whereClause groupBy orderBy) conn = do
           opt "ORDER BY " toQueryPart orderBy
   result <- execQueryParams conn query []
   ensureQuerySuccess query result
-  let rows = Data.Vect.Fin.tabulate {len = ntuples result} id
   case columns of
-       CAll => do matches <- ensureMatches {numRows = ntuples result}
-                  map toList $ for rows $ \row => fromTuple <$> extractFields result row _ matches
-       CSome ixes => do matches <- ensureMatches {numRows = ntuples result}
-                        map toList $ for rows $ \row => extractFields result row _ matches
+       CAll => map fromTuple <$> extractFieldsMany result _
+       CSome ixes => extractFieldsMany result _
 
 selectOp : Select ty ret -> Operation ret
 selectOp = singleOp . execSelect
