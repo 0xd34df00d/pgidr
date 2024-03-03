@@ -34,21 +34,27 @@ data ResultStatus : Type where
   ResultError : (code : ResultStatusCode) -> (msg : String) -> ResultStatus
 
 public export
+record QR where
+  constructor QueryResult
+  {0 queryResultSTag : Type}
+  result : Result queryResultSTag
+
+public export
 interface (MonadError ExecError m, HasIO m) => MonadExec m where
   ||| Execute a query without any parameters.
-  execQuery : Conn s -> String -> m (Result s)
+  execQuery : String -> m QR
   ||| Execute a query with a given vector of parameters.
-  execQueryParams : Conn s -> String -> {n : _} -> Vect n String -> m (Result s)
+  execQueryParams : String -> {n : _} -> Vect n String -> m QR
   ||| Check query result status, returning the status and a potential error message.
   resultStatus : Result s -> m ResultStatus
 
 export
-runMonadExec : HasIO io => (forall m. MonadExec m => m res) -> io (Either ExecError res)
-runMonadExec action = runEitherT {m = io} action
+runMonadExec : HasIO io => (conn : Conn s) -> (forall m. MonadExec m => m res) -> io (Either ExecError res)
+runMonadExec {s = _} conn action = runEitherT {m = io} action
   where
   MonadExec (EitherT ExecError io) where
-    execQuery = Postgres.C.exec
-    execQueryParams = Postgres.C.execParams'
+    execQuery q = QueryResult <$> Postgres.C.exec conn q
+    execQueryParams q params = QueryResult <$> Postgres.C.execParams' conn q params
     resultStatus res = do
       status <- Postgres.C.resultStatus res
       if isSuccessfulQuery status
@@ -57,16 +63,16 @@ runMonadExec action = runEitherT {m = io} action
 
 -- TODO having a list as the monoid is unnecessarily slow
 export
-runMonadExecLogging : HasIO io => (forall m. MonadExec m => m res) -> io (Either ExecError res, List String)
-runMonadExecLogging action = runWriterT $ runEitherT {m = WriterT (List String) io} action
+runMonadExecLogging : HasIO io => (conn : Conn s) -> (forall m. MonadExec m => m res) -> io (Either ExecError res, List String)
+runMonadExecLogging {s = _} conn action = runWriterT $ runEitherT {m = WriterT (List String) io} action
   where
   MonadExec (EitherT ExecError (WriterT (List String) io)) where
-    execQuery conn q = do
+    execQuery q = do
       tell $ pure $ "executing `\{q}`"
-      Postgres.C.exec conn q
-    execQueryParams conn q params = do
+      QueryResult <$> Postgres.C.exec conn q
+    execQueryParams q params = do
       tell $ pure $ "executing `\{q}` with params `\{show params}`"
-      Postgres.C.execParams' conn q params
+      QueryResult <$> Postgres.C.execParams' conn q params
     resultStatus res = do
       status <- Postgres.C.resultStatus res
       tell $ pure $ "query status: `\{show status}`"

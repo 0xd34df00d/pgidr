@@ -52,11 +52,11 @@ record Insert (ty : Dir -> Type) (ret : Type) where
   returning : Columns OneRow ty ret
 
 execInsert : Insert ty ret -> ExecuteFun ret
-execInsert (MkInsert val returning) conn = do
+execInsert (MkInsert val returning) = do
   let (_ ** cols) = mkInsertColumns val
       query = mkInsertQuery {ty} cols returning
       params = map (.value) cols
-  result <- execQueryParams conn query params
+  QueryResult result <- execQueryParams query params
   ensureQuerySuccess query result
   extractReturning result returning
 

@@ -135,13 +135,13 @@ namespace OptList
   opt pref f ls = opt pref f (Just ls)
 
 execSelect : Select ty ret -> ExecuteFun ret
-execSelect (MkSelect selSrc columns whereClause groupBy orderBy) conn = do
+execSelect (MkSelect selSrc columns whereClause groupBy orderBy) = do
   let query = "SELECT \{joinBy ", " $ toColumnNames columns} " ++
               "FROM \{selSrc} " ++
               "WHERE \{toQueryPart whereClause} " ++
           opt "GROUP BY " toQueryPart groupBy ++
           opt "ORDER BY " toQueryPart orderBy
-  result <- execQueryParams conn query []
+  QueryResult result <- execQueryParams query []
   ensureQuerySuccess query result
   case columns of
        CAll => map fromTuple <$> extractFieldsMany result _

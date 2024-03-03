@@ -24,7 +24,12 @@ dropTable conn = do
   dumpResult res
 
 0 Person : (dir : Dir) -> Type
-Person = NamedTuple "persons" [PKeyInt "id", "first_name" @: String, "last_name" @: String, "age" @: Integer]
+Person = NamedTuple "persons" [ PKeyInt "id"
+                              , "first_name" @: String
+                              , "last_name" @: String
+                              , "age" @: Integer
+                              , "home_phone" @:? String
+                              ]
 
 0 Payout : (dir : Dir) -> Type
 Payout = NamedTuple "payouts" [PKeyInt "id", "person_id" @> Person $ "id", "payout_sum" @: Integer]
@@ -51,15 +56,15 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
   putStr e
 
   dropTable conn
-  (res, logs) <- runMonadExecLogging $ do
-    create conn Person
-    create conn Payout
+  (res, logs) <- runMonadExecLogging conn $ do
+    create Person
+    create Payout
 
-    deleted <- execute conn $ do
-      () <- insert into Person [ Nothing, "John", "Doe", 42 ]
-      p2 <- insert' into Person [ Nothing, "Jane", "Doe", 32 ] { returning := all }
-      p3id <- insert' into Person [ Nothing, "Johnny", "Donny", 41 ] { returning := column "id" }
-      [p4id, _] <- insert' into Person [ Nothing, "Foo", "Bar", 666 ] { returning := columns ["id", "first_name"] }
+    deleted <- execute $ do
+      () <- insert into Person [ Nothing, "John", "Doe", 42, Nothing ]
+      p2 <- insert' into Person [ Nothing, "Jane", "Doe", 32, Just "555-55-55" ] { returning := all }
+      p3id <- insert' into Person [ Nothing, "Johnny", "Donny", 41, Nothing ] { returning := column "id" }
+      [p4id, _] <- insert' into Person [ Nothing, "Foo", "Bar", 666, Nothing ] { returning := columns ["id", "first_name"] }
 
       for_ {t = List} [100, 300, 200, 400] $ \sum =>
         insert into Payout [ Nothing, p3id, sum ]
@@ -71,7 +76,7 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
       _ <- select from (Person `as` "p1" `crossJoin` Person `as` "p2") id
       delete' from Payout (col "person_id" == val p3id) { returning := all }
     printLn deleted
-    payouts <- execute conn (select from (innerJoin (table Person) (table Payout) $ "payouts"."person_id" == "persons"."id") id)
+    payouts <- execute (select from (innerJoin (table Person) (table Payout) $ "payouts"."person_id" == "persons"."id") id)
     -- printLn payouts
     pure ()
   putStrLn $ unlines $ logs

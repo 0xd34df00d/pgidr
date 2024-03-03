@@ -40,10 +40,9 @@ createQuery ty creatables = "CREATE TABLE \{tableNameOf ty} (\{fieldsStr _ creat
 
 export
 create : MonadExec m =>
-         Conn s ->
          (0 ty : _) ->
          (HasSignature Unqualified _ ty, HasTableName ty) =>
          {auto alls : All (CreatablePgType . (.type)) (signatureOf ty)} ->
          m ()
-create conn ty = let query = createQuery ty alls
-                  in execQuery conn query >>= ensureQuerySuccess query
+create ty = let query = createQuery ty alls
+             in execQuery query >>= \(QueryResult result) => ensureQuerySuccess query result

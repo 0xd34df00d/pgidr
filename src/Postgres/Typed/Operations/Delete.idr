@@ -27,11 +27,11 @@ record Delete (ty : Dir -> Type) ret where
   returning : Columns ManyRows ty ret
 
 execDelete : Delete ty ret -> ExecuteFun ret
-execDelete (MkDelete table where' returning) conn = do
+execDelete (MkDelete table where' returning) = do
   let query = "DELETE FROM \{table} " ++
               "WHERE \{toQueryPart where'} " ++
               mkReturningClause returning
-  result <- execQuery conn query
+  QueryResult result <- execQuery query
   ensureQuerySuccess query result
   extractReturning result returning
 
