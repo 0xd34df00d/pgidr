@@ -104,6 +104,6 @@ extractReturning {cnt = OneRow} result = \case
    CSome idxes => extractFirstRow result _ =<<| ensureMatches
 extractReturning {cnt = ManyRows} result = \case
    CNone => pure ()
-   CAll => ?erhs1 -- fromTuple <$> (extractFirstRow result _ =<<| ensureMatches)
-   COne idx => ?erhs2 -- head <$> (extractFirstRow result (subSignature _ [idx]) =<<| ensureMatches)
-   CSome idxes => ?erhs3 -- extractFirstRow result _ =<<| ensureMatches
+   CAll => map fromTuple <$> extractFieldsMany result _
+   COne idx => map head <$> extractFieldsMany result (subSignature _ [idx])
+   CSome idxes => extractFieldsMany result _
