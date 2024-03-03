@@ -88,7 +88,8 @@ The types of the corresponding `result`s will be just as you'd expect!
 
 `DELETE`:
 
-* [ ] Basic deletes with `WHERE`
+* [x] Basic deletes with `WHERE`
+* [x] `RETURNING`
 
 ## Building
 
