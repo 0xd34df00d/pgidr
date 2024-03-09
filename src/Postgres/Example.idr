@@ -32,7 +32,10 @@ Person = NamedTuple "persons" [ PKeyInt "id"
                               ]
 
 0 Payout : (dir : Dir) -> Type
-Payout = NamedTuple "payouts" [PKeyInt "id", "person_id" @> Person $ "id", "payout_sum" @: Integer]
+Payout = NamedTuple "payouts" [ PKeyInt "id"
+                              , "person_id" @> Person $ "id"
+                              , "payout_sum" @: Integer
+                              ]
 
 handleResult : Show res => String -> Either ExecError res -> IO ()
 handleResult success = \case Left err => putStrLn $ "error: " ++ show err
