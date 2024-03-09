@@ -23,7 +23,7 @@ dropTable conn = do
   res <- exec conn "DROP TABLE IF EXISTS persons"
   dumpResult res
 
-0 Person : (dir : Dir) -> Type
+0 Person : (ctx : OpCtx) -> Type
 Person = NamedTuple "persons" [ PKeyInt "id"
                               , "first_name" @: String
                               , "last_name" @: String
@@ -31,7 +31,7 @@ Person = NamedTuple "persons" [ PKeyInt "id"
                               , "home_phone" @:? String
                               ]
 
-0 Payout : (dir : Dir) -> Type
+0 Payout : (ctx : OpCtx) -> Type
 Payout = NamedTuple "payouts" [ PKeyInt "id"
                               , "person_id" @> Person $ "id"
                               , "payout_sum" @: Integer

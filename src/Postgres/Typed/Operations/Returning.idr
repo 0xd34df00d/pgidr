@@ -11,7 +11,7 @@ import Postgres.Typed.Operations.Helpers
 
 public export
 0
-typeAt : (0 ty : Dir -> Type) ->
+typeAt : (0 ty : OpCtx -> Type) ->
          HasSignature Unqualified n ty =>
          (idx : Fin n) ->
          Type
@@ -27,7 +27,7 @@ applyRowCount OneRow ty = ty
 applyRowCount ManyRows ty = List ty
 
 public export
-data Columns : (cnt : RowCount) -> (ty : Dir -> Type) -> (ret : Type) -> Type where
+data Columns : (cnt : RowCount) -> (ty : OpCtx -> Type) -> (ret : Type) -> Type where
   CNone : Columns cnt ty ()
   CAll  : HasSignature Unqualified n ty =>
           Columns cnt ty (applyRowCount cnt (ty Read))
@@ -44,7 +44,7 @@ all : HasSignature Unqualified n ty => Columns cnt ty (applyRowCount cnt $ ty Re
 all = CAll
 
 public export
-ColsType : (ty : Dir -> Type) ->
+ColsType : (ty : OpCtx -> Type) ->
            HasSignature Unqualified n ty =>
            {k : _} ->
            {names : Vect k (Name Unqualified)} ->

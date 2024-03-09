@@ -51,17 +51,17 @@ toSig (SigLeaf ty alias) = aliasify alias $ signatureOf ty
 toSig (SigConcat l _ r _) = toSig l ++ toSig r
 
 export
-data JoinTree : (st : SigTree n) -> (dir : Dir) -> Type where
+data JoinTree : (st : SigTree n) -> (ctx : OpCtx) -> Type where
   Leaf : IsTupleLike Unqualified n ty =>
          IsSelectSource ty =>
-         (leaf : ty dir) ->
-         JoinTree (SigLeaf ty alias) dir
+         (leaf : ty ctx) ->
+         JoinTree (SigLeaf ty alias) ctx
   Join : {sigl : SigTree nl} ->
          {sigr : SigTree nr} ->
          {jcond : JoinCondition sigl sigr} ->
-         (jtl : JoinTree sigl dir) ->
-         (jtr : JoinTree sigr dir) ->
-         JoinTree (SigConcat sigl jtype sigr jcond) dir
+         (jtl : JoinTree sigl ctx) ->
+         (jtr : JoinTree sigr ctx) ->
+         JoinTree (SigConcat sigl jtype sigr jcond) ctx
 
 public export
 {sl : SigTree nl} -> {sr : SigTree nr} -> HasSignature Qualified (nl + nr) (JoinOnExprSig sl sr) where
@@ -85,7 +85,7 @@ export
               (fromTuple $ rewrite cong fst prf in fst splits)
               (fromTuple $ rewrite cong snd prf in snd splits)
 
-  fromToId (Leaf {alias} leaf) = rewrite unwrapWrapId {dir} alias (toTuple leaf) in
+  fromToId (Leaf {alias} leaf) = rewrite unwrapWrapId {ctx} alias (toTuple leaf) in
                                          cong Leaf $ fromToId leaf
   fromToId (Join jtl jtr) = ?w3_2
   toFromId tup with (st)
@@ -113,11 +113,11 @@ CanBeJoined st1 st2 = isect (sigTreeSources st1) (sigTreeSources st2) = []
   isect xs ys = [x | x <- xs, any (== x) ys]
 
 export
-{dir, st : _} -> Show (JoinTree st dir) where
+{ctx, st : _} -> Show (JoinTree st ctx) where
   show jt = "\{toFromPart st} \{prettyTuple $ toTuple jt}"
 
 public export
-table : (0 ty : Dir -> Type) ->
+table : (0 ty : OpCtx -> Type) ->
         IsTupleLike Unqualified n ty =>
         IsSelectSource ty =>
         HasTableName ty =>
@@ -126,7 +126,7 @@ table ty = SigLeaf ty (tableNameOf ty)
 
 infix 3 `as`
 public export
-as : (0 ty : Dir -> Type) ->
+as : (0 ty : OpCtx -> Type) ->
      (alias : String) ->
      IsTupleLike Unqualified n ty =>
      IsSelectSource ty =>

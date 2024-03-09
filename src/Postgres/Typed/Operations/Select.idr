@@ -18,7 +18,7 @@ import Postgres.Typed.Operations.Join
 
 namespace Output
   public export
-  data Columns : (ty : Dir -> Type) -> (qk : QualKind) -> (ret : Type) -> Type where
+  data Columns : (ty : OpCtx -> Type) -> (qk : QualKind) -> (ret : Type) -> Type where
     CAll    : HasSignature qk n ty =>
               Columns ty qk (List (ty Read))
     CSome   : HasSignature qk n ty =>
@@ -49,7 +49,7 @@ namespace Ordering
                                          Last => "LAST"
 
   public export
-  record Order (ty : Dir -> Type) where
+  record Order (ty : OpCtx -> Type) where
     constructor MkOrder
     orderExpr : Expr ty a
     direction : Maybe OrderDir
@@ -82,7 +82,7 @@ namespace Ordering
 
 namespace Grouping
   public export
-  record SomeExpr (ty : Dir -> Type) where
+  record SomeExpr (ty : OpCtx -> Type) where
     constructor MkSE
     expr : Expr ty a
 
@@ -107,7 +107,7 @@ namespace Grouping
   toQueryPart = joinBy ", " . map (\se => toQueryPart se.expr)
 
 public export
-record Select (ty : Dir -> Type) (ret : Type) where
+record Select (ty : OpCtx -> Type) (ret : Type) where
   constructor MkSelect
   {colCount : Nat}
   {auto isTableType : IsTupleLike qk colCount ty}
@@ -151,13 +151,13 @@ selectOp : Select ty ret -> Operation ret
 selectOp = singleOp . execSelect
 
 public export 0
-SelectMod : (Dir -> Type) -> Type -> Type
+SelectMod : (OpCtx -> Type) -> Type -> Type
 SelectMod ty ret = Select ty (List (ty Read)) -> Select ty (List ret)
 
 namespace SelectTable
   export
   select : (0 _ : Dummy DFrom) ->
-           (0 ty : Dir -> Type) ->
+           (0 ty : OpCtx -> Type) ->
            {n : _} ->
            IsTupleLike qk n ty =>
            IsSelectSource ty =>

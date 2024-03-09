@@ -14,13 +14,13 @@ import public Postgres.Typed.Signature
 %default total
 
 public export
-data Dir = Read | Write
+data OpCtx = Read | Write
 
 public export
 data EffectiveNullability = Nullable | NonNullable
 
 public export
-computeNullability : List (Modifier ty) -> Dir -> EffectiveNullability
+computeNullability : List (Modifier ty) -> OpCtx -> EffectiveNullability
 computeNullability mods Read =
   contains mods
     [ isNotNull ~> NonNullable
@@ -34,43 +34,43 @@ computeNullability mods Write =
     ] (otherwise Nullable)
 
 public export 0
-computeType : Dir -> (ty : Type) -> List (Modifier ty) -> Type
-computeType dir ty mods = case computeNullability mods dir of
+computeType : OpCtx -> (ty : Type) -> List (Modifier ty) -> Type
+computeType ctx ty mods = case computeNullability mods ctx of
                                Nullable => Maybe ty
                                NonNullable => ty
 
 public export 0
-computeType' : Dir -> (_ : SignatureElem qk) -> Type
-computeType' dir (MkSE _ ty modifiers) = computeType dir ty modifiers
+computeType' : OpCtx -> (_ : SignatureElem qk) -> Type
+computeType' ctx (MkSE _ ty modifiers) = computeType ctx ty modifiers
 
 public export
-onSigVal : {dir : Dir} ->
+onSigVal : {ctx : OpCtx} ->
            (fNull : forall ty. PgType ty => Maybe ty -> a) ->
            (fNonNull : forall ty. PgType ty => ty -> a) ->
            (se : SignatureElem qk) ->
-           (elt : computeType' dir se) ->
+           (elt : computeType' ctx se) ->
            a
-onSigVal fNull fNonNull (MkSE _ ty mods) elt with (computeNullability mods dir)
+onSigVal fNull fNonNull (MkSE _ ty mods) elt with (computeNullability mods ctx)
   _ | Nullable = fNull elt
   _ | NonNullable = fNonNull elt
 
 public export
-onSigValUniform : {dir : Dir} ->
+onSigValUniform : {ctx : OpCtx} ->
                   (f : forall ty. PgType ty => ty -> a) ->
                   (se : SignatureElem qk) ->
-                  (elt : computeType' dir se) ->
+                  (elt : computeType' ctx se) ->
                   Maybe a
 onSigValUniform f = onSigVal (map f) (Just . f)
 
 public export
-Tuple : Signature qk n -> (dir : Dir) -> Type
-Tuple sig dir = All (computeType' dir) sig
+Tuple : Signature qk n -> (ctx : OpCtx) -> Type
+Tuple sig ctx = All (computeType' ctx) sig
 
 export
-prettyTuple : {dir : _} -> {s : Signature qk _} -> Tuple s dir -> String
+prettyTuple : {ctx : _} -> {s : Signature qk _} -> Tuple s ctx -> String
 prettyTuple tup = "{ " ++ joinBy ", " (toList $ forget $ mapPropertyRelevant showElem tup) ++ " }"
   where
-  showElem : (se : SignatureElem qk) -> computeType' dir se -> String
+  showElem : (se : SignatureElem qk) -> computeType' ctx se -> String
   showElem se elt = let value = maybe "IS NULL" ("= " ++) $ onSigValUniform show se elt
                      in "\{showName se.name} \{value}"
 
@@ -78,17 +78,17 @@ public export
 subTuple : (0 ty : _) ->
            HasSignature qn n ty =>
            (idxes : Vect k (Fin n)) ->
-           Dir ->
+           OpCtx ->
            Type
 subTuple ty idxes = Tuple (signatureOf ty `subSignature` idxes)
 
 public export
-record NamedTuple (name : String) (s : Signature qk n) (dir : Dir) where
+record NamedTuple (name : String) (s : Signature qk n) (ctx : OpCtx) where
   constructor MkTup
-  columns : Tuple s dir
+  columns : Tuple s ctx
 
 export
-{dir, name : _} -> {s : Signature qk n} -> Show (NamedTuple name s dir) where
+{ctx, name : _} -> {s : Signature qk n} -> Show (NamedTuple name s ctx) where
   show tup = name ++ " " ++ prettyTuple tup.columns
 
 public export
@@ -100,15 +100,15 @@ public export
   tableName = name
 
 public export
-interface HasSignature qk n ty => IsTupleLike qk n (0 ty : Dir -> Type) | ty where
+interface HasSignature qk n ty => IsTupleLike qk n (0 ty : OpCtx -> Type) | ty where
   constructor MkIsTupleLike
-  toTuple : ty dir -> Tuple (signatureOf ty) dir
-  fromTuple : Tuple (signatureOf ty) dir -> ty dir
+  toTuple : ty ctx -> Tuple (signatureOf ty) ctx
+  fromTuple : Tuple (signatureOf ty) ctx -> ty ctx
 
-  fromToId : (v : ty dir) ->
+  fromToId : (v : ty ctx) ->
              fromTuple (toTuple v) = v
-  toFromId : (v : Tuple (signatureOf ty) dir) ->
-             toTuple (fromTuple {dir} v) = v
+  toFromId : (v : Tuple (signatureOf ty) ctx) ->
+             toTuple (fromTuple {ctx} v) = v
 
 public export
 {name : _} -> {s : Signature qk n} -> IsTupleLike qk n (NamedTuple name s) where
@@ -127,30 +127,30 @@ aliasify : String -> Signature Unqualified n -> Signature Qualified n
 aliasify alias = map (aliasifySig alias)
 
 public export
-wrapAliasify : All (computeType' dir) sig ->
-               All (computeType' dir) (aliasify alias sig)
+wrapAliasify : All (computeType' ctx) sig ->
+               All (computeType' ctx) (aliasify alias sig)
 wrapAliasify [] = []
 wrapAliasify {sig = (MkSE _ _ _ {pgType}) :: _} (x :: xs) = x :: wrapAliasify xs
 
 public export
 unwrapAliasify : {sig : _} ->
-                 All (computeType' dir) (aliasify alias sig) ->
-                 All (computeType' dir) sig
+                 All (computeType' ctx) (aliasify alias sig) ->
+                 All (computeType' ctx) sig
 unwrapAliasify {sig = []} [] = []
 unwrapAliasify {sig = (MkSE {}) :: _} (x :: xs) = x :: unwrapAliasify xs
 
 export
 unwrapWrapId : {sig : _} ->
                (alias : _) ->
-               (alls : All (computeType' dir) sig) ->
-               unwrapAliasify {dir} {alias} (wrapAliasify {dir} {alias} alls) = alls
+               (alls : All (computeType' ctx) sig) ->
+               unwrapAliasify {ctx} {alias} (wrapAliasify {ctx} {alias} alls) = alls
 unwrapWrapId _ [] = Refl
 unwrapWrapId {sig = (MkSE {}) :: _} alias (a :: as) = cong (a ::) (unwrapWrapId alias as)
 
 export
 wrapUnwrapId : {sig : _} ->
                (alias : _) ->
-               (alls : All (computeType' dir) (aliasify alias sig)) ->
-               wrapAliasify {sig} {dir} {alias} (unwrapAliasify {dir} {alias} alls) = alls
+               (alls : All (computeType' ctx) (aliasify alias sig)) ->
+               wrapAliasify {sig} {ctx} {alias} (unwrapAliasify {ctx} {alias} alls) = alls
 wrapUnwrapId {sig = []} _ [] = Refl
 wrapUnwrapId {sig = (MkSE {}) :: _} alias (a :: as) = cong (a ::) (wrapUnwrapId alias as)

@@ -18,7 +18,7 @@ from : Dummy DFrom
 from = MkDF
 
 public export
-record Delete (ty : Dir -> Type) ret where
+record Delete (ty : OpCtx -> Type) ret where
   constructor MkDelete
   {fieldsCount : Nat}
   {auto tyIsTuple : IsTupleLike Unqualified fieldsCount ty}
@@ -37,7 +37,7 @@ execDelete (MkDelete table where' returning) = do
 
 export
 delete : (0 _ : Dummy DFrom) ->
-         (0 ty : Dir -> Type) ->
+         (0 ty : OpCtx -> Type) ->
          {n : _} ->
          (IsTupleLike Unqualified n ty, HasTableName ty) =>
          Expr ty Bool ->
@@ -46,7 +46,7 @@ delete _ ty expr = singleOp $ execDelete $ MkDelete (tableNameOf ty) expr CNone
 
 export
 delete' : (0 _ : Dummy DFrom) ->
-          (0 ty : Dir -> Type) ->
+          (0 ty : OpCtx -> Type) ->
           {n : _} ->
           (IsTupleLike Unqualified n ty, HasTableName ty) =>
           Expr ty Bool ->

@@ -43,7 +43,7 @@ mkInsertColumns = catMaybes
                 . toTuple
 
 public export
-record Insert (ty : Dir -> Type) (ret : Type) where
+record Insert (ty : OpCtx -> Type) (ret : Type) where
   constructor MkInsert
   {fieldsCount : Nat}
   {auto tyIsTuple : IsTupleLike Unqualified fieldsCount ty}
@@ -60,7 +60,7 @@ execInsert (MkInsert val returning) = do
   ensureQuerySuccess query result
   extractReturning result returning
 
-insertBase : (0 ty : Dir -> Type) ->
+insertBase : (0 ty : OpCtx -> Type) ->
              {n : _} ->
              (IsTupleLike Unqualified n ty, HasTableName ty) =>
              (val : ty Write) ->
@@ -78,7 +78,7 @@ into = MkDF
 namespace InsertRecord
   export
   insert : (0 _ : Dummy DInto) ->
-           (0 ty : Dir -> Type) ->
+           (0 ty : OpCtx -> Type) ->
            {n : _} ->
            (IsTupleLike Unqualified n ty, HasTableName ty) =>
            (val : ty Write) ->
@@ -87,7 +87,7 @@ namespace InsertRecord
 
   export
   insert' : (0 _ : Dummy DInto) ->
-            (0 ty : Dir -> Type) ->
+            (0 ty : OpCtx -> Type) ->
             {n : _} ->
             (IsTupleLike Unqualified n ty, HasTableName ty) =>
             (val : ty Write) ->
@@ -98,7 +98,7 @@ namespace InsertRecord
 namespace InsertTuple
   export
   insert : (0 _ : Dummy DInto) ->
-           (0 ty : Dir -> Type) ->
+           (0 ty : OpCtx -> Type) ->
            {n : _} ->
            (IsTupleLike Unqualified n ty, HasTableName ty) =>
            (val : Tuple (signatureOf ty) Write) ->
@@ -107,7 +107,7 @@ namespace InsertTuple
 
   export
   insert' : (0 _ : Dummy DInto) ->
-            (0 ty : Dir -> Type) ->
+            (0 ty : OpCtx -> Type) ->
             {n : _} ->
             (IsTupleLike Unqualified n ty, HasTableName ty) =>
             (val : Tuple (signatureOf ty) Write) ->
