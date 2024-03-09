@@ -11,8 +11,7 @@ For an example of the latter, let's define a type representing a person:
 ```idris
 import Postgres.Typed.Tuple
 
-0
-Person : (dir : Dir) -> Type
+0 Person : (dir : Dir) -> Type
 Person = NamedTuple "persons" [ PKeyInt "id"   -- a shortcut for a PRIMARY KEY that is SERIAL
                               , "first_name" @: String
                               , "last_name" @: String
@@ -76,6 +75,41 @@ We can even ask for the whole row:
   johnDoeRow <- execute $ insert' into Person [ Nothing, "John", "Doe", 22, Nothing ] { returning := all }
 ```
 getting a `Person` back!
+
+### Queries are monadic too!
+
+In fact, SQL queries and actions form a monadic structure as well, so the above could be written simply as
+```idris
+  johnId <- execute $ do
+    () <- insert into Person [ Nothing, "John", "Doe", 42, Nothing ]
+    janeId <- insert' into Person [ Nothing, "Jane", "Doe", 42, Just "555-55-55" ] { returning := column "id" }
+    [johnId, johnName] <- insert' into Person [ Nothing, "John", "Doe", 42, Just "555-55-555" ] { returning := columns ["id", "first_name"] }
+    wholeJohnDoeRow <- insert' into Person [ Nothing, "John", "Doe", 22, Nothing ] { returning := all }
+    pure johnId
+```
+Of course, if any of the queries abort, the subsequent one won't be executed — just with anything else in a `MonadExec` action.
+
+### Selects
+
+
+
+### References
+
+We can define a table that references our `Person`s:
+```idris
+0 Payout : (dir : Dir) -> Type
+Payout = NamedTuple "payouts" [ PKeyInt "id"
+                              , "person_id" @> Person $ "id"
+                              , "payout_sum" @: Integer
+                              ]
+```
+and then insert a few payouts (assuming we're continuing in the above `execute` `do`-block after `pure johnId`):
+```
+    for_ {t = List} [100, 300, 200, 400] $ \sum =>
+      insert into Payout [ Nothing, janeId, sum ]
+    for_ {t = List} [10, 30, 20, 40] $ \sum =>
+      insert into Payout [ Nothing, johnId, sum ]
+```
 
 ## Features
 
