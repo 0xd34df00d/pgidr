@@ -29,23 +29,27 @@ applyRowCount ManyRows ty = List ty
 public export
 data Columns : (cnt : RowCount) -> (ty : OpCtx -> Type) -> (ret : Type) -> Type where
   CNone : Columns cnt ty ()
-  CAll  : HasSignature Unqualified n ty =>
+  CAll  : {n : _} ->
+          IsTupleLike Unqualified n ty =>
           Columns cnt ty (applyRowCount cnt (ty Read))
-  COne  : HasSignature Unqualified n ty =>
+  COne  : {n : _} ->
+          IsTupleLike Unqualified n ty =>
           (idx : Fin n) ->
           Columns cnt ty (applyRowCount cnt $ typeAt ty idx)
-  CSome : HasSignature Unqualified n ty =>
-          {k : _} ->
+  CSome : {n, k : _} ->
+          IsTupleLike Unqualified n ty =>
           (idxes : Vect (S k) (Fin n)) ->
           Columns cnt ty (applyRowCount cnt $ subTuple ty idxes Read)
 
 public export
-all : HasSignature Unqualified n ty => Columns cnt ty (applyRowCount cnt $ ty Read)
+all : {n : _} ->
+      IsTupleLike Unqualified n ty =>
+      Columns cnt ty (applyRowCount cnt $ ty Read)
 all = CAll
 
 public export
 ColsType : (ty : OpCtx -> Type) ->
-           HasSignature Unqualified n ty =>
+           IsTupleLike Unqualified n ty =>
            {k : _} ->
            {names : Vect k (Name Unqualified)} ->
            (alls : All (`InSignature` signatureOf ty) names) ->
@@ -53,7 +57,8 @@ ColsType : (ty : OpCtx -> Type) ->
 ColsType ty alls = Tuple (signatureOf ty `subSignature` namesToIxes alls) Read
 
 public export
-columns : HasSignature Unqualified n ty =>
+columns : {n : _} ->
+          IsTupleLike Unqualified n ty =>
           {k : _} ->
           (names : Vect (S k) (Name Unqualified)) ->
           {auto alls : All (`InSignature` signatureOf ty) names} ->
@@ -61,7 +66,8 @@ columns : HasSignature Unqualified n ty =>
 columns _ = CSome $ namesToIxes alls
 
 public export
-column : HasSignature Unqualified n ty =>
+column : {n : _} ->
+         IsTupleLike Unqualified n ty =>
          (name : Name Unqualified) ->
          {auto inSig : name `InSignature` signatureOf ty} ->
          Columns cnt ty (applyRowCount cnt $ computeType' Read (inSigToFin inSig `index` signatureOf ty))
@@ -92,8 +98,7 @@ extractFirstRow res sig matches = extractFields res (rewrite matches.rowsMatch i
 
 export
 extractReturning : MonadError ExecError m =>
-                   {cnt, n : _} ->
-                   IsTupleLike Unqualified n ty =>
+                   {cnt : _} ->
                    Result s ->
                    Columns cnt ty ret ->
                    m ret
