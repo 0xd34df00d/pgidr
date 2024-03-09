@@ -141,10 +141,10 @@ inSigToFin : {0 mv : Maybe a} -> IsJust' mv -> a
 inSigToFin = fromIsJust'
 
 public export
-namesToIxes : HasSignature Unqualified n ty =>
-              {k : _} ->
+namesToIxes : {k, n : _} ->
+              {0 sig : Signature Unqualified n} ->
               {names : Vect k (Name Unqualified)} ->
-              (alls : All (`InSignature` signatureOf ty) names) ->
+              (alls : All (`InSignature` sig) names) ->
               Vect k (Fin n)
 namesToIxes [] = []
 namesToIxes (inSig :: inSigs) = inSigToFin inSig :: namesToIxes inSigs
