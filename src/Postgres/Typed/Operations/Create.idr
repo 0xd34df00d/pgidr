@@ -44,5 +44,7 @@ create : MonadExec m =>
          (HasSignature Unqualified _ ty, HasTableName ty) =>
          {auto alls : All (CreatablePgType . (.type)) (signatureOf ty)} ->
          m ()
-create ty = let query = createQuery ty alls
-             in execQuery query >>= \(QueryResult result) => ensureQuerySuccess query result
+create ty = do
+  let query = createQuery ty alls
+  QueryResult result <- execQuery query
+  ensureQuerySuccess query result
