@@ -89,7 +89,6 @@ infixl 1 =<<|
 f =<<| act = act >>= \r => f r
 
 extractFirstRow : MonadError ExecError m =>
-                  {n : _} ->
                   (res : Result s) ->
                   (sig : Signature Unqualified n) ->
                   (0 matches : ResultMatches res sig 1) ->

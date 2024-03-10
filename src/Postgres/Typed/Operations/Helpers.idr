@@ -66,7 +66,6 @@ extractTextual res row col = if getisnull res row col
 
 export
 extractFields : MonadError ExecError m =>
-                {n : _} ->
                 (res : Result s) ->
                 (row : RowI res) ->
                 (sig : Signature qk n) ->
