@@ -11,11 +11,10 @@ import Postgres.Typed.Operations.Helpers
 
 public export
 0
-typeAt : (0 ty : OpCtx -> Type) ->
-         HasSignature Unqualified n ty =>
+typeAt : (0 tbl : Table n) ->
          (idx : Fin n) ->
          Type
-typeAt ty idx = computeType' Read (idx `index` signatureOf ty)
+typeAt tbl idx = computeType' Read (idx `index` tbl.signature)
 
 public export
 data RowCount = OneRow | ManyRows
@@ -27,61 +26,62 @@ applyRowCount OneRow ty = ty
 applyRowCount ManyRows ty = List ty
 
 public export
-data Columns : (cnt : RowCount) -> (ty : OpCtx -> Type) -> (ret : Type) -> Type where
-  CNone : Columns cnt ty ()
+data Columns : (cnt : RowCount) -> (tbl : Table n) -> (ret : Type) -> Type where
+  CNone : Columns cnt tbl ()
   CAll  : {n : _} ->
-          IsTupleLike Unqualified n ty =>
-          Columns cnt ty (applyRowCount cnt (ty Read))
+          {tbl : Table n} ->
+          Columns cnt tbl (applyRowCount cnt $ tableTuple tbl Read)
   COne  : {n : _} ->
-          IsTupleLike Unqualified n ty =>
+          {tbl : Table n} ->
           (idx : Fin n) ->
-          Columns cnt ty (applyRowCount cnt $ typeAt ty idx)
+          Columns cnt tbl (applyRowCount cnt $ typeAt tbl idx)
   CSome : {n, k : _} ->
-          IsTupleLike Unqualified n ty =>
+          {tbl : Table n} ->
           (idxes : Vect (S k) (Fin n)) ->
-          Columns cnt ty (applyRowCount cnt $ subTuple ty idxes Read)
+          Columns cnt tbl (applyRowCount cnt $ subTuple tbl idxes Read)
 
 public export
 all : {n : _} ->
-      IsTupleLike Unqualified n ty =>
-      Columns cnt ty (applyRowCount cnt $ ty Read)
+      {tbl : Table n} ->
+      Columns cnt tbl (applyRowCount cnt $ tableTuple tbl Read)
 all = CAll
 
 public export
-ColsType : (ty : OpCtx -> Type) ->
-           IsTupleLike Unqualified n ty =>
+0
+ColsType : (tbl : Table n) ->
            {k : _} ->
            {names : Vect k (Name Unqualified)} ->
-           (alls : All (`InSignature` signatureOf ty) names) ->
+           (alls : All (`InSignature` tbl.signature) names) ->
            Type
-ColsType ty alls = Tuple (signatureOf ty `subSignature` namesToIxes alls) Read
+ColsType tbl alls = Tuple (tbl.signature `subSignature` namesToIxes alls) Read
 
 public export
-columns : {n : _} ->
-          IsTupleLike Unqualified n ty =>
-          {k : _} ->
+columns : {n, k : _} ->
+          {tbl : Table n} ->
           (names : Vect (S k) (Name Unqualified)) ->
-          {auto alls : All (`InSignature` signatureOf ty) names} ->
-          Columns cnt ty (applyRowCount cnt $ ColsType ty alls)
+          {auto alls : All (`InSignature` tbl.signature) names} ->
+          Columns cnt tbl (applyRowCount cnt $ ColsType tbl alls)
 columns _ = CSome $ namesToIxes alls
 
 public export
 column : {n : _} ->
-         IsTupleLike Unqualified n ty =>
+         {tbl : Table n} ->
          (name : Name Unqualified) ->
-         {auto inSig : name `InSignature` signatureOf ty} ->
-         Columns cnt ty (applyRowCount cnt $ computeType' Read (inSigToFin inSig `index` signatureOf ty))
+         {auto inSig : name `InSignature` tbl.signature} ->
+         Columns cnt tbl (applyRowCount cnt $ typeAt tbl (inSigToFin inSig))
 column _ = COne $ inSigToFin inSig
 
 export
-toColumnNames : Columns cnt ty ret -> Maybe (List String)
+toColumnNames : Columns cnt tbl ret ->
+                Maybe (List String)
 toColumnNames CNone = Nothing
-toColumnNames CAll = Just $ map (.uname) $ toList $ allColumnNames ty
-toColumnNames (COne idx) = Just [(idx `index` signatureOf ty).name.uname]
-toColumnNames (CSome idxes) = Just $ map (.uname) $ toList $ columnNames ty idxes
+toColumnNames CAll = Just $ map (.uname) $ toList $ allColumnNames tbl.signature
+toColumnNames (COne idx) = Just [(idx `index` tbl.signature).name.uname]
+toColumnNames (CSome idxes) = Just $ map (.uname) $ toList $ columnNames (tbl.signature) idxes
 
 export
-mkReturningClause : (returning : Columns cnt ty ret) -> String
+mkReturningClause : (returning : Columns cnt tbl ret) ->
+                    String
 mkReturningClause = maybe "" (\cols => "RETURNING " ++ joinBy ", " cols) . toColumnNames
 
 infixl 1 =<<|
@@ -99,15 +99,15 @@ export
 extractReturning : MonadError ExecError m =>
                    {cnt : _} ->
                    Result s ->
-                   Columns cnt ty ret ->
+                   Columns cnt tbl ret ->
                    m ret
 extractReturning {cnt = OneRow} result = \case
    CNone => pure ()
-   CAll => fromTuple <$> (extractFirstRow result _ =<<| ensureMatches)
+   CAll => extractFirstRow result _ =<<| ensureMatches
    COne idx => head <$> (extractFirstRow result (subSignature _ [idx]) =<<| ensureMatches)
    CSome idxes => extractFirstRow result _ =<<| ensureMatches
 extractReturning {cnt = ManyRows} result = \case
    CNone => pure ()
-   CAll => map fromTuple <$> extractFieldsMany result _
+   CAll => extractFieldsMany result _
    COne idx => map head <$> extractFieldsMany result (subSignature _ [idx])
    CSome idxes => extractFieldsMany result _

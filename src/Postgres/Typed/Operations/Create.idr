@@ -32,19 +32,17 @@ fieldsStr : (sig : Signature Unqualified _) ->
 fieldsStr sig alls = joinBy ", " $ toList $ forget $ mapPropertyRelevant fieldStr alls
 
 export
-createQuery : (0 ty : _) ->
-              (HasSignature Unqualified _ ty, HasTableName ty) =>
-              All (CreatablePgType . (.type)) (signatureOf ty) ->
+createQuery : (tbl : Table n) ->
+              All (CreatablePgType . (.type)) tbl.signature ->
               String
-createQuery ty creatables = "CREATE TABLE \{tableNameOf ty} (\{fieldsStr _ creatables})"
+createQuery tbl creatables = "CREATE TABLE \{tbl.name} (\{fieldsStr _ creatables})"
 
 export
 create : MonadExec m =>
-         (0 ty : _) ->
-         (HasSignature Unqualified _ ty, HasTableName ty) =>
-         {auto alls : All (CreatablePgType . (.type)) (signatureOf ty)} ->
+         (tbl : Table n) ->
+         {auto alls : All (CreatablePgType . (.type)) tbl.signature} ->
          m ()
-create ty = do
-  let query = createQuery ty alls
+create tbl = do
+  let query = createQuery tbl alls
   QueryResult result <- execQuery query
   ensureQuerySuccess query result

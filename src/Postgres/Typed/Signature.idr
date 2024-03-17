@@ -74,33 +74,17 @@ Signature : (qk : QualKind) -> (n : Nat) -> Type
 Signature qk n = Vect n (SignatureElem qk)
 
 public export
-interface HasTableName (0 ty : a) where
-  tableName : String
-
-public export
-tableNameOf : (0 ty : _) ->
-              HasTableName ty =>
-              String
-tableNameOf ty = tableName {ty}
-
-public export
-interface HasSignature qk n (0 ty : a) | ty where
-  constructor MkHasSignature
-  signature : Signature qk n
-
-public export
-signatureOf : (0 ty : _) ->
-              {auto hasSig : HasSignature qk n ty} ->
-              Signature qk n
-signatureOf ty = signature {ty}
+record Table ncols where
+  constructor MkTable
+  name : String
+  signature : Signature Unqualified ncols
 
 public export
 data Modifier : (ty : Type) -> Type where
   PKey : PKeySort ty -> Modifier ty
-  References : (0 other : a) ->
-               (HasTableName other, HasSignature Unqualified _ other) =>
+  References : (other : Table n) ->
                (idx : Fin n) ->
-               {auto teq : ty = (idx `index` signatureOf other).type} ->
+               {auto teq : ty = (idx `index` other.signature).type} ->
                Modifier ty
   Default : (defVal : ty) ->
             Modifier ty
@@ -160,16 +144,14 @@ name @:? ty = MkSE (UName name) ty []
 
 public export
 (@>) : (name : String) ->
-       (0 otherTy : a) ->
+       (other : Table n) ->
        (otherName : Name Unqualified) ->
-       HasSignature Unqualified n otherTy =>
-       HasTableName otherTy =>
-       {auto inSig : otherName `InSignature` signatureOf otherTy} ->
+       {auto inSig : otherName `InSignature` other.signature} ->
        SignatureElem Unqualified
-(@>) name otherTy otherName =
+(@>) name other otherName =
   let idx := inSigToFin inSig
-      pgTy := (idx `index` signatureOf otherTy).pgType
-   in MkSE (UName name) _ [References otherTy idx, NotNull]
+      pgTy := (idx `index` other.signature).pgType
+   in MkSE (UName name) _ [References other idx, NotNull]
 
 public export
 PKeyInt : (name : String) ->
@@ -183,14 +165,12 @@ subSignature : Signature qk n ->
 subSignature sig cols = map (`index` sig) cols
 
 export
-columnNames : (0 ty : _) ->
-              HasSignature qk n ty =>
+columnNames : (sig : Signature qk n) ->
               Vect k (Fin n) ->
               Vect k (Name qk)
-columnNames ty = map (.name . (`index` signatureOf ty))
+columnNames sig = map (.name . (`index` sig))
 
 export
-allColumnNames : (0 ty : _) ->
-                 HasSignature qk n ty =>
+allColumnNames : (sig : Signature qk n) ->
                  Vect n (Name qk)
-allColumnNames ty = map (.name) $ signatureOf ty
+allColumnNames = map (.name)

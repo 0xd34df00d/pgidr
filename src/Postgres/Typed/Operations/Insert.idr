@@ -21,10 +21,9 @@ record InsertColumn where
   colName : String
   value : String
 
-mkInsertQuery : {k : _} ->
-                (HasSignature Unqualified n ty, HasTableName ty) =>
+mkInsertQuery : {k, tbl : _} ->
                 (cols : Vect k InsertColumn) ->
-                (returning : Columns OneRow ty ret) ->
+                (returning : Columns OneRow tbl ret) ->
                 String
 mkInsertQuery cols returning =
   let namesStr = joinBy ", " $ toList $ .colName <$> cols
@@ -32,42 +31,38 @@ mkInsertQuery cols returning =
                    $ toList
                    $ tabulate {len = k} (\i => "$" ++ show (finToNat i + 1))
       returningClause = mkReturningClause returning
-   in "INSERT INTO \{tableNameOf ty} (\{namesStr}) VALUES (\{placeholders}) \{returningClause}"
+   in "INSERT INTO \{tbl.name} (\{namesStr}) VALUES (\{placeholders}) \{returningClause}"
 
-mkInsertColumns : IsTupleLike Unqualified n ty =>
-                  (val : ty Write) ->
+mkInsertColumns : (tbl : Table n) ->
+                  (val : Tuple tbl.signature Write) ->
                   (k ** Vect k InsertColumn)
-mkInsertColumns = catMaybes
-                . forget
-                . mapPropertyRelevant (\se => onSigValUniform (MkIC se.name.uname . toTextual) se)
-                . toTuple
+mkInsertColumns t = catMaybes
+                  . forget
+                  . mapPropertyRelevant (\se => onSigValUniform (MkIC se.name.uname . toTextual) se)
 
 public export
-record Insert (ty : OpCtx -> Type) (ret : Type) where
+record Insert (tbl : Table ncols) (ret : Type) where
   constructor MkInsert
-  {fieldsCount : Nat}
-  {auto tyIsTuple : IsTupleLike Unqualified fieldsCount ty}
-  {auto tyHasTable : HasTableName ty}
-  value : ty Write
-  returning : Columns OneRow ty ret
+  value : Tuple tbl.signature Write
+  returning : Columns OneRow tbl ret
 
-execInsert : Insert ty ret -> ExecuteFun ret
+execInsert : {tbl : _} -> Insert tbl ret -> ExecuteFun ret
 execInsert (MkInsert val returning) = do
-  let (_ ** cols) = mkInsertColumns val
-      query = mkInsertQuery {ty} cols returning
+  let (_ ** cols) = mkInsertColumns tbl val
+      query = mkInsertQuery cols returning
       params = map (.value) cols
   QueryResult result <- execQueryParams query params
   ensureQuerySuccess query result
   extractReturning result returning
 
-insertBase : (0 ty : OpCtx -> Type) ->
-             {n : _} ->
-             (IsTupleLike Unqualified n ty, HasTableName ty) =>
-             (val : ty Write) ->
-             Insert ty ()
+insertBase : (0 tbl : Table n) ->
+             (val : Tuple tbl.signature Write) ->
+             Insert tbl ()
 insertBase _ val = MkInsert val CNone
 
-insertOp : Insert ty ret -> Operation ret
+insertOp : {tbl : _} ->
+           Insert tbl ret ->
+           Operation ret
 insertOp = singleOp . execInsert
 
 data DInto : Type where
@@ -75,42 +70,19 @@ public export
 into : Dummy DInto
 into = MkDF
 
-namespace InsertRecord
-  export
-  insert : (0 _ : Dummy DInto) ->
-           (0 ty : OpCtx -> Type) ->
-           {n : _} ->
-           (IsTupleLike Unqualified n ty, HasTableName ty) =>
-           (val : ty Write) ->
-           Operation ()
-  insert _ ty val = insertOp $ insertBase ty val
+export
+insert : (0 _ : Dummy DInto) ->
+         {n : _} ->
+         (tbl : Table n) ->
+         (val : Tuple tbl.signature Write) ->
+         Operation ()
+insert _ tbl = insertOp . insertBase tbl
 
-  export
-  insert' : (0 _ : Dummy DInto) ->
-            (0 ty : OpCtx -> Type) ->
-            {n : _} ->
-            (IsTupleLike Unqualified n ty, HasTableName ty) =>
-            (val : ty Write) ->
-            (Insert ty () -> Insert ty ret) ->
-            Operation ret
-  insert' _ ty val f = insertOp $ f (insertBase ty val)
-
-namespace InsertTuple
-  export
-  insert : (0 _ : Dummy DInto) ->
-           (0 ty : OpCtx -> Type) ->
-           {n : _} ->
-           (IsTupleLike Unqualified n ty, HasTableName ty) =>
-           (val : Tuple (signatureOf ty) Write) ->
-           Operation ()
-  insert _ ty = insertOp . insertBase ty . fromTuple
-
-  export
-  insert' : (0 _ : Dummy DInto) ->
-            (0 ty : OpCtx -> Type) ->
-            {n : _} ->
-            (IsTupleLike Unqualified n ty, HasTableName ty) =>
-            (val : Tuple (signatureOf ty) Write) ->
-            (Insert ty () -> Insert ty ret) ->
-            Operation ret
-  insert' _ ty val f = insertOp $ f (insertBase ty (fromTuple val))
+export
+insert' : (0 _ : Dummy DInto) ->
+          {n : _} ->
+          (tbl : Table n) ->
+          (val : Tuple tbl.signature Write) ->
+          (Insert tbl () -> Insert tbl ret) ->
+          Operation ret
+insert' _ tbl val f = insertOp $ f (insertBase tbl val)

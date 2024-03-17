@@ -23,23 +23,23 @@ dropTable conn = do
   res <- exec conn "DROP TABLE IF EXISTS persons"
   dumpResult res
 
-0 Person : (ctx : OpCtx) -> Type
-Person = NamedTuple "persons" [ PKeyInt "id"
-                              , "first_name" @: String
-                              , "last_name" @: String
-                              , "age" @: Integer
-                              , "home_phone" @:? String
-                              ]
-
-0 Payout : (ctx : OpCtx) -> Type
-Payout = NamedTuple "payouts" [ PKeyInt "id"
-                              , "person_id" @> Person $ "id"
-                              , "payout_sum" @: Integer
-                              ]
-
 handleResult : Show res => String -> Either ExecError res -> IO ()
 handleResult success = \case Left err => putStrLn $ "error: " ++ show err
                              Right r => putStrLn $ success ++ ": " ++ show r
+
+Person : Table ?
+Person = MkTable "persons" [ PKeyInt "id"
+                           , "first_name" @: String
+                           , "last_name" @: String
+                           , "age" @: Integer
+                           , "home_phone" @:? String
+                           ]
+
+Payout : Table ?
+Payout = MkTable "payouts" [ PKeyInt "id"
+                           , "person_id" @> Person $ "id"
+                           , "payout_sum" @: Integer
+                           ]
 
 {-
 Assuming you've run
@@ -79,8 +79,13 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
       _ <- select from (Person `as` "p1" `crossJoin` Person `as` "p2") id
       delete' from Payout (col "person_id" == val p3id) { returning := all }
     printLn deleted
-    payouts <- execute (select from (innerJoin (table Person) (table Payout) $ "payouts"."person_id" == "persons"."id") id)
-    -- printLn payouts
+    payouts <- execute (select from
+                          (innerJoin (table Person) (table Payout) $
+                            "payouts".!."person_id" == "persons".!."id"
+                          )
+                          id
+                        )
+    printLn payouts
     pure ()
   putStrLn $ unlines $ logs
   case res of

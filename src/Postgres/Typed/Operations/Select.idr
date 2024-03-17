@@ -10,7 +10,6 @@ import public Postgres.Typed.Tuple
 import Postgres.Typed.Operations.Class
 import public Postgres.Typed.Operations.Expression
 import public Postgres.Typed.Operations.Helpers
-import public Postgres.Typed.Operations.SelectSource
 import Postgres.Typed.Operations.Join
 
 %default total
@@ -18,19 +17,20 @@ import Postgres.Typed.Operations.Join
 
 namespace Output
   public export
-  data Columns : (ty : OpCtx -> Type) -> (qk : QualKind) -> (ret : Type) -> Type where
-    CAll    : HasSignature qk n ty =>
-              Columns ty qk (List (ty Read))
-    CSome   : HasSignature qk n ty =>
-              {k : _} ->
+  data Columns : (sig : Signature qk n) -> (ret : Type) -> Type where
+    CAll    : {n : _} ->
+              {sig : Signature _ n} ->
+              Columns sig (List $ Tuple sig Read)
+    CSome   : {k, n : _} ->
+              {sig : Signature _ n} ->
               (ixes : Vect k (Fin n)) ->
-              Columns ty qk (List (subTuple ty ixes Read))
+              Columns sig (List $ Tuple (sig `subSignature` ixes) Read)
 
   export
-  toColumnNames : Columns ty qk ret ->
+  toColumnNames : Columns sig ret ->
                   List String
-  toColumnNames CAll = map showName $ toList $ allColumnNames ty
-  toColumnNames (CSome ixes) = map showName $ toList $ columnNames ty ixes
+  toColumnNames CAll = map showName $ toList $ allColumnNames sig
+  toColumnNames (CSome ixes) = map showName $ toList $ columnNames sig ixes
 
 namespace Ordering
   public export
@@ -49,31 +49,31 @@ namespace Ordering
                                          Last => "LAST"
 
   public export
-  record Order (ty : OpCtx -> Type) where
+  record Order (sig : a) where
     constructor MkOrder
-    orderExpr : Expr ty a
+    orderExpr : Expr sig b
     direction : Maybe OrderDir
     nulls : Maybe NullsPos
 
   namespace FSU
     public export
-    fromString : HasSignature Unqualified n ty =>
-                 (name : String) ->
-                 {auto inSig : UName name `InSignature` signatureOf ty} ->
-                 Maybe (Order ty)
+    fromString : (name : String) ->
+                 {sig : Signature Unqualified _} ->
+                 {auto inSig : UName name `InSignature` sig} ->
+                 Maybe (Order sig)
     fromString name = Just $ MkOrder (col $ UName name) Nothing Nothing
 
   namespace FSQ
     public export
-    fromString : HasSignature Qualified n ty =>
-                 (name : String) ->
+    fromString : (name : String) ->
+                 {sig : Signature Qualified _} ->
                  ValidQualifiedString name =>
-                 {auto inSig : fromString name `InSignature` signatureOf ty} ->
-                 Maybe (Order ty)
+                 {auto inSig : fromString name `InSignature` sig} ->
+                 Maybe (Order sig)
     fromString name = Just $ MkOrder (col $ fromString name) Nothing Nothing
 
   export
-  toQueryPart : Order ty ->
+  toQueryPart : Order _ ->
                 String
   toQueryPart (MkOrder expr dir nulls) =
     let dirStr = maybe "" orderDirToString dir
@@ -82,40 +82,29 @@ namespace Ordering
 
 namespace Grouping
   public export
-  record SomeExpr (ty : OpCtx -> Type) where
+  record SomeExpr (ty : a) where
     constructor MkSE
-    expr : Expr ty a
+    expr : Expr ty r
 
   namespace FSSingle
     public export
-    fromString : HasSignature qk n ty =>
-                 (name : Name qk) ->
-                 {auto inSig : name `InSignature` signatureOf ty} ->
-                 List (SomeExpr ty)
+    fromString : (name : Name qk) ->
+                 {sig : Signature qk _} ->
+                 {auto inSig : name `InSignature` sig} ->
+                 List (SomeExpr sig)
     fromString name = [MkSE $ col name]
 
   namespace FSMulti
     public export
-    fromString : HasSignature qk n ty =>
-                 (name : Name qk) ->
-                 {auto inSig : name `InSignature` signatureOf ty} ->
-                 SomeExpr ty
+    fromString : (name : Name qk) ->
+                 {sig : Signature qk _} ->
+                 {auto inSig : name `InSignature` sig} ->
+                 SomeExpr sig
     fromString name = MkSE $ col name
 
   export
-  toQueryPart : List (SomeExpr ty) -> String
+  toQueryPart : List (SomeExpr sig) -> String
   toQueryPart = joinBy ", " . map (\se => toQueryPart se.expr)
-
-public export
-record Select (ty : OpCtx -> Type) (ret : Type) where
-  constructor MkSelect
-  {colCount : Nat}
-  {auto isTableType : IsTupleLike qk colCount ty}
-  selSrc : String
-  columns : Columns ty qk ret
-  where' : Expr ty Bool
-  groupBy : List (SomeExpr ty)
-  orderBy : Maybe (Order ty)
 
 data DFrom : Type where
 public export 0
@@ -134,7 +123,17 @@ namespace OptList
   opt _ _ [] = ""
   opt pref f ls = opt pref f (Just ls)
 
-execSelect : Select ty ret -> ExecuteFun ret
+public export
+record Select (sig : Signature qk n) (ret : Type) where
+  constructor MkSelect
+  selSrc : String
+  columns : Columns sig ret
+  where' : Expr sig Bool
+  groupBy : List (SomeExpr sig)
+  orderBy : Maybe (Order sig)
+
+execSelect : Select sig ret ->
+             ExecuteFun ret
 execSelect (MkSelect selSrc columns whereClause groupBy orderBy) = do
   let query = "SELECT \{joinBy ", " $ toColumnNames columns} " ++
               "FROM \{selSrc} " ++
@@ -144,32 +143,33 @@ execSelect (MkSelect selSrc columns whereClause groupBy orderBy) = do
   QueryResult result <- execQueryParams query []
   ensureQuerySuccess query result
   case columns of
-       CAll => map fromTuple <$> extractFieldsMany result _
+       CAll => extractFieldsMany result _
        CSome ixes => extractFieldsMany result _
 
-selectOp : Select ty ret -> Operation ret
+selectOp : Select sig ret ->
+           Operation ret
 selectOp = singleOp . execSelect
 
-public export 0
-SelectMod : (OpCtx -> Type) -> Type -> Type
-SelectMod ty ret = Select ty (List (ty Read)) -> Select ty (List ret)
+public export
+0
+SelectMod : Signature qk n -> Type -> Type
+SelectMod sig ret = Select sig (List $ Tuple sig Read) ->
+                    Select sig (List ret)
 
 namespace SelectTable
   export
   select : (0 _ : Dummy DFrom) ->
-           (0 ty : OpCtx -> Type) ->
            {n : _} ->
-           IsTupleLike qk n ty =>
-           IsSelectSource ty =>
-           SelectMod ty ret ->
+           (tbl : Table n) ->
+           SelectMod tbl.signature ret ->
            Operation (List ret)
-  select _ ty f = selectOp $ f $ MkSelect (selectSourceOf ty) CAll (1 == 1) [] Nothing
+  select _ tbl f = selectOp $ f $ MkSelect tbl.name CAll (1 == 1) [] Nothing
 
 namespace SelectJoin
   export
   select : (0 _ : Dummy DFrom) ->
            {n : _} ->
            (st : SigTree n) ->
-           SelectMod (JoinTree st) ret ->
+           SelectMod (toSig st) ret ->
            Operation (List ret)
   select _ st f = selectOp $ f $ MkSelect (toFromPart st) CAll (1 == 1) [] Nothing

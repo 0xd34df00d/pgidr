@@ -13,7 +13,7 @@ Show ty => Show (Modifier ty) where
   show (PKey sort) = case sort of
                           PKeyNormal => "PRIMARY KEY"
                           PKeySerial => "SERIAL PRIMARY KEY"
-  show (References other idx) = "REFERENCES \{tableNameOf other} (\{(idx `index` signatureOf other).name})"
+  show (References other idx) = "REFERENCES \{other.name} (\{(idx `index` other.signature).name})"
   show (Default defVal) = "DEFAULT " ++ show defVal
   show NotNull = "NOT NULL"
 

@@ -18,13 +18,13 @@ from : Dummy DFrom
 from = MkDF
 
 public export
-record Delete (ty : OpCtx -> Type) ret where
+record Delete (tbl : Table n) ret where
   constructor MkDelete
   table : String
-  where' : Expr ty Bool
-  returning : Columns ManyRows ty ret
+  where' : Expr tbl.signature Bool
+  returning : Columns ManyRows tbl ret
 
-execDelete : Delete ty ret -> ExecuteFun ret
+execDelete : Delete tbl ret -> ExecuteFun ret
 execDelete (MkDelete table where' returning) = do
   let query = "DELETE FROM \{table} " ++
               "WHERE \{toQueryPart where'} " ++
@@ -35,19 +35,17 @@ execDelete (MkDelete table where' returning) = do
 
 export
 delete : (0 _ : Dummy DFrom) ->
-         (0 ty : OpCtx -> Type) ->
          {n : _} ->
-         HasTableName ty =>
-         Expr ty Bool ->
+         (tbl : Table n) ->
+         Expr tbl.signature Bool ->
          Operation ()
-delete _ ty expr = singleOp $ execDelete $ MkDelete (tableNameOf ty) expr CNone
+delete _ tbl expr = singleOp $ execDelete $ MkDelete tbl.name expr CNone
 
 export
 delete' : (0 _ : Dummy DFrom) ->
-          (0 ty : OpCtx -> Type) ->
           {n : _} ->
-          HasTableName ty =>
-          Expr ty Bool ->
-          (Delete ty () -> Delete ty ret) ->
+          (tbl : Table n) ->
+          Expr tbl.signature Bool ->
+          (Delete tbl () -> Delete tbl ret) ->
           Operation ret
-delete' _ ty expr f = singleOp $ execDelete $ f $ MkDelete (tableNameOf ty) expr CNone
+delete' _ tbl expr f = singleOp $ execDelete $ f $ MkDelete tbl.name expr CNone

@@ -7,7 +7,6 @@ import Postgres.Typed.Signature
 import Postgres.Typed.Tuple
 
 import Postgres.Typed.Operations.Expression
-import Postgres.Typed.Operations.SelectSource
 
 %language ElabReflection
 %default total
@@ -20,11 +19,12 @@ data JoinType = Inner | Left | Right | Full
 public export
 data SigTree : (n : Nat) -> Type
 
-record JoinOnExprSig (sl : SigTree nl) (sr : SigTree nr) where
+public export
+toSig : SigTree n -> Signature Qualified n
 
 export
 data JoinCondition : (sigl : SigTree nl) -> (sigr : SigTree nr) -> Type where
-  JoinOn : Expr (JoinOnExprSig sigl sigr) Bool -> JoinCondition sigl sigr
+  JoinOn : Expr (toSig sigl ++ toSig sigr) Bool -> JoinCondition sigl sigr
 
 namespace JCOverloads
   export
@@ -33,9 +33,7 @@ namespace JCOverloads
 
 public export
 data SigTree : (n : Nat) -> Type where
-  SigLeaf : (0 ty : _) ->
-            IsTupleLike Unqualified n ty =>
-            IsSelectSource ty =>
+  SigLeaf : (tbl : Table n) ->
             (alias : String) ->
             SigTree n
   SigConcat : {nl, nr : Nat} ->
@@ -45,58 +43,28 @@ data SigTree : (n : Nat) -> Type where
               (jcond : JoinCondition sigl sigr) ->
               SigTree (nl + nr)
 
-public export
-toSig : SigTree n -> Signature Qualified n
-toSig (SigLeaf ty alias) = aliasify alias $ signatureOf ty
+toSig (SigLeaf tbl alias) = aliasify alias tbl.signature
 toSig (SigConcat l _ r _) = toSig l ++ toSig r
 
 export
-data JoinTree : (st : SigTree n) -> (ctx : OpCtx) -> Type where
-  Leaf : IsTupleLike Unqualified n ty =>
-         IsSelectSource ty =>
-         (leaf : ty ctx) ->
-         JoinTree (SigLeaf ty alias) ctx
+data JoinTree : (st : SigTree n) -> Type where
+  Leaf : (leaf : Tuple tbl.signature Read) ->
+         JoinTree (SigLeaf tbl alias)
   Join : {sigl : SigTree nl} ->
          {sigr : SigTree nr} ->
          {jcond : JoinCondition sigl sigr} ->
-         (jtl : JoinTree sigl ctx) ->
-         (jtr : JoinTree sigr ctx) ->
-         JoinTree (SigConcat sigl jtype sigr jcond) ctx
+         (jtl : JoinTree sigl) ->
+         (jtr : JoinTree sigr) ->
+         JoinTree (SigConcat sigl jtype sigr jcond)
 
-public export
-{sl : SigTree nl} -> {sr : SigTree nr} -> HasSignature Qualified (nl + nr) (JoinOnExprSig sl sr) where
-  signature = toSig sl ++ toSig sr
-
-export
-{st : SigTree n} -> HasSignature Qualified n (JoinTree st) where
-  signature = toSig st
-
-export
-{st : SigTree n} -> IsTupleLike Qualified n (JoinTree st) where
-  toTuple (Leaf leaf) = wrapAliasify $ toTuple leaf
-  toTuple (Join jtl jtr) = toTuple jtl ++ toTuple jtr
-
-  fromTuple tup with (st)
-   _ | SigLeaf ty alias = Leaf $ fromTuple $ unwrapAliasify tup
-   _ | SigConcat {nl} sigl jtype sigr jcond =
-        let splits = splitAt nl tup
-            0 prf = sym $ concatSplitInverse (toSig sigl) (toSig sigr)
-         in Join
-              (fromTuple $ rewrite cong fst prf in fst splits)
-              (fromTuple $ rewrite cong snd prf in snd splits)
-
-  fromToId (Leaf {alias} leaf) = rewrite unwrapWrapId {ctx} alias (toTuple leaf) in
-                                         cong Leaf $ fromToId leaf
-  fromToId (Join jtl jtr) = ?w3_2
-  toFromId tup with (st)
-    _ | SigLeaf ty alias = cong wrapAliasify (toFromId $ unwrapAliasify tup)
-                   `trans` wrapUnwrapId alias tup
-    _ | SigConcat {nl} sigl jtype sigr jcond = ?toFromId_rhs3
+asTuple : JoinTree st -> Tuple (toSig st) Read
+asTuple (Leaf leaf) = wrapAliasify leaf
+asTuple (Join jtl jtr) = asTuple jtl ++ asTuple jtr
 
 namespace SigTreeOverloads
   export
   toFromPart : SigTree n -> String
-  toFromPart (SigLeaf ty alias) = "\{selectSourceOf ty} AS \{alias}"
+  toFromPart (SigLeaf tbl alias) = "\{tbl.name} AS \{alias}"
   toFromPart (SigConcat sigl jtype sigr jcond) = "(\{toFromPart sigl} \{show jtype} JOIN \{toFromPart sigr} \{toFromPart jcond})"
 
 public export
@@ -113,23 +81,18 @@ CanBeJoined st1 st2 = isect (sigTreeSources st1) (sigTreeSources st2) = []
   isect xs ys = [x | x <- xs, any (== x) ys]
 
 export
-{ctx, st : _} -> Show (JoinTree st ctx) where
-  show jt = "\{toFromPart st} \{prettyTuple $ toTuple jt}"
+{st : _} -> Show (JoinTree st) where
+  show jt = "\{toFromPart st} \{prettyTuple $ asTuple jt}"
 
 public export
-table : (0 ty : OpCtx -> Type) ->
-        IsTupleLike Unqualified n ty =>
-        IsSelectSource ty =>
-        HasTableName ty =>
+table : (tbl : Table n) ->
         SigTree n
-table ty = SigLeaf ty (tableNameOf ty)
+table tbl = SigLeaf tbl tbl.name
 
 infix 3 `as`
 public export
-as : (0 ty : OpCtx -> Type) ->
+as : (tbl : Table n) ->
      (alias : String) ->
-     IsTupleLike Unqualified n ty =>
-     IsSelectSource ty =>
      SigTree n
 ty `as` alias = SigLeaf ty alias
 
@@ -151,6 +114,6 @@ innerJoin : {n1, n2 : _} ->
             (st1 : SigTree n1) ->
             (st2 : SigTree n2) ->
             CanBeJoined st1 st2 =>
-            (joinExpr : Expr (JoinOnExprSig st1 st2) Bool) ->
+            (joinExpr : Expr (toSig st1 ++ toSig st2) Bool) ->
             SigTree (n1 + n2)
 innerJoin st1 st2 joinExpr = SigConcat st1 Inner st2 (JoinOn joinExpr)

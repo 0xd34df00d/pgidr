@@ -63,6 +63,7 @@ onSigValUniform : {ctx : OpCtx} ->
 onSigValUniform f = onSigVal (map f) (Just . f)
 
 public export
+0
 Tuple : Signature qk n -> (ctx : OpCtx) -> Type
 Tuple sig ctx = All (computeType' ctx) sig
 
@@ -75,48 +76,17 @@ prettyTuple tup = "{ " ++ joinBy ", " (toList $ forget $ mapPropertyRelevant sho
                      in "\{showName se.name} \{value}"
 
 public export
-subTuple : (0 ty : _) ->
-           HasSignature qn n ty =>
+0
+tableTuple : Table n -> OpCtx -> Type
+tableTuple t = Tuple t.signature
+
+public export
+0
+subTuple : (0 tbl : Table n) ->
            (idxes : Vect k (Fin n)) ->
            OpCtx ->
            Type
-subTuple ty idxes = Tuple (signatureOf ty `subSignature` idxes)
-
-public export
-record NamedTuple (name : String) (s : Signature qk n) (ctx : OpCtx) where
-  constructor MkTup
-  columns : Tuple s ctx
-
-export
-{ctx, name : _} -> {s : Signature qk n} -> Show (NamedTuple name s ctx) where
-  show tup = name ++ " " ++ prettyTuple tup.columns
-
-public export
-{s : Signature qk n} -> HasSignature qk n (NamedTuple name s) where
-  signature = s
-
-public export
-{name : _} -> HasTableName (NamedTuple name s) where
-  tableName = name
-
-public export
-interface HasSignature qk n ty => IsTupleLike qk n (0 ty : OpCtx -> Type) | ty where
-  constructor MkIsTupleLike
-  toTuple : ty ctx -> Tuple (signatureOf ty) ctx
-  fromTuple : Tuple (signatureOf ty) ctx -> ty ctx
-
-  fromToId : (v : ty ctx) ->
-             fromTuple (toTuple v) = v
-  toFromId : (v : Tuple (signatureOf ty) ctx) ->
-             toTuple (fromTuple {ctx} v) = v
-
-public export
-{name : _} -> {s : Signature qk n} -> IsTupleLike qk n (NamedTuple name s) where
-  toTuple = .columns
-  fromTuple = MkTup
-
-  fromToId (MkTup columns) = Refl
-  toFromId v = Refl
+subTuple tbl idxes = Tuple (tbl.signature `subSignature` idxes)
 
 public export
 aliasifySig : String -> SignatureElem Unqualified -> SignatureElem Qualified

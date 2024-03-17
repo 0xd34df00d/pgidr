@@ -29,9 +29,9 @@ public export
 data Expr : (0 ty : a) -> (ety : Type) -> Type where
   EConst  : (val : PgConst ety) ->
             Expr ty ety
-  EColumn : HasSignature qk n ty =>
+  EColumn : (sig : Signature qk n) ->
             (ix : Fin n) ->
-            Expr ty (ix `index` signatureOf ty).type
+            Expr ty (ix `index` sig).type
   EBinRel : (op : BinRelOp) ->
             (l, r : Expr ty ety) ->
             Expr ty Bool
@@ -73,18 +73,19 @@ namespace EDSL
     fromString = EConst . PCString
 
   public export
-  col : HasSignature qk n ty =>
-        (name : Name qk) ->
-        {auto inSig : name `InSignature` signatureOf ty} ->
-        Expr ty (inSigToFin inSig `index` signatureOf ty).type
-  col _ = EColumn (inSigToFin inSig)
+  col : (name : Name qk) ->
+        {sig : Signature qk _} ->
+        {auto inSig : name `InSignature` sig} ->
+        Expr sig (inSigToFin inSig `index` sig).type
+  col _ = EColumn sig (inSigToFin inSig)
 
+  infix 9 .!.
   public export
-  (.) : HasSignature Qualified n ty =>
-        (qual, name : String) ->
-        {auto inSig : QName qual name `InSignature` signatureOf ty} ->
-        Expr ty (inSigToFin inSig `index` signatureOf ty).type
-  (.) _ _ = EColumn (inSigToFin inSig)
+  (.!.) : (qual, name : String) ->
+        {sig : Signature Qualified _} ->
+        {auto inSig : QName qual name `InSignature` sig} ->
+        Expr sig (inSigToFin inSig `index` sig).type
+  (.!.) _ _ = EColumn sig (inSigToFin inSig)
 
 isLeaf : Expr ty ety -> Bool
 isLeaf (EConst{}) = True
@@ -103,7 +104,7 @@ mutual
                                   PCBool b => case b of
                                                    True => "TRUE"
                                                    False => "FALSE"
-  toQueryPart (EColumn ix) = showName (ix `index` signatureOf ty).name
+  toQueryPart (EColumn sig ix) = showName (ix `index` sig).name
   toQueryPart (EBinRel op l r) = "\{parens l} \{opToSql op} \{parens r}"
   toQueryPart (EAnd l r) = "\{parens l} AND \{parens r}"
   toQueryPart (EOr l r) = "\{parens l} OR \{parens r}"
