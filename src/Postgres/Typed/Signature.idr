@@ -84,7 +84,7 @@ data Modifier : (ty : Type) -> Type where
   PKey : PKeySort ty -> Modifier ty
   References : (other : Table n) ->
                (idx : Fin n) ->
-               {auto teq : ty = (idx `index` other.signature).type} ->
+               {auto 0 teq : ty = (idx `index` other.signature).type} ->
                Modifier ty
   Default : (defVal : ty) ->
             Modifier ty
