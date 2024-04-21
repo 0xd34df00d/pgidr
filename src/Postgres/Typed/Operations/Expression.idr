@@ -48,6 +48,16 @@ namespace IntegerVal
   val : Integer -> Expr ty Integer
   val = EConst . PCNum
 
+namespace StringVal
+  public export
+  val : String -> Expr ty String
+  val = EConst . PCString
+
+namespace BoolVal
+  public export
+  val : Bool -> Expr ty Bool
+  val = EConst . PCBool
+
 namespace EDSL
   infix 6 ==, <=, >=, <, >
   public export
