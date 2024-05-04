@@ -108,6 +108,16 @@ and then insert a few payouts (assuming we're continuing in the above `execute` 
 ### Selects
 
 
+### Deletes
+
+Deleting records is pretty straightforward.
+And we can even ask to get back the columns of the rows we've deleted,
+analogously to returning things from `insert`:
+```idris
+  deleted <- delete' from Payout (col "person_id" == val janeId) { returning := all }
+```
+Here, `deleted` contains a list of `Payout`s that were, well, deleted.
+
 ## Features
 
 `INSERT`:
