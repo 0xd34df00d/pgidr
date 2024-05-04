@@ -63,30 +63,30 @@ example = withConnection "user=pgidr_role dbname=pgidr_db" $ \conn => do
     create Person
     create Payout
 
-    deleted <- execute $ do
+    (johnnyId, fooId) <- execute $ do
       () <- insert into Person [ Nothing, "John", "Doe", 42, Nothing ]
       p2 <- insert' into Person [ Nothing, "Jane", "Doe", 32, Just "555-55-55" ] { returning := all }
-      p3id <- insert' into Person [ Nothing, "Johnny", "Donny", 41, Nothing ] { returning := column "id" }
-      [p4id, _] <- insert' into Person [ Nothing, "Foo", "Bar", 666, Nothing ] { returning := columns ["id", "first_name"] }
+      johnnyId <- insert' into Person [ Nothing, "Johnny", "Donny", 41, Nothing ] { returning := column "id" }
+      [fooId, _] <- insert' into Person [ Nothing, "Foo", "Bar", 666, Nothing ] { returning := columns ["id", "first_name"] }
 
       for_ {t = List} [100, 300, 200, 400] $ \sum =>
-        insert into Payout [ Nothing, p3id, sum ]
+        insert into Payout [ Nothing, johnnyId, sum ]
       for_ {t = List} [10, 30, 20, 40] $ \sum =>
-        insert into Payout [ Nothing, p4id, sum ]
+        insert into Payout [ Nothing, fooId, sum ]
 
       allPersons <- select from Person id
       allDoes <- select from Person { where' := col "last_name" == "Doe", orderBy := "first_name" }
       _ <- select from (Person `as` "p1" `crossJoin` Person `as` "p2") id
-      delete' from Payout (col "person_id" == val p3id) { returning := all }
+      pure (johnnyId, fooId)
+    allPayouts <- execute $
+      select from
+        (innerJoin (table Person) (table Payout) $
+          "payouts".!."person_id" == "persons".!."id"
+          )
+        { orderBy := ?order_rhs }
+    printLn allPayouts
+    deleted <- execute $ delete' from Payout (col "person_id" == val johnnyId) { returning := all }
     printLn deleted
-    payouts <- execute (select from
-                          (innerJoin (table Person) (table Payout) $
-                            "payouts".!."person_id" == "persons".!."id"
-                          )
-                          id
-                        )
-    printLn payouts
-    pure ()
   putStrLn $ unlines $ logs
   case res of
        Left err => putStrLn $ "error: " ++ show err
