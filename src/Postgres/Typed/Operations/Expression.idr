@@ -1,7 +1,6 @@
 module Postgres.Typed.Operations.Expression
 
 import Data.Vect
-import Data.Vect.Quantifiers
 
 import public Postgres.Typed.Tuple
 
