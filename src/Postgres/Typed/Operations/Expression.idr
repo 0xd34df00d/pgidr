@@ -25,42 +25,43 @@ data PgConst : Type -> Type where
   -- TODO there's more! https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
 
 public export
-data Expr : (0 ty : a) -> (ety : Type) -> Type where
+data Expr : (0 rowTy : a) -> (ety : Type) -> Type where
   EConst  : (val : PgConst ety) ->
-            Expr ty ety
+            Expr rowTy ety
   EColumn : (sig : Signature qk n) ->
             (ix : Fin n) ->
-            Expr ty (ix `index` sig).type
+            Expr rowTy (ix `index` sig).type
   EBinRel : (op : BinRelOp) ->
-            (l, r : Expr ty ety) ->
-            Expr ty Bool
+            (l, r : Expr rowTy ety) ->
+            Expr rowTy Bool
 
-  EAnd : (l, r : Expr ty Bool) ->
-         Expr ty Bool
-  EOr  : (l, r : Expr ty Bool) ->
-         Expr ty Bool
-  ENot : (e : Expr ty Bool) -> Expr ty Bool
+  EAnd : (l, r : Expr rowTy Bool) ->
+         Expr rowTy Bool
+  EOr  : (l, r : Expr rowTy Bool) ->
+         Expr rowTy Bool
+  ENot : (e : Expr rowTy Bool) ->
+         Expr rowTy Bool
   -- TODO there's more! https://www.postgresql.org/docs/current/sql-expressions.html
 
 namespace IntegerVal
   public export
-  val : Integer -> Expr ty Integer
+  val : Integer -> Expr rowTy Integer
   val = EConst . PCNum
 
 namespace StringVal
   public export
-  val : String -> Expr ty String
+  val : String -> Expr rowTy String
   val = EConst . PCString
 
 namespace BoolVal
   public export
-  val : Bool -> Expr ty Bool
+  val : Bool -> Expr rowTy Bool
   val = EConst . PCBool
 
 namespace EDSL
   infix 6 ==, <=, >=, <, >
   public export
-  (==), (<=), (>=), (<), (>) : (l, r : Expr ty ety) -> Expr ty Bool
+  (==), (<=), (>=), (<), (>) : (l, r : Expr rowTy ety) -> Expr rowTy Bool
   (==) = EBinRel Eq
   (<=) = EBinRel Leq
   (>=) = EBinRel Geq
@@ -69,16 +70,16 @@ namespace EDSL
 
   infix 5 &&, ||
   public export
-  (&&), (||) : (l, r : Expr ty Bool) -> Expr ty Bool
+  (&&), (||) : (l, r : Expr rowTy Bool) -> Expr rowTy Bool
   (&&) = EAnd
   (||) = EOr
 
   public export
-  fromInteger : Integer -> Expr ty Integer
+  fromInteger : Integer -> Expr rowTy Integer
   fromInteger = EConst . PCNum
 
   public export
-  FromString (Expr ty String) where
+  FromString (Expr rowTy String) where
     fromString = EConst . PCString
 
   public export
@@ -96,7 +97,7 @@ namespace EDSL
         Expr sig (inSigToFin inSig `index` sig).type
   (.!.) _ _ = EColumn sig (inSigToFin inSig)
 
-isLeaf : Expr ty ety -> Bool
+isLeaf : Expr rowTy ety -> Bool
 isLeaf (EConst{}) = True
 isLeaf (EColumn{}) = True
 isLeaf (EBinRel{}) = False
@@ -106,7 +107,7 @@ isLeaf (ENot{}) = False
 
 mutual
   export
-  toQueryPart : Expr ty ret -> String
+  toQueryPart : Expr rowTy ret -> String
   toQueryPart (EConst val) = case val of
                                   PCString str => "'\{str}'"
                                   PCNum n => show n
