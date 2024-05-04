@@ -32,6 +32,8 @@ data Expr : (0 rowTy : a) -> (ety : Type) -> Type where
   EColumn : (sig : Signature qk n) ->
             (ix : Fin n) ->
             Expr rowTy (ix `index` sig).type
+  EAll    : Expr rowTy rowTy
+
   EBinRel : (op : BinRelOp) ->
             (l, r : Expr rowTy ety) ->
             Expr rowTy Bool
@@ -104,6 +106,7 @@ namespace EDSL
 isLeaf : Expr rowTy ety -> Bool
 isLeaf (EConst{}) = True
 isLeaf (EColumn{}) = True
+isLeaf (EAll{}) = True
 isLeaf (EBinRel{}) = False
 isLeaf (EAnd{}) = False
 isLeaf (EOr{}) = False
@@ -120,6 +123,7 @@ mutual
                                                    True => "TRUE"
                                                    False => "FALSE"
   toQueryPart (EColumn sig ix) = showName (ix `index` sig).name
+  toQueryPart (EAll) = "*"
   toQueryPart (EBinRel op l r) = "\{parens l} \{opToSql op} \{parens r}"
   toQueryPart (EAnd l r) = "\{parens l} AND \{parens r}"
   toQueryPart (EOr l r) = "\{parens l} OR \{parens r}"
