@@ -1,5 +1,6 @@
 module Postgres.Typed.Operations.Expression
 
+import Data.List.Quantifiers
 import Data.Vect
 
 import public Postgres.Typed.Tuple
@@ -34,6 +35,9 @@ data Expr : (0 rowTy : a) -> (ety : Type) -> Type where
   EBinRel : (op : BinRelOp) ->
             (l, r : Expr rowTy ety) ->
             Expr rowTy Bool
+  EList   : {0 tys : List Type} ->
+            (exprs : All (Expr baseTy) tys) ->
+            Expr baseTy (HList tys)
 
   EAnd : (l, r : Expr rowTy Bool) ->
          Expr rowTy Bool
@@ -104,6 +108,7 @@ isLeaf (EBinRel{}) = False
 isLeaf (EAnd{}) = False
 isLeaf (EOr{}) = False
 isLeaf (ENot{}) = False
+isLeaf (EList{}) = False
 
 mutual
   export
@@ -119,6 +124,11 @@ mutual
   toQueryPart (EAnd l r) = "\{parens l} AND \{parens r}"
   toQueryPart (EOr l r) = "\{parens l} OR \{parens r}"
   toQueryPart (ENot e) = "NOT \{parens e}"
+  toQueryPart (EList exprs) = joinBy ", " $ go exprs
+    where
+    go : Data.List.Quantifiers.All.All (Expr rowTy) tys -> List String
+    go [] = []
+    go (x :: xs) = toQueryPart x :: go xs
 
   parens : Expr ty' ret' -> String
   parens e = if isLeaf e then toQueryPart e else "(" ++ toQueryPart e ++ ")"
