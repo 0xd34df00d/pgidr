@@ -11,6 +11,7 @@ import public Postgres.Typed.Tuple
 public export
 data BinRelOp : (ety : Type) -> Type where
   Eq, Gt, Geq, Lt, Leq : BinRelOp ety
+  And, Or : BinRelOp Bool
 
 opToSql : BinRelOp ety -> String
 opToSql = \case Eq => "="
@@ -18,6 +19,8 @@ opToSql = \case Eq => "="
                 Geq => ">="
                 Lt => "<"
                 Leq => "<="
+                And => "AND"
+                Or => "OR"
 
 public export
 data PgConst : Type -> Type where
@@ -44,10 +47,6 @@ data Expr : (0 rowTy : a) -> (ety : Type) -> Type where
             (l, r : Expr rowTy ety) ->
             Expr rowTy Bool
 
-  EAnd : (l, r : Expr rowTy Bool) ->
-         Expr rowTy Bool
-  EOr  : (l, r : Expr rowTy Bool) ->
-         Expr rowTy Bool
   ENot : (e : Expr rowTy Bool) ->
          Expr rowTy Bool
   -- TODO there's more! https://www.postgresql.org/docs/current/sql-expressions.html
@@ -80,8 +79,8 @@ namespace EDSL
   infix 5 &&, ||
   public export
   (&&), (||) : (l, r : Expr rowTy Bool) -> Expr rowTy Bool
-  (&&) = EAnd
-  (||) = EOr
+  (&&) = EBinRel And
+  (||) = EBinRel Or
 
   public export
   fromInteger : Integer -> Expr rowTy Integer
@@ -112,8 +111,6 @@ isLeaf (EColumn{}) = True
 isLeaf (EAll{}) = True
 isLeaf (ENone{}) = True
 isLeaf (EBinRel{}) = False
-isLeaf (EAnd{}) = False
-isLeaf (EOr{}) = False
 isLeaf (ENot{}) = False
 isLeaf (EList{}) = False
 
@@ -130,8 +127,6 @@ mutual
   toQueryPart (EAll) = "*"
   toQueryPart (ENone) = "NULL"
   toQueryPart (EBinRel op l r) = "\{parens l} \{opToSql op} \{parens r}"
-  toQueryPart (EAnd l r) = "\{parens l} AND \{parens r}"
-  toQueryPart (EOr l r) = "\{parens l} OR \{parens r}"
   toQueryPart (ENot e) = "NOT \{parens e}"
   toQueryPart (EList exprs) = joinBy ", " $ go exprs
     where
