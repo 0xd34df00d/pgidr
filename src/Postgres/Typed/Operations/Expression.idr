@@ -20,9 +20,9 @@ opToSql = \case Eq => "="
 
 public export
 data PgConst : Type -> Type where
-  PCString : String -> PgConst String
-  PCNum    : (Show a, Num a) => a -> PgConst a
-  PCBool   : Bool -> PgConst Bool
+  PCString : (str : String) -> PgConst String
+  PCNum    : (Show a, Num a) => (num : a) -> PgConst a
+  PCBool   : (b : Bool) -> PgConst Bool
   -- TODO there's more! https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
 
 public export
