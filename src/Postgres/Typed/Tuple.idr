@@ -40,7 +40,7 @@ computeType ctx ty mods = case computeNullability mods ctx of
                                NonNullable => ty
 
 public export 0
-computeType' : OpCtx -> (_ : SignatureElem qk) -> Type
+computeType' : OpCtx -> SignatureElem qk -> Type
 computeType' ctx (MkSE _ ty modifiers) = computeType ctx ty modifiers
 
 public export
