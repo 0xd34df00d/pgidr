@@ -36,6 +36,18 @@ PgType Integer where
   fromTextual = pure . cast -- TODO better error reporting
 
 public export
+PgType Bool where
+  toTextual True = "1"
+  toTextual False = "0"
+  fromTextual str = if str `elem` trues then pure True
+                    else if str `elem` falses then pure False
+                    else Left $ "unable to parse `" ++ str ++ "` as a boolean"
+    where
+    trues, falses : List String
+    trues = ["1", "true", "yes", "on"]
+    falses = ["0", "false", "no", "off"]
+
+public export
 PgType UnknownPgType where
   toTextual = .rawContents
   fromTextual = pure . MkUPT
@@ -56,3 +68,7 @@ CreatablePgType String where
 public export
 CreatablePgType Integer where
   fieldTypeName = "INTEGER"
+
+public export
+CreatablePgType Bool where
+  fieldTypeName = "BOOLEAN"
