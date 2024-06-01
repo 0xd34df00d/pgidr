@@ -29,6 +29,12 @@ data PgConst : Type -> Type where
   PCBool   : (b : Bool) -> PgConst Bool
   -- TODO there's more! https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
 
+export
+valueOf : PgConst ty -> ty
+valueOf (PCString str) = str
+valueOf (PCNum num) = num
+valueOf (PCBool b) = b
+
 public export
 data Expr : (0 rowTy : a) -> (ety : Type) -> Type where
   EConst  : (val : PgConst ety) ->
