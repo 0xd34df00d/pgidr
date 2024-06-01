@@ -1,7 +1,7 @@
 module Postgres.Typed.Operations.Expression
 
-import Data.List.Quantifiers
 import Data.Vect
+import Data.Vect.Quantifiers
 
 import public Postgres.Typed.Tuple
 
@@ -45,9 +45,9 @@ data Expr : (0 rowTy : a) -> (ety : Type) -> Type where
   EColumn : (sig : Signature qk n) ->
             (ix : Fin n) ->
             Expr rowTy (ix `index` sig).type
-  EList   : {0 tys : List Type} ->
+  EList   : {0 tys : Vect (S n) Type} ->
             (exprs : All (Expr baseTy) tys) ->
-            Expr baseTy (HList tys)
+            Expr baseTy (HVect tys)
 
   EBinRel : (op : BinRelOp ety) ->
             (l, r : Expr rowTy ety) ->
@@ -136,7 +136,7 @@ mutual
   toQueryPart (ENot e) = "NOT \{parens e}"
   toQueryPart (EList exprs) = joinBy ", " $ go exprs
     where
-    go : Data.List.Quantifiers.All.All (Expr rowTy) tys -> List String
+    go : All (Expr rowTy) tys -> List String
     go [] = []
     go (x :: xs) = toQueryPart x :: go xs
 
