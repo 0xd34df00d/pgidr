@@ -9,9 +9,10 @@ import public Postgres.Typed.Tuple
 %prefix_record_projections off
 
 public export
-data BinRelOp = Eq | Gt | Geq | Lt | Leq
+data BinRelOp : (ety : Type) -> Type where
+  Eq, Gt, Geq, Lt, Leq : BinRelOp ety
 
-opToSql : BinRelOp -> String
+opToSql : BinRelOp ety -> String
 opToSql = \case Eq => "="
                 Gt => ">"
                 Geq => ">="
@@ -29,18 +30,19 @@ public export
 data Expr : (0 rowTy : a) -> (ety : Type) -> Type where
   EConst  : (val : PgConst ety) ->
             Expr rowTy ety
+  ENone   : Expr rowTy ()
+
+  EAll    : Expr tbl (tableTuple tbl Read)
   EColumn : (sig : Signature qk n) ->
             (ix : Fin n) ->
             Expr rowTy (ix `index` sig).type
-  EAll    : Expr tbl (tableTuple tbl Read)
-  ENone   : Expr rowTy ()
-
-  EBinRel : (op : BinRelOp) ->
-            (l, r : Expr rowTy ety) ->
-            Expr rowTy Bool
   EList   : {0 tys : List Type} ->
             (exprs : All (Expr baseTy) tys) ->
             Expr baseTy (HList tys)
+
+  EBinRel : (op : BinRelOp ety) ->
+            (l, r : Expr rowTy ety) ->
+            Expr rowTy Bool
 
   EAnd : (l, r : Expr rowTy Bool) ->
          Expr rowTy Bool
