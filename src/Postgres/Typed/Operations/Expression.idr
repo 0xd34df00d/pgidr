@@ -9,9 +9,9 @@ import public Postgres.Typed.Tuple
 %prefix_record_projections off
 
 public export
-data BinRelOp : (ety : Type) -> Type where
+data BinRelOp : (ety : Vect n Type) -> Type where
   Eq, Gt, Geq, Lt, Leq : BinRelOp ety
-  And, Or : BinRelOp Bool
+  And, Or : BinRelOp [Bool]
 
 opToSql : BinRelOp ety -> String
 opToSql = \case Eq => "="
@@ -36,48 +36,48 @@ valueOf (PCNum num) = num
 valueOf (PCBool b) = b
 
 public export
-data Expr : (0 rowTy : a) -> (ety : Type) -> Type where
+data Expr : (0 rowTy : a) -> (0 eTy : Vect n Type) -> Type where
   EConst  : (val : PgConst ety) ->
-            Expr rowTy ety
-  ENone   : Expr rowTy ()
+            Expr rowTy [ety]
+  ENone   : Expr rowTy []
 
   EAll    : {n : _} ->
             {0 tbl : Table n} ->
-            Expr tbl (tableTuple tbl Read)
+            Expr tbl (map (computeType' ctx) tbl.signature)
   EColumn : (sig : Signature qk n) ->
             (ix : Fin n) ->
-            Expr rowTy (ix `index` sig).type
+            Expr rowTy [(ix `index` sig).type]
   EList   : {0 tys : Vect (S n) Type} ->
-            (exprs : All (Expr baseTy) tys) ->
-            Expr baseTy (HVect tys)
+            (exprs : All (\ty => Expr rowTy [ty]) tys) ->
+            Expr rowTy tys
 
   EBinRel : (op : BinRelOp ety) ->
             (l, r : Expr rowTy ety) ->
-            Expr rowTy Bool
+            Expr rowTy [Bool]
 
-  ENot : (e : Expr rowTy Bool) ->
-         Expr rowTy Bool
+  ENot : (e : Expr rowTy [Bool]) ->
+         Expr rowTy [Bool]
   -- TODO there's more! https://www.postgresql.org/docs/current/sql-expressions.html
 
 namespace IntegerVal
   public export
-  val : Integer -> Expr rowTy Integer
+  val : Integer -> Expr rowTy [Integer]
   val = EConst . PCNum
 
 namespace StringVal
   public export
-  val : String -> Expr rowTy String
+  val : String -> Expr rowTy [String]
   val = EConst . PCString
 
 namespace BoolVal
   public export
-  val : Bool -> Expr rowTy Bool
+  val : Bool -> Expr rowTy [Bool]
   val = EConst . PCBool
 
 namespace EDSL
   infix 6 ==, <=, >=, <, >
   public export
-  (==), (<=), (>=), (<), (>) : (l, r : Expr rowTy ety) -> Expr rowTy Bool
+  (==), (<=), (>=), (<), (>) : (l, r : Expr rowTy eTy) -> Expr rowTy [Bool]
   (==) = EBinRel Eq
   (<=) = EBinRel Leq
   (>=) = EBinRel Geq
@@ -86,23 +86,23 @@ namespace EDSL
 
   infix 5 &&, ||
   public export
-  (&&), (||) : (l, r : Expr rowTy Bool) -> Expr rowTy Bool
+  (&&), (||) : (l, r : Expr rowTy [Bool]) -> Expr rowTy [Bool]
   (&&) = EBinRel And
   (||) = EBinRel Or
 
   public export
-  fromInteger : Integer -> Expr rowTy Integer
+  fromInteger : Integer -> Expr rowTy [Integer]
   fromInteger = EConst . PCNum
 
   public export
-  FromString (Expr rowTy String) where
+  FromString (Expr rowTy [String]) where
     fromString = EConst . PCString
 
   public export
   col : (name : Name qk) ->
         {sig : Signature qk _} ->
         {auto inSig : name `InSignature` sig} ->
-        Expr sig (inSigToFin inSig `index` sig).type
+        Expr sig [(inSigToFin inSig `index` sig).type]
   col _ = EColumn sig (inSigToFin inSig)
 
   infix 9 .!.
@@ -110,7 +110,7 @@ namespace EDSL
   (.!.) : (qual, name : String) ->
         {sig : Signature Qualified _} ->
         {auto inSig : QName qual name `InSignature` sig} ->
-        Expr sig (inSigToFin inSig `index` sig).type
+        Expr sig [(inSigToFin inSig `index` sig).type]
   (.!.) _ _ = EColumn sig (inSigToFin inSig)
 
 isLeaf : Expr rowTy ety -> Bool
@@ -133,12 +133,12 @@ mutual
                                                    False => "FALSE"
   toQueryPart (EColumn sig ix) = showName (ix `index` sig).name
   toQueryPart (EAll) = "*"
-  toQueryPart (ENone) = "NULL"
+  toQueryPart (ENone) = ""
   toQueryPart (EBinRel op l r) = "\{parens l} \{opToSql op} \{parens r}"
   toQueryPart (ENot e) = "NOT \{parens e}"
   toQueryPart (EList exprs) = joinBy ", " $ go exprs
     where
-    go : All (Expr rowTy) tys -> List String
+    go : All (\ty => Expr rowTy [ty]) tys -> List String
     go [] = []
     go (x :: xs) = toQueryPart x :: go xs
 

@@ -49,12 +49,10 @@ record Insert (tbl : Table ncols) (ret : Type) where
   value : Tuple tbl.signature Write
   returning : Columns OneRow tbl ret
 
--- TODO consider indexing `Expr` with its length in its type
--- to have static guarantees about whether the result is long enough
 extractExprResult : MonadError ExecError m =>
                     Result s ->
                     Expr tbl ret ->
-                    m ret
+                    m (HVect ret)
 extractExprResult res = evalStateT 0 . go
   where
   shift : Nat -> StateT Nat m ret' -> StateT Nat m ret'
@@ -63,18 +61,18 @@ extractExprResult res = evalStateT 0 . go
     modify (+ n) $> res
 
   go : Expr tbl' ret' ->
-       StateT Nat m ret'
-  go (EConst val) = shift 1 $ pure $ valueOf val
-  go ENone = pure ()
+       StateT Nat m (HVect ret')
+  go (EConst val) = shift 1 $ pure [valueOf val]
+  go ENone = pure []
   go (EAll {n}) = shift n $ ?rhs_1
   go (EColumn sig ix) = shift 1 $ ?rhs_2
   go (EList exprs) = go' exprs
     where
     go' : {0 tys : Vect n Type} ->
-          (exprs : All (Expr baseTy) tys) ->
+          (exprs : All (\ty => Expr baseTy [ty]) tys) ->
           StateT Nat m (HVect tys)
     go' [] = pure []
-    go' (expr :: exprs) = [| go expr :: go' exprs |]
+    go' (expr :: exprs) = [| go expr ++ go' exprs |]
   go (EBinRel _ _ _) = shift 1 $ ?rhs_4
   go (ENot _) = shift 1 $ ?rhs_5
 
