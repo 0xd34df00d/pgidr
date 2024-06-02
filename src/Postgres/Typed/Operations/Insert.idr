@@ -2,7 +2,7 @@ module Postgres.Typed.Operations.Insert
 
 import Data.String
 import Data.Vect
-
+import Data.Vect.Quantifiers
 import Data.Vect.Quantifiers.Extra
 
 import Postgres.C
@@ -11,6 +11,7 @@ import public Postgres.Typed.Tuple
 
 import Postgres.Typed.Operations.Class
 import Postgres.Typed.Operations.Helpers
+import public Postgres.Typed.Operations.Expression
 import public Postgres.Typed.Operations.Returning
 
 %default total
@@ -45,6 +46,35 @@ record Insert (tbl : Table ncols) (ret : Type) where
   constructor MkInsert
   value : Tuple tbl.signature Write
   returning : Columns OneRow tbl ret
+
+-- TODO consider indexing `Expr` with its length in its type
+-- to have static guarantees about whether the result is long enough
+extractReturning : MonadError ExecError m =>
+                   Result s ->
+                   Expr tbl ret ->
+                   m ret
+extractReturning res = snd . go 0
+  where
+  go : (col : Nat) ->
+       Expr tbl' ret' ->
+       (Nat, m ret')
+  go col (EConst val) = (1 + col, pure $ valueOf val)
+  go col ENone = (col, pure ())
+  go col (EAll {n}) = (n + col, ?rhs_2)
+  go col (EColumn sig ix) = (1 + col, ?rhs_1)
+  go col (EList exprs) = go' col exprs
+    where
+    go' : {0 tys : Vect n Type} ->
+          (col : Nat) ->
+          (exprs : All (Expr baseTy) tys) ->
+          (Nat, m (HVect tys))
+    go' col [] = (col, pure [])
+    go' col (expr :: exprs) =
+      let (col', val) = go col expr
+          (col'', vals) = go' col' exprs
+      in (col'', [| val :: vals |])
+  go col (EBinRel _ _ _) = (1 + col, ?rhs_4)
+  go col (ENot _) = (1 + col, ?rhs_8)
 
 execInsert : {tbl : _} -> Insert tbl ret -> ExecuteFun ret
 execInsert (MkInsert val returning) = do
