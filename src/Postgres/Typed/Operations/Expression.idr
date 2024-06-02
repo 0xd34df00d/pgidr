@@ -41,7 +41,9 @@ data Expr : (0 rowTy : a) -> (ety : Type) -> Type where
             Expr rowTy ety
   ENone   : Expr rowTy ()
 
-  EAll    : Expr tbl (tableTuple tbl Read)
+  EAll    : {n : _} ->
+            {0 tbl : Table n} ->
+            Expr tbl (tableTuple tbl Read)
   EColumn : (sig : Signature qk n) ->
             (ix : Fin n) ->
             Expr rowTy (ix `index` sig).type
