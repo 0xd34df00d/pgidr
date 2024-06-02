@@ -1,5 +1,7 @@
 module Postgres.Typed.Operations.Insert
 
+import Control.Monad.State
+
 import Data.String
 import Data.Vect
 import Data.Vect.Quantifiers
@@ -49,32 +51,32 @@ record Insert (tbl : Table ncols) (ret : Type) where
 
 -- TODO consider indexing `Expr` with its length in its type
 -- to have static guarantees about whether the result is long enough
-extractReturning : MonadError ExecError m =>
-                   Result s ->
-                   Expr tbl ret ->
-                   m ret
-extractReturning res = snd . go 0
+extractExprResult : MonadError ExecError m =>
+                    Result s ->
+                    Expr tbl ret ->
+                    m ret
+extractExprResult res = evalStateT 0 . go
   where
-  go : (col : Nat) ->
-       Expr tbl' ret' ->
-       (Nat, m ret')
-  go col (EConst val) = (1 + col, pure $ valueOf val)
-  go col ENone = (col, pure ())
-  go col (EAll {n}) = (n + col, ?rhs_2)
-  go col (EColumn sig ix) = (1 + col, ?rhs_1)
-  go col (EList exprs) = go' col exprs
+  shift : Nat -> StateT Nat m ret' -> StateT Nat m ret'
+  shift n act = do
+    res <- act
+    modify (+ n) $> res
+
+  go : Expr tbl' ret' ->
+       StateT Nat m ret'
+  go (EConst val) = shift 1 $ pure $ valueOf val
+  go ENone = pure ()
+  go (EAll {n}) = shift n $ ?rhs_1
+  go (EColumn sig ix) = shift 1 $ ?rhs_2
+  go (EList exprs) = go' exprs
     where
     go' : {0 tys : Vect n Type} ->
-          (col : Nat) ->
           (exprs : All (Expr baseTy) tys) ->
-          (Nat, m (HVect tys))
-    go' col [] = (col, pure [])
-    go' col (expr :: exprs) =
-      let (col', val) = go col expr
-          (col'', vals) = go' col' exprs
-      in (col'', [| val :: vals |])
-  go col (EBinRel _ _ _) = (1 + col, ?rhs_4)
-  go col (ENot _) = (1 + col, ?rhs_8)
+          StateT Nat m (HVect tys)
+    go' [] = pure []
+    go' (expr :: exprs) = [| go expr :: go' exprs |]
+  go (EBinRel _ _ _) = shift 1 $ ?rhs_4
+  go (ENot _) = shift 1 $ ?rhs_5
 
 execInsert : {tbl : _} -> Insert tbl ret -> ExecuteFun ret
 execInsert (MkInsert val returning) = do
